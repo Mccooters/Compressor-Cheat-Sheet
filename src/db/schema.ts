@@ -15,6 +15,12 @@ export const equipmentTypeEnum = pgEnum("equipment_type", [
   "compressor",
   "controller",
   "dryer",
+  "line_filter",
+  "breathing_air",
+  "oily_water_separator",
+  "vacuum_pump",
+  "generator",
+  "nitrogen_generator",
 ]);
 
 export const equipmentStatusEnum = pgEnum("equipment_status", [
