@@ -1,6 +1,6 @@
 import "./load-env";
 import fs from "node:fs";
-import { inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "./index";
 import { equipment } from "./schema";
 import { parseSpecs, type EquipmentType } from "@/lib/equipment/specSchemas";
@@ -256,7 +256,24 @@ const TRAILING_KEYWORDS = [
   "Outlet",
   "Set",
   "System",
+  "Full Feature",
+  "Basemount",
+  "Integrated",
+  "Intergrated",
 ];
+
+// Words that show up as filler around a real model code but never form one
+// on their own — if every word in a candidate is drawn from this set, it's
+// generic description ("Air", "Diesel Skid", "Compressor TBC"), not a model.
+const GENERIC_WORDS = new Set([
+  "air", "compressor", "dryer", "diesel", "petrol", "electric", "skid",
+  "unit", "plant", "spare", "tbc", "tba", "n/a", "model", "unknown",
+  "serial", "number", "screw", "piston", "filter", "pump", "separator",
+  "generator", "assembly", "outlet", "set", "system", "basemount",
+  "integrated", "intergrated", "full", "feature", "not", "in", "service",
+  "decommissioned", "refrigerant", "refrigerated", "built", "use", "no",
+  "longer", "back", "up",
+]);
 
 function findKeyword(text: string, table: { pattern: RegExp; value: string }[]) {
   for (const { pattern, value } of table) {
@@ -268,19 +285,46 @@ function findKeyword(text: string, table: { pattern: RegExp; value: string }[]) 
 function isNoiseSegment(s: string): boolean {
   const t = s.trim();
   if (!t) return true;
-  return /^(TBA|TBC|N\/A|NOT IN SERVICE|UNKNOWN|SPARE|DECOMMISSIONED)$/i.test(t);
+  if (!/[a-z0-9]/i.test(t)) return true;
+  const words = t.toLowerCase().split(/[\s\-/]+/).filter(Boolean);
+  return words.length > 0 && words.every((w) => GENERIC_WORDS.has(w));
 }
 
 function cutAtTrailingKeyword(text: string): string {
-  let cut = text;
+  let bestIdx = -1;
   for (const kw of TRAILING_KEYWORDS) {
-    const idx = cut.search(new RegExp(`\\b${kw}\\b`, "i"));
-    if (idx > 0) {
-      cut = cut.slice(0, idx).trim();
-      break;
+    const idx = text.search(new RegExp(`\\b${kw}\\b`, "i"));
+    if (idx > -1 && (bestIdx === -1 || idx < bestIdx)) {
+      bestIdx = idx;
     }
   }
-  return cut;
+  if (bestIdx === 0) return "";
+  return bestIdx > 0 ? text.slice(0, bestIdx).trim() : text;
+}
+
+// Drops embedded serial numbers / site tags (e.g. "N: ITJ554543", "SERIAL
+// 1010T02070") that sometimes ride along in the same segment as the model
+// instead of behind their own dash. The unlabeled bare-code form
+// ("COX191187") is only stripped outside the model segment (allowUnlabeled
+// = false for the segment immediately after the manufacturer) — real model
+// codes like "CPRD10200" have the same letters+digits shape as a serial and
+// would otherwise get eaten.
+function stripEmbeddedSerial(text: string, allowUnlabeled: boolean): string {
+  let result = text.replace(
+    /\b(?:S\/N|SN|N|SERIAL)\s*:?\s*[A-Z0-9]{2,6}\d{3,}\b/gi,
+    ""
+  );
+  if (allowUnlabeled) {
+    result = result.replace(/\b[A-Z]{2,6}\d{5,}\b/g, "");
+  }
+  return result.replace(/\(\s*\)/g, "").trim();
+}
+
+// Different techs typed the same model with and without a space after the
+// manufacturer's letter-prefix (e.g. "CPM 10" vs "CPM10") — glue them back
+// together so they dedupe to one catalog entry instead of two.
+function normalizeModelSpacing(model: string): string {
+  return model.replace(/^([A-Za-z]+)\s+(?=\d)/, "$1");
 }
 
 // Asset names follow "Manufacturer[ Model] - <serial/site note> - <style> - <drive>"
@@ -309,12 +353,17 @@ function splitManufacturerModel(assetName: string): {
       .filter(Boolean);
 
     let modelNumber = "";
-    for (const part of parts) {
-      const candidate = cutAtTrailingKeyword(part);
+    for (const [partIndex, part] of parts.entries()) {
+      let candidate = stripEmbeddedSerial(part, partIndex > 0);
+      candidate = cutAtTrailingKeyword(candidate);
+      candidate = candidate.replace(/\s{2,}/g, " ").replace(/[-–:]\s*$/, "").trim();
       if (!isNoiseSegment(candidate)) {
         modelNumber = candidate;
         break;
       }
+    }
+    if (modelNumber) {
+      modelNumber = normalizeModelSpacing(modelNumber);
     }
 
     return {
@@ -620,7 +669,7 @@ async function main() {
 
   const filtered = extracted.filter((e) => {
     if (e.type === "compressor" || e.type === "dryer") {
-      return e.confident;
+      return e.confident && e.modelNumber !== "(model unknown)";
     }
     if (e.type === "line_filter") {
       return isGoodLineFilter(e);
@@ -635,7 +684,13 @@ async function main() {
     e.displayName = `${e.manufacturer} ${e.modelNumber}`.trim();
   }
 
-  const finalList = [...filtered, ...HAND_CURATED];
+  // Line filters were imported once, then deliberately deleted from the
+  // catalog by the user — keep the category mapping/extraction logic intact
+  // in case they're wanted again, but don't re-insert them by default.
+  const INCLUDE_LINE_FILTERS = process.argv.includes("--include-line-filters");
+  const finalList = [...filtered, ...HAND_CURATED].filter(
+    (e) => e.type !== "line_filter" || INCLUDE_LINE_FILTERS
+  );
 
   const byType = new Map<string, number>();
   for (const e of finalList) {
@@ -650,15 +705,8 @@ async function main() {
   console.log(`\nFull final list written to ${REPORT_PATH}`);
 
   if (COMMIT) {
-    console.log("\nClearing placeholder seed equipment...");
-    const seedNames = [
-      "Atlas Copco GA 30 VSD+",
-      "Ingersoll Rand R-Series R55",
-      "Atlas Copco FD 115 Refrigerated Dryer",
-      "Pneumatic Products DDX150 Desiccant Dryer",
-      "Atlas Copco Elektronikon Graphic Controller",
-    ];
-    await db.delete(equipment).where(inArray(equipment.displayName, seedNames));
+    console.log("\nClearing previously imported equipment...");
+    await db.delete(equipment).where(eq(equipment.createdBy, "csv-import"));
 
     console.log(`Inserting ${finalList.length} equipment entries...`);
     for (const e of finalList) {
