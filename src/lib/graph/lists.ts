@@ -13,11 +13,76 @@ export function encodeSharingUrl(url: string): string {
   return `u!${base64}`;
 }
 
-// SharePoint "List" share links (the :l: format) don't resolve the same way
-// document links do — there's no single documented relationship that's
-// guaranteed to come back populated, so this tries several and returns
-// whatever each call actually yields for inspection rather than assuming
-// one shape.
+type GraphList = {
+  id: string;
+  displayName?: string;
+  webUrl?: string;
+  parentReference?: { siteId?: string };
+};
+
+// Resolves a SharePoint "List" share link (the :l: format) to its site +
+// list ids. Confirmed working via /shares/{id}/list — other relationships
+// (driveItem, plain share) either error or don't carry the ids we need.
+export async function resolveSharedList(
+  url: string
+): Promise<{ siteId: string; listId: string; displayName: string; webUrl: string }> {
+  const client = await getGraphClient();
+  const shareId = encodeSharingUrl(url);
+
+  const list = (await client.api(`/shares/${shareId}/list`).get()) as GraphList;
+  const siteId = list.parentReference?.siteId;
+  if (!siteId) {
+    throw new Error("Resolved list has no parentReference.siteId");
+  }
+
+  return {
+    siteId,
+    listId: list.id,
+    displayName: list.displayName ?? "",
+    webUrl: list.webUrl ?? "",
+  };
+}
+
+export type ListColumn = {
+  name: string;
+  displayName: string;
+  hidden?: boolean;
+  readOnly?: boolean;
+};
+
+export async function getListColumns(
+  siteId: string,
+  listId: string
+): Promise<ListColumn[]> {
+  const client = await getGraphClient();
+  const response = (await client
+    .api(`/sites/${siteId}/lists/${listId}/columns`)
+    .get()) as { value?: ListColumn[] };
+  return response.value ?? [];
+}
+
+export type ListItem = { id: string; fields: Record<string, unknown> };
+
+export async function getListItems(
+  siteId: string,
+  listId: string,
+  top = 999
+): Promise<ListItem[]> {
+  const client = await getGraphClient();
+  const response = (await client
+    .api(`/sites/${siteId}/lists/${listId}/items`)
+    .expand("fields")
+    .top(top)
+    .get()) as { value?: { id: string; fields?: Record<string, unknown> }[] };
+  return (response.value ?? []).map((item) => ({
+    id: item.id,
+    fields: item.fields ?? {},
+  }));
+}
+
+// Diagnostic dump of every relationship that might resolve a list share
+// link — kept around for re-inspecting if the list is ever moved/recreated
+// and resolveSharedList() starts failing.
 export async function inspectSharedListUrl(url: string) {
   const client = await getGraphClient();
   const shareId = encodeSharingUrl(url);
@@ -40,22 +105,4 @@ export async function inspectSharedListUrl(url: string) {
   }
 
   return attempts;
-}
-
-export async function getListColumns(siteId: string, listId: string) {
-  const client = await getGraphClient();
-  const response = (await client
-    .api(`/sites/${siteId}/lists/${listId}/columns`)
-    .get()) as { value?: { name?: string; displayName?: string }[] };
-  return response.value ?? [];
-}
-
-export async function getListItems(siteId: string, listId: string) {
-  const client = await getGraphClient();
-  const response = (await client
-    .api(`/sites/${siteId}/lists/${listId}/items`)
-    .expand("fields")
-    .top(50)
-    .get()) as { value?: { id: string; fields?: Record<string, unknown> }[] };
-  return response.value ?? [];
 }

@@ -1,5 +1,5 @@
 import { isGraphConfigured } from "@/lib/graph/config";
-import { inspectSharedListUrl } from "@/lib/graph/lists";
+import { getListColumns, getListItems, resolveSharedList } from "@/lib/graph/lists";
 
 export default async function SharePointInspectPage() {
   const listUrl = process.env.SHAREPOINT_CONTROLLER_LIST_URL;
@@ -23,7 +23,22 @@ export default async function SharePointInspectPage() {
   let result: unknown;
   let error: string | undefined;
   try {
-    result = await inspectSharedListUrl(listUrl);
+    const { siteId, listId, displayName, webUrl } = await resolveSharedList(listUrl);
+    const [columns, items] = await Promise.all([
+      getListColumns(siteId, listId),
+      getListItems(siteId, listId, 10),
+    ]);
+    result = {
+      siteId,
+      listId,
+      displayName,
+      webUrl,
+      columns: columns
+        .filter((c) => !c.hidden)
+        .map((c) => ({ name: c.name, displayName: c.displayName, readOnly: c.readOnly })),
+      itemCount: items.length,
+      sampleItems: items,
+    };
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);
   }
@@ -32,10 +47,8 @@ export default async function SharePointInspectPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">SharePoint list inspector</h1>
       <p className="text-sm text-neutral-500">
-        One-off diagnostic page — not linked from anywhere. Shows the raw Graph
-        API responses for {listUrl} so the real shape can inform the sync
-        implementation. Requires being signed in with a real Microsoft
-        account (dev login has no Graph access token).
+        One-off diagnostic page — not linked from anywhere. Shows the resolved
+        site/list ids, columns, and first 10 items for {listUrl}.
       </p>
       {error ? (
         <pre className="overflow-auto rounded-md bg-red-50 p-4 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
