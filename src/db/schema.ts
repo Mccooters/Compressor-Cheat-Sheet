@@ -57,6 +57,11 @@ export const faultTreeNodeTypeEnum = pgEnum("fault_tree_node_type", [
   "diagnosis",
 ]);
 
+export const recordSourceEnum = pgEnum("record_source", [
+  "manual",
+  "sharepoint_sync",
+]);
+
 export const equipment = pgTable("equipment", {
   id: uuid("id").defaultRandom().primaryKey(),
   type: equipmentTypeEnum("type").notNull(),
@@ -71,6 +76,55 @@ export const equipment = pgTable("equipment", {
     .notNull()
     .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const controller = pgTable(
+  "controller",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    manufacturer: text("manufacturer").notNull(),
+    modelName: text("model_name").notNull(),
+    displayName: text("display_name").notNull(),
+    notes: text("notes"),
+    source: recordSourceEnum("source").notNull().default("manual"),
+    // Set once a Microsoft Lists/SharePoint sync exists — lets a re-sync
+    // upsert this row instead of creating a duplicate.
+    sharepointListId: text("sharepoint_list_id"),
+    sharepointItemId: text("sharepoint_item_id"),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    createdBy: text("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("controller_manufacturer_model_idx").on(
+      table.manufacturer,
+      table.modelName
+    ),
+  ]
+);
+
+export const controllerPassword = pgTable("controller_password", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  controllerId: uuid("controller_id")
+    .notNull()
+    .references(() => controller.id, { onDelete: "cascade" }),
+  // e.g. "Service", "User", "Factory", "Level 1" — the named access level or
+  // procedure this code/instruction unlocks.
+  label: text("label").notNull(),
+  // The code itself, or free-text button-press instructions when the
+  // controller has no numeric password (e.g. "Hold Reset for 5 seconds").
+  value: text("value").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  source: recordSourceEnum("source").notNull().default("manual"),
+  sharepointItemId: text("sharepoint_item_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
@@ -183,6 +237,20 @@ export const faultTreeBranch = pgTable(
 export const equipmentRelations = relations(equipment, ({ many }) => ({
   documents: many(documentLink),
 }));
+
+export const controllerRelations = relations(controller, ({ many }) => ({
+  passwords: many(controllerPassword),
+}));
+
+export const controllerPasswordRelations = relations(
+  controllerPassword,
+  ({ one }) => ({
+    controller: one(controller, {
+      fields: [controllerPassword.controllerId],
+      references: [controller.id],
+    }),
+  })
+);
 
 export const documentLinkRelations = relations(documentLink, ({ one }) => ({
   equipment: one(equipment, {

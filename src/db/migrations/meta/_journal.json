@@ -15,6 +15,13 @@
       "when": 1781910017831,
       "tag": "0001_chemical_ink",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781936536915,
+      "tag": "0002_bitter_enchantress",
+      "breakpoints": true
     }
   ]
 }

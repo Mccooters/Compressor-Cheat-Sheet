@@ -18,6 +18,12 @@ const cards = [
     title: "Search",
     description: "Search across equipment and fault trees at once.",
   },
+  {
+    href: "/controllers",
+    title: "Controller passwords",
+    description:
+      "Look up service, factory, and user access codes by controller manufacturer and model.",
+  },
 ];
 
 export default function Home() {
@@ -29,7 +35,7 @@ export default function Home() {
           The internal reference for compressors, controllers, and dryers.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {cards.map((card) => (
           <Link
             key={card.href}
