@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listEquipment } from "@/lib/equipment/queries";
+import { DeleteEquipmentButton } from "@/components/equipment/DeleteEquipmentButton";
 
 export default async function AdminEquipmentListPage() {
   const items = await listEquipment({ includeArchived: true });
@@ -36,12 +37,19 @@ export default async function AdminEquipmentListPage() {
               </td>
               <td className="py-2">{item.status}</td>
               <td className="py-2 text-right">
-                <Link
-                  href={`/admin/equipment/${item.id}/edit`}
-                  className="underline"
-                >
-                  Edit
-                </Link>
+                <div className="flex items-center justify-end gap-3">
+                  <Link
+                    href={`/admin/equipment/${item.id}/edit`}
+                    className="underline"
+                  >
+                    Edit
+                  </Link>
+                  <DeleteEquipmentButton
+                    equipmentId={item.id}
+                    displayName={item.displayName}
+                    className="text-red-600 hover:underline"
+                  />
+                </div>
               </td>
             </tr>
           ))}

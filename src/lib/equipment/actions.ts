@@ -20,7 +20,7 @@ const equipmentFieldsSchema = z.object({
 function extractSpecsFromFormData(formData: FormData) {
   const specs: Record<string, unknown> = {};
   for (const [key, value] of formData.entries()) {
-    if (key.startsWith("spec_")) {
+    if (key.startsWith("spec_") && value !== "") {
       specs[key.slice("spec_".length)] = value;
     }
   }
@@ -73,5 +73,13 @@ export async function archiveEquipment(id: string) {
 
   revalidatePath("/equipment");
   revalidatePath(`/equipment/${id}`);
+  redirect("/admin/equipment");
+}
+
+export async function deleteEquipment(id: string) {
+  await db.delete(equipment).where(eq(equipment.id, id));
+
+  revalidatePath("/equipment");
+  revalidatePath("/admin/equipment");
   redirect("/admin/equipment");
 }
