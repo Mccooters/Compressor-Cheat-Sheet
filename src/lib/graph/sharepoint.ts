@@ -66,3 +66,18 @@ export async function getDriveItemMetadata(driveId: string, itemId: string) {
     lastModifiedDateTime: item.lastModifiedDateTime,
   };
 }
+
+// "@microsoft.graph.downloadUrl" is a short-lived (~1hr), pre-authenticated
+// direct-content URL — usable straight in an <img src>, unlike webUrl (which
+// opens SharePoint's viewer page, not the raw file). Always fetch fresh at
+// render time rather than caching it in the database.
+export async function getDriveItemDownloadUrl(
+  driveId: string,
+  itemId: string
+): Promise<string | null> {
+  const client = await getGraphClient();
+  const item = (await client.api(`/drives/${driveId}/items/${itemId}`).get()) as {
+    "@microsoft.graph.downloadUrl"?: string;
+  };
+  return item["@microsoft.graph.downloadUrl"] ?? null;
+}

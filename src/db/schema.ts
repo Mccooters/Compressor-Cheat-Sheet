@@ -33,6 +33,7 @@ export const documentTypeEnum = pgEnum("document_type", [
   "datasheet",
   "wiring_diagram",
   "parts_list",
+  "photo",
   "other",
 ]);
 
@@ -132,6 +133,12 @@ export const controllerPassword = pgTable("controller_password", {
 export const documentLink = pgTable("document_link", {
   id: uuid("id").defaultRandom().primaryKey(),
   equipmentId: uuid("equipment_id").references(() => equipment.id, {
+    onDelete: "cascade",
+  }),
+  // A document_link belongs to exactly one of equipment or controller —
+  // enforced at the application layer (mirrors how equipmentId itself was
+  // already optional rather than a DB-level CHECK constraint).
+  controllerId: uuid("controller_id").references(() => controller.id, {
     onDelete: "cascade",
   }),
   title: text("title").notNull(),
@@ -240,6 +247,7 @@ export const equipmentRelations = relations(equipment, ({ many }) => ({
 
 export const controllerRelations = relations(controller, ({ many }) => ({
   passwords: many(controllerPassword),
+  documents: many(documentLink),
 }));
 
 export const controllerPasswordRelations = relations(
@@ -256,6 +264,10 @@ export const documentLinkRelations = relations(documentLink, ({ one }) => ({
   equipment: one(equipment, {
     fields: [documentLink.equipmentId],
     references: [equipment.id],
+  }),
+  controller: one(controller, {
+    fields: [documentLink.controllerId],
+    references: [controller.id],
   }),
 }));
 

@@ -23,15 +23,15 @@ const docTypes = [
 ] as const;
 
 const manualLinkSchema = z.object({
-  equipmentId: z.string().uuid(),
+  controllerId: z.string().uuid(),
   title: z.string().min(1, "Title is required"),
   docType: z.enum(docTypes),
   webUrl: z.string().url("Must be a valid URL"),
 });
 
-export async function addManualLink(formData: FormData) {
+export async function addControllerManualLink(formData: FormData) {
   const values = manualLinkSchema.parse({
-    equipmentId: formData.get("equipmentId"),
+    controllerId: formData.get("controllerId"),
     title: formData.get("title"),
     docType: formData.get("docType"),
     webUrl: formData.get("webUrl"),
@@ -44,31 +44,36 @@ export async function addManualLink(formData: FormData) {
     addedBy: userEmail ?? undefined,
   });
 
-  revalidatePath(`/equipment/${values.equipmentId}`);
-  revalidatePath(`/admin/equipment/${values.equipmentId}/edit`);
+  revalidatePath(`/controllers/${values.controllerId}`);
+  revalidatePath(`/admin/controllers/${values.controllerId}/edit`);
 }
 
-export async function deleteDocumentLink(id: string, equipmentId: string) {
+export async function deleteControllerDocumentLink(
+  id: string,
+  controllerId: string
+) {
   await db.delete(documentLink).where(eq(documentLink.id, id));
-  revalidatePath(`/equipment/${equipmentId}`);
-  revalidatePath(`/admin/equipment/${equipmentId}/edit`);
+  revalidatePath(`/controllers/${controllerId}`);
+  revalidatePath(`/admin/controllers/${controllerId}/edit`);
 }
 
-export async function searchSharePointAction(query: string): Promise<SharePointHit[]> {
+export async function searchControllerSharePointAction(
+  query: string
+): Promise<SharePointHit[]> {
   if (!isGraphConfigured()) return [];
   if (!query.trim()) return [];
   return searchDriveItems(query);
 }
 
-export async function addGraphDocumentLink(
-  equipmentId: string,
+export async function addControllerGraphDocumentLink(
+  controllerId: string,
   docType: (typeof docTypes)[number],
   hit: SharePointHit
 ) {
   const userEmail = await getCurrentUserEmail();
 
   await db.insert(documentLink).values({
-    equipmentId,
+    controllerId,
     title: hit.name,
     docType,
     source: "graph",
@@ -81,13 +86,13 @@ export async function addGraphDocumentLink(
     addedBy: userEmail ?? undefined,
   });
 
-  revalidatePath(`/equipment/${equipmentId}`);
-  revalidatePath(`/admin/equipment/${equipmentId}/edit`);
+  revalidatePath(`/controllers/${controllerId}`);
+  revalidatePath(`/admin/controllers/${controllerId}/edit`);
 }
 
-export async function refreshDocumentLinkMetadata(
+export async function refreshControllerDocumentLinkMetadata(
   documentLinkId: string,
-  equipmentId: string
+  controllerId: string
 ) {
   if (!isGraphConfigured()) return;
 
@@ -112,6 +117,6 @@ export async function refreshDocumentLinkMetadata(
     })
     .where(eq(documentLink.id, documentLinkId));
 
-  revalidatePath(`/equipment/${equipmentId}`);
-  revalidatePath(`/admin/equipment/${equipmentId}/edit`);
+  revalidatePath(`/controllers/${controllerId}`);
+  revalidatePath(`/admin/controllers/${controllerId}/edit`);
 }

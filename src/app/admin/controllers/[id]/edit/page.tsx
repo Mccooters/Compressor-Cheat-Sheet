@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ControllerForm } from "@/components/controllers/ControllerForm";
 import { ControllerPasswordsPanel } from "@/components/controllers/ControllerPasswordsPanel";
+import { ControllerDocumentLinksPanel } from "@/components/controllers/ControllerDocumentLinksPanel";
 import { DeleteControllerButton } from "@/components/controllers/DeleteControllerButton";
 import { updateController } from "@/lib/controllers/actions";
 import { getControllerById } from "@/lib/controllers/queries";
@@ -36,6 +37,8 @@ export default async function EditControllerPage({
       />
 
       <ControllerPasswordsPanel controllerId={item.id} passwords={item.passwords} />
+
+      <ControllerDocumentLinksPanel controllerId={item.id} documents={item.documents} />
     </div>
   );
 }

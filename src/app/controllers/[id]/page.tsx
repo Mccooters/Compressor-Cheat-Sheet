@@ -2,6 +2,29 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getControllerById } from "@/lib/controllers/queries";
+import { isGraphConfigured } from "@/lib/graph/config";
+import { getDriveItemDownloadUrl } from "@/lib/graph/sharepoint";
+
+async function resolvePhotoSrc(photo: {
+  source: string;
+  sharepointDriveId: string | null;
+  sharepointItemId: string | null;
+  webUrl: string;
+}): Promise<string> {
+  if (photo.source === "graph" && photo.sharepointDriveId && photo.sharepointItemId && isGraphConfigured()) {
+    try {
+      const downloadUrl = await getDriveItemDownloadUrl(
+        photo.sharepointDriveId,
+        photo.sharepointItemId
+      );
+      if (downloadUrl) return downloadUrl;
+    } catch {
+      // Fall through to webUrl — still usable as a "view photo" link even
+      // if it won't render as an inline <img>.
+    }
+  }
+  return photo.webUrl;
+}
 
 export default async function ControllerDetailPage({
   params,
@@ -14,14 +37,28 @@ export default async function ControllerDetailPage({
 
   const session = await auth();
 
+  const photo = item.documents.find((d) => d.docType === "photo");
+  const manuals = item.documents.filter((d) => d.docType !== "photo");
+  const photoSrc = photo ? await resolvePhotoSrc(photo) : null;
+
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-start justify-between">
-        <div>
-          <span className="text-xs font-medium uppercase text-neutral-500">
-            {item.manufacturer}
-          </span>
-          <h1 className="text-2xl font-semibold">{item.displayName}</h1>
+        <div className="flex items-start gap-4">
+          {photoSrc && (
+            // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL, not a static asset next/image can optimize
+            <img
+              src={photoSrc}
+              alt={item.displayName}
+              className="h-20 w-20 rounded-md border border-neutral-200 object-cover dark:border-neutral-800"
+            />
+          )}
+          <div>
+            <span className="text-xs font-medium uppercase text-neutral-500">
+              {item.manufacturer}
+            </span>
+            <h1 className="text-2xl font-semibold">{item.displayName}</h1>
+          </div>
         </div>
         {session?.user && (
           <Link
@@ -67,6 +104,43 @@ export default async function ControllerDetailPage({
               </div>
             ))}
           </dl>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-medium">Manuals</h2>
+        {manuals.length === 0 ? (
+          <p className="text-sm text-neutral-500">
+            No manuals linked yet.{" "}
+            {session?.user && (
+              <Link href={`/admin/controllers/${item.id}/edit`} className="underline">
+                Add one
+              </Link>
+            )}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {manuals.map((doc) => (
+              <li key={doc.id}>
+                <a
+                  href={doc.webUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                >
+                  <span>
+                    <span className="font-medium">{doc.title}</span>
+                    <span className="ml-2 text-xs uppercase text-neutral-500">
+                      {doc.docType}
+                    </span>
+                  </span>
+                  <span className="text-xs text-neutral-400">
+                    {doc.source === "graph" ? "SharePoint" : "Link"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </div>

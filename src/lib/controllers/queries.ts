@@ -31,6 +31,7 @@ export async function getControllerById(id: string) {
     where: eq(controller.id, id),
     with: {
       passwords: { orderBy: [asc(controllerPassword.sortOrder)] },
+      documents: true,
     },
   });
 }
