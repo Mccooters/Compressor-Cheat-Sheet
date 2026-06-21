@@ -52,3 +52,4 @@ directly.
 | `npm run db:migrate` | Apply generated migrations (use this in CI/production instead of `db:push`) |
 | `npm run db:studio` | Open Drizzle Studio to browse/edit data in a GUI |
 | `npm run db:seed` | Insert sample equipment and a sample fault tree |
+| `npm run db:seed-fault-trees` | Insert a full set of fault-finding trees for rotary screw electric air compressors (links to any matching equipment already in the database) |
