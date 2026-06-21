@@ -18,9 +18,11 @@ async function resolvePhotoSrc(photo: {
         photo.sharepointItemId
       );
       if (downloadUrl) return downloadUrl;
-    } catch {
+      console.error("getDriveItemDownloadUrl returned no downloadUrl for", photo.sharepointItemId);
+    } catch (err) {
       // Fall through to webUrl — still usable as a "view photo" link even
       // if it won't render as an inline <img>.
+      console.error("Failed to resolve photo download URL:", err);
     }
   }
   return photo.webUrl;
