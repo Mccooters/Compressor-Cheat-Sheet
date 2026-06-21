@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { equipment } from "@/db/schema";
 import type { EquipmentType } from "@/lib/equipment/specSchemas";
@@ -31,7 +31,7 @@ export async function listEquipment(filters: EquipmentListFilters = {}) {
 
   return db.query.equipment.findMany({
     where: conditions.length ? and(...conditions) : undefined,
-    orderBy: [desc(equipment.updatedAt)],
+    orderBy: [asc(equipment.manufacturer), asc(equipment.modelNumber)],
   });
 }
 

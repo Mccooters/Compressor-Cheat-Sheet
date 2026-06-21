@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listControllers } from "@/lib/controllers/queries";
 import { resolveControllerPhotoSrc } from "@/lib/controllers/photo";
+import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 
 export default async function ControllersListPage({
   searchParams,
@@ -38,7 +39,7 @@ export default async function ControllersListPage({
         </Link>
       </div>
 
-      <form className="flex gap-3" action="/controllers">
+      <LiveFilterForm>
         <input
           type="search"
           name="q"
@@ -46,13 +47,7 @@ export default async function ControllersListPage({
           defaultValue={q}
           className="min-w-64 flex-1 rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
         />
-        <button
-          type="submit"
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700"
-        >
-          Search
-        </button>
-      </form>
+      </LiveFilterForm>
 
       {results.length === 0 ? (
         <p className="text-neutral-500">No controllers found.</p>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { searchAll } from "@/lib/search/queries";
+import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 
 export default async function SearchPage({
   searchParams,
@@ -12,7 +13,7 @@ export default async function SearchPage({
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <h1 className="text-xl font-semibold">Search</h1>
-      <form action="/search" className="flex gap-3">
+      <LiveFilterForm>
         <input
           type="search"
           name="q"
@@ -20,13 +21,7 @@ export default async function SearchPage({
           placeholder="Search equipment and fault trees..."
           className="flex-1 rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
         />
-        <button
-          type="submit"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-        >
-          Search
-        </button>
-      </form>
+      </LiveFilterForm>
 
       {q && (
         <>

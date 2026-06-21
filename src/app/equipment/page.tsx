@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EquipmentCard } from "@/components/equipment/EquipmentCard";
+import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 import { listEquipment } from "@/lib/equipment/queries";
 import { EQUIPMENT_TYPES, type EquipmentType } from "@/lib/equipment/specSchemas";
 
@@ -27,7 +28,7 @@ export default async function EquipmentListPage({
         </Link>
       </div>
 
-      <form className="flex flex-wrap gap-3" action="/equipment">
+      <LiveFilterForm>
         <input
           type="search"
           name="q"
@@ -47,13 +48,7 @@ export default async function EquipmentListPage({
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700"
-        >
-          Filter
-        </button>
-      </form>
+      </LiveFilterForm>
 
       {results.length === 0 ? (
         <p className="text-neutral-500">No equipment found.</p>

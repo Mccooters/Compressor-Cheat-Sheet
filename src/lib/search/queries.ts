@@ -1,4 +1,4 @@
-import { and, eq, ilike, or } from "drizzle-orm";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { equipment, faultTree, faultTreeNode } from "@/db/schema";
 
@@ -13,6 +13,7 @@ export async function searchAll(q: string) {
         ilike(equipment.manufacturer, term),
         ilike(equipment.modelNumber, term)
       ),
+      orderBy: [asc(equipment.manufacturer), asc(equipment.modelNumber)],
       limit: 20,
     }),
     db.query.faultTree.findMany({
@@ -20,6 +21,7 @@ export async function searchAll(q: string) {
         eq(faultTree.status, "published"),
         or(ilike(faultTree.title, term), ilike(faultTree.description, term))
       ),
+      orderBy: [asc(faultTree.title)],
       limit: 20,
     }),
     db.query.faultTreeNode.findMany({
@@ -48,6 +50,8 @@ export async function searchAll(q: string) {
 
   return {
     equipment: equipmentResults,
-    faultTrees: Array.from(faultTreeMatches.values()),
+    faultTrees: Array.from(faultTreeMatches.values()).sort((a, b) =>
+      a.title.localeCompare(b.title)
+    ),
   };
 }
