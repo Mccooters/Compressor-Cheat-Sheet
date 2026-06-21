@@ -2,31 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getControllerById } from "@/lib/controllers/queries";
-import { isGraphConfigured } from "@/lib/graph/config";
-import { getDriveItemDownloadUrl } from "@/lib/graph/sharepoint";
-
-async function resolvePhotoSrc(photo: {
-  source: string;
-  sharepointDriveId: string | null;
-  sharepointItemId: string | null;
-  webUrl: string;
-}): Promise<string> {
-  if (photo.source === "graph" && photo.sharepointDriveId && photo.sharepointItemId && isGraphConfigured()) {
-    try {
-      const downloadUrl = await getDriveItemDownloadUrl(
-        photo.sharepointDriveId,
-        photo.sharepointItemId
-      );
-      if (downloadUrl) return downloadUrl;
-      console.error("getDriveItemDownloadUrl returned no downloadUrl for", photo.sharepointItemId);
-    } catch (err) {
-      // Fall through to webUrl — still usable as a "view photo" link even
-      // if it won't render as an inline <img>.
-      console.error("Failed to resolve photo download URL:", err);
-    }
-  }
-  return photo.webUrl;
-}
+import { resolveControllerPhotoSrc } from "@/lib/controllers/photo";
 
 export default async function ControllerDetailPage({
   params,
@@ -41,7 +17,7 @@ export default async function ControllerDetailPage({
 
   const photo = item.documents.find((d) => d.docType === "photo");
   const manuals = item.documents.filter((d) => d.docType !== "photo");
-  const photoSrc = photo ? await resolvePhotoSrc(photo) : null;
+  const photoSrc = photo ? await resolveControllerPhotoSrc(photo) : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -52,7 +28,7 @@ export default async function ControllerDetailPage({
             <img
               src={photoSrc}
               alt={item.displayName}
-              className="h-20 w-20 rounded-md border border-neutral-200 object-cover dark:border-neutral-800"
+              className="max-h-32 w-32 shrink-0 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
             />
           )}
           <div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listControllers } from "@/lib/controllers/queries";
+import { resolveControllerPhotoSrc } from "@/lib/controllers/photo";
 
 export default async function ControllersListPage({
   searchParams,
@@ -8,6 +9,15 @@ export default async function ControllersListPage({
 }) {
   const { q } = await searchParams;
   const results = await listControllers({ q });
+
+  const photoSrcs = new Map(
+    await Promise.all(
+      results.map(async (item) => {
+        const photo = item.documents[0];
+        return [item.id, photo ? await resolveControllerPhotoSrc(photo) : null] as const;
+      })
+    )
+  );
 
   const byManufacturer = new Map<string, typeof results>();
   for (const item of results) {
@@ -54,16 +64,29 @@ export default async function ControllersListPage({
                 {manufacturer}
               </h2>
               <ul className="grid gap-2 sm:grid-cols-2">
-                {items.map((item) => (
-                  <li key={item.id}>
-                    <Link
-                      href={`/controllers/${item.id}`}
-                      className="block rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
-                    >
-                      {item.modelName}
-                    </Link>
-                  </li>
-                ))}
+                {items.map((item) => {
+                  const photoSrc = photoSrcs.get(item.id);
+                  return (
+                    <li key={item.id}>
+                      <Link
+                        href={`/controllers/${item.id}`}
+                        className="flex items-center gap-3 rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                      >
+                        {photoSrc ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL
+                          <img
+                            src={photoSrc}
+                            alt=""
+                            className="h-10 w-10 shrink-0 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 shrink-0 rounded-md border border-dashed border-neutral-200 dark:border-neutral-800" />
+                        )}
+                        {item.modelName}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ))}

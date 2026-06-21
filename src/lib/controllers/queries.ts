@@ -1,6 +1,6 @@
 import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
-import { controller, controllerPassword } from "@/db/schema";
+import { controller, controllerPassword, documentLink } from "@/db/schema";
 
 export type ControllerListFilters = {
   q?: string;
@@ -23,6 +23,9 @@ export async function listControllers(filters: ControllerListFilters = {}) {
   return db.query.controller.findMany({
     where: conditions.length ? and(...conditions) : undefined,
     orderBy: [asc(controller.manufacturer), asc(controller.modelName)],
+    with: {
+      documents: { where: eq(documentLink.docType, "photo"), limit: 1 },
+    },
   });
 }
 

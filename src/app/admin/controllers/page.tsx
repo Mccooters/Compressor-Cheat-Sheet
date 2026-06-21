@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listControllers } from "@/lib/controllers/queries";
+import { resolveControllerPhotoSrc } from "@/lib/controllers/photo";
 import { DeleteControllerButton } from "@/components/controllers/DeleteControllerButton";
 import { syncControllersFromSharePointAction } from "@/lib/controllers/actions";
 
@@ -15,6 +16,14 @@ export default async function AdminControllersListPage({
 }) {
   const items = await listControllers();
   const sp = await searchParams;
+  const photoSrcs = new Map(
+    await Promise.all(
+      items.map(async (item) => {
+        const photo = item.documents[0];
+        return [item.id, photo ? await resolveControllerPhotoSrc(photo) : null] as const;
+      })
+    )
+  );
 
   return (
     <div className="space-y-6">
@@ -48,14 +57,29 @@ export default async function AdminControllersListPage({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
+            <th className="py-2" />
             <th className="py-2">Manufacturer</th>
             <th className="py-2">Model</th>
             <th className="py-2" />
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
+          {items.map((item) => {
+            const photoSrc = photoSrcs.get(item.id);
+            return (
             <tr key={item.id} className="border-b border-neutral-100 dark:border-neutral-900">
+              <td className="py-2">
+                {photoSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL
+                  <img
+                    src={photoSrc}
+                    alt=""
+                    className="h-8 w-8 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-md border border-dashed border-neutral-200 dark:border-neutral-800" />
+                )}
+              </td>
               <td className="py-2">{item.manufacturer}</td>
               <td className="py-2">{item.modelName}</td>
               <td className="py-2 text-right">
@@ -74,7 +98,8 @@ export default async function AdminControllersListPage({
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
