@@ -23,6 +23,12 @@ const calculators = [
     title: "Solenoid resistance",
     description: "Coil resistance and current from rated voltage and wattage.",
   },
+  {
+    href: "/calculators/pressure-equipment-hazard-level",
+    title: "Pressure equipment hazard level (AS 4343)",
+    description:
+      "Numerical method from AS 4343:2014 for hazard level A–E of pressure vessels and boilers.",
+  },
 ];
 
 export default function CalculatorsIndexPage() {
