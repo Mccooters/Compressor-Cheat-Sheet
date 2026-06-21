@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listControllers } from "@/lib/controllers/queries";
-import { resolveControllerPhotoSrc } from "@/lib/controllers/photo";
+import { resolvePhotoSrc } from "@/lib/documents/photo";
 import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 
 export default async function ControllersListPage({
@@ -15,7 +15,7 @@ export default async function ControllersListPage({
     await Promise.all(
       results.map(async (item) => {
         const photo = item.documents[0];
-        return [item.id, photo ? await resolveControllerPhotoSrc(photo) : null] as const;
+        return [item.id, photo ? await resolvePhotoSrc(photo) : null] as const;
       })
     )
   );

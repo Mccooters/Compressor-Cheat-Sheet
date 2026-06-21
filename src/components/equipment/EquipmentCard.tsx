@@ -10,6 +10,7 @@ const typeColors: Record<string, string> = {
 
 export function EquipmentCard({
   equipment,
+  photoSrc,
 }: {
   equipment: {
     id: string;
@@ -18,21 +19,34 @@ export function EquipmentCard({
     manufacturer: string;
     modelNumber: string;
   };
+  photoSrc?: string | null;
 }) {
   return (
     <Link
       href={`/equipment/${equipment.id}`}
-      className="block rounded-lg border border-neutral-200 p-4 transition hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+      className="flex items-start gap-3 rounded-lg border border-neutral-200 p-4 transition hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
     >
-      <span
-        className={`inline-block rounded px-2 py-0.5 text-xs font-medium capitalize ${typeColors[equipment.type] ?? ""}`}
-      >
-        {equipment.type}
-      </span>
-      <h3 className="mt-2 font-medium">{equipment.displayName}</h3>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">
-        {equipment.manufacturer} · {equipment.modelNumber}
-      </p>
+      {photoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL
+        <img
+          src={photoSrc}
+          alt=""
+          className="h-12 w-12 shrink-0 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+        />
+      ) : (
+        <div className="h-12 w-12 shrink-0 rounded-md border border-dashed border-neutral-200 dark:border-neutral-800" />
+      )}
+      <div>
+        <span
+          className={`inline-block rounded px-2 py-0.5 text-xs font-medium capitalize ${typeColors[equipment.type] ?? ""}`}
+        >
+          {equipment.type}
+        </span>
+        <h3 className="mt-2 font-medium">{equipment.displayName}</h3>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          {equipment.manufacturer} · {equipment.modelNumber}
+        </p>
+      </div>
     </Link>
   );
 }

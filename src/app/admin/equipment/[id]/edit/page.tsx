@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { EquipmentForm } from "@/components/equipment/EquipmentForm";
 import { DocumentLinksPanel } from "@/components/documents/DocumentLinksPanel";
+import { EquipmentControllersPanel } from "@/components/equipment/EquipmentControllersPanel";
 import { DeleteEquipmentButton } from "@/components/equipment/DeleteEquipmentButton";
 import { archiveEquipment, updateEquipment } from "@/lib/equipment/actions";
 import { getEquipmentById } from "@/lib/equipment/queries";
@@ -46,6 +47,11 @@ export default async function EditEquipmentPage({
           description: item.description,
           specs: item.specs as Record<string, unknown>,
         }}
+      />
+
+      <EquipmentControllersPanel
+        equipmentId={item.id}
+        linkedControllers={item.controllerLinks.map((link) => link.controller)}
       />
 
       <DocumentLinksPanel equipmentId={item.id} documents={item.documents} />

@@ -19,7 +19,7 @@ export function DocumentLinksPanel({
 }) {
   return (
     <section className="space-y-4 rounded-md border border-neutral-200 p-4 dark:border-neutral-800">
-      <h2 className="font-medium">Manuals &amp; datasheets</h2>
+      <h2 className="font-medium">Photo, manuals &amp; datasheets</h2>
 
       {documents.length > 0 && (
         <ul className="space-y-2">
@@ -65,6 +65,7 @@ export function DocumentLinksPanel({
             <option value="datasheet">Datasheet</option>
             <option value="wiring_diagram">Wiring diagram</option>
             <option value="parts_list">Parts list</option>
+            <option value="photo">Photo</option>
             <option value="other">Other</option>
           </select>
         </div>

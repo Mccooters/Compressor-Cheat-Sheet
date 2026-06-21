@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { specFieldsByType, type EquipmentType } from "@/lib/equipment/specSchemas";
 import { getEquipmentById } from "@/lib/equipment/queries";
 import { getFaultTreesForEquipment } from "@/lib/faultTrees/queries";
+import { resolvePhotoSrc } from "@/lib/documents/photo";
 
 export default async function EquipmentDetailPage({
   params,
@@ -22,17 +23,31 @@ export default async function EquipmentDetailPage({
   const fields = specFieldsByType[item.type as EquipmentType];
   const specs = (item.specs as Record<string, unknown>) ?? {};
 
+  const photo = item.documents.find((d) => d.docType === "photo");
+  const manuals = item.documents.filter((d) => d.docType !== "photo");
+  const photoSrc = photo ? await resolvePhotoSrc(photo) : null;
+
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="flex items-start justify-between">
-        <div>
-          <span className="text-xs font-medium uppercase text-neutral-500">
-            {item.type}
-          </span>
-          <h1 className="text-2xl font-semibold">{item.displayName}</h1>
-          <p className="text-neutral-600 dark:text-neutral-400">
-            {item.manufacturer} · {item.modelNumber}
-          </p>
+        <div className="flex items-start gap-4">
+          {photoSrc && (
+            // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL, not a static asset next/image can optimize
+            <img
+              src={photoSrc}
+              alt={item.displayName}
+              className="max-h-32 w-32 shrink-0 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+            />
+          )}
+          <div>
+            <span className="text-xs font-medium uppercase text-neutral-500">
+              {item.type}
+            </span>
+            <h1 className="text-2xl font-semibold">{item.displayName}</h1>
+            <p className="text-neutral-600 dark:text-neutral-400">
+              {item.manufacturer} · {item.modelNumber}
+            </p>
+          </div>
         </div>
         {session?.user && (
           <Link
@@ -69,8 +84,35 @@ export default async function EquipmentDetailPage({
       </section>
 
       <section>
+        <h2 className="mb-3 text-lg font-medium">Controllers</h2>
+        {item.controllerLinks.length === 0 ? (
+          <p className="text-sm text-neutral-500">
+            No controllers linked yet.{" "}
+            {session?.user && (
+              <Link href={`/admin/equipment/${item.id}/edit`} className="underline">
+                Add one
+              </Link>
+            )}
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {item.controllerLinks.map((link) => (
+              <li key={link.controller.id}>
+                <Link
+                  href={`/controllers/${link.controller.id}`}
+                  className="block rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                >
+                  <span className="font-medium">{link.controller.displayName}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
         <h2 className="mb-3 text-lg font-medium">Manuals &amp; datasheets</h2>
-        {item.documents.length === 0 ? (
+        {manuals.length === 0 ? (
           <p className="text-sm text-neutral-500">
             No manuals linked yet.{" "}
             {session?.user && (
@@ -81,7 +123,7 @@ export default async function EquipmentDetailPage({
           </p>
         ) : (
           <ul className="space-y-2">
-            {item.documents.map((doc) => (
+            {manuals.map((doc) => (
               <li key={doc.id}>
                 <a
                   href={doc.webUrl}

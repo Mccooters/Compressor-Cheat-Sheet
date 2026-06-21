@@ -130,6 +130,21 @@ export const controllerPassword = pgTable("controller_password", {
     .defaultNow(),
 });
 
+export const equipmentController = pgTable(
+  "equipment_controller",
+  {
+    equipmentId: uuid("equipment_id")
+      .notNull()
+      .references(() => equipment.id, { onDelete: "cascade" }),
+    controllerId: uuid("controller_id")
+      .notNull()
+      .references(() => controller.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.equipmentId, table.controllerId] }),
+  ]
+);
+
 export const documentLink = pgTable("document_link", {
   id: uuid("id").defaultRandom().primaryKey(),
   equipmentId: uuid("equipment_id").references(() => equipment.id, {
@@ -243,12 +258,28 @@ export const faultTreeBranch = pgTable(
 
 export const equipmentRelations = relations(equipment, ({ many }) => ({
   documents: many(documentLink),
+  controllerLinks: many(equipmentController),
 }));
 
 export const controllerRelations = relations(controller, ({ many }) => ({
   passwords: many(controllerPassword),
   documents: many(documentLink),
+  equipmentLinks: many(equipmentController),
 }));
+
+export const equipmentControllerRelations = relations(
+  equipmentController,
+  ({ one }) => ({
+    equipment: one(equipment, {
+      fields: [equipmentController.equipmentId],
+      references: [equipment.id],
+    }),
+    controller: one(controller, {
+      fields: [equipmentController.controllerId],
+      references: [controller.id],
+    }),
+  })
+);
 
 export const controllerPasswordRelations = relations(
   controllerPassword,

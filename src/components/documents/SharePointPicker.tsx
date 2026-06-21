@@ -12,6 +12,7 @@ const docTypeOptions = [
   { value: "datasheet", label: "Datasheet" },
   { value: "wiring_diagram", label: "Wiring diagram" },
   { value: "parts_list", label: "Parts list" },
+  { value: "photo", label: "Photo" },
   { value: "other", label: "Other" },
 ] as const;
 

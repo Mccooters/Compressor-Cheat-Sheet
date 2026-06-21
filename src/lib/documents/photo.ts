@@ -11,10 +11,10 @@ type PhotoDoc = {
 // @microsoft.graph.downloadUrl is short-lived (~1hr) and pre-authenticated —
 // usable directly in <img src>, unlike webUrl (SharePoint's viewer page, not
 // the raw file). Always resolved fresh at render time, never cached, so it
-// can't go stale in the database.
-export async function resolveControllerPhotoSrc(
-  photo: PhotoDoc
-): Promise<string> {
+// can't go stale in the database. Shared between equipment and controller
+// photos — both store the same shape on document_link, just keyed to a
+// different owner column.
+export async function resolvePhotoSrc(photo: PhotoDoc): Promise<string> {
   if (
     photo.source === "graph" &&
     photo.sharepointDriveId &&

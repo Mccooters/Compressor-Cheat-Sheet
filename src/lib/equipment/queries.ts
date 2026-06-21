@@ -1,6 +1,6 @@
 import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
-import { equipment } from "@/db/schema";
+import { documentLink, equipment } from "@/db/schema";
 import type { EquipmentType } from "@/lib/equipment/specSchemas";
 
 export type EquipmentListFilters = {
@@ -32,13 +32,19 @@ export async function listEquipment(filters: EquipmentListFilters = {}) {
   return db.query.equipment.findMany({
     where: conditions.length ? and(...conditions) : undefined,
     orderBy: [asc(equipment.manufacturer), asc(equipment.modelNumber)],
+    with: {
+      documents: { where: eq(documentLink.docType, "photo"), limit: 1 },
+    },
   });
 }
 
 export async function getEquipmentById(id: string) {
   return db.query.equipment.findFirst({
     where: eq(equipment.id, id),
-    with: { documents: true },
+    with: {
+      documents: true,
+      controllerLinks: { with: { controller: true } },
+    },
   });
 }
 

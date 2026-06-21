@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getControllerById } from "@/lib/controllers/queries";
-import { resolveControllerPhotoSrc } from "@/lib/controllers/photo";
+import { resolvePhotoSrc } from "@/lib/documents/photo";
 
 export default async function ControllerDetailPage({
   params,
@@ -17,7 +17,7 @@ export default async function ControllerDetailPage({
 
   const photo = item.documents.find((d) => d.docType === "photo");
   const manuals = item.documents.filter((d) => d.docType !== "photo");
-  const photoSrc = photo ? await resolveControllerPhotoSrc(photo) : null;
+  const photoSrc = photo ? await resolvePhotoSrc(photo) : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">

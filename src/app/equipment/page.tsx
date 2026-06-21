@@ -3,6 +3,7 @@ import { EquipmentCard } from "@/components/equipment/EquipmentCard";
 import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 import { listEquipment } from "@/lib/equipment/queries";
 import { EQUIPMENT_TYPES, type EquipmentType } from "@/lib/equipment/specSchemas";
+import { resolvePhotoSrc } from "@/lib/documents/photo";
 
 export default async function EquipmentListPage({
   searchParams,
@@ -15,6 +16,14 @@ export default async function EquipmentListPage({
     : undefined;
 
   const results = await listEquipment({ q, type: validType });
+  const photoSrcs = new Map(
+    await Promise.all(
+      results.map(async (item) => {
+        const photo = item.documents[0];
+        return [item.id, photo ? await resolvePhotoSrc(photo) : null] as const;
+      })
+    )
+  );
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -55,7 +64,11 @@ export default async function EquipmentListPage({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {results.map((item) => (
-            <EquipmentCard key={item.id} equipment={item} />
+            <EquipmentCard
+              key={item.id}
+              equipment={item}
+              photoSrc={photoSrcs.get(item.id)}
+            />
           ))}
         </div>
       )}
