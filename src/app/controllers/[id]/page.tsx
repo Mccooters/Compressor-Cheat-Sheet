@@ -34,7 +34,12 @@ export default async function ControllerDetailPage({
       </div>
 
       {item.notes && (
-        <p className="text-neutral-700 dark:text-neutral-300">{item.notes}</p>
+        <section>
+          <h2 className="mb-2 text-lg font-medium">Password reset instructions</h2>
+          <p className="whitespace-pre-line text-neutral-700 dark:text-neutral-300">
+            {item.notes}
+          </p>
+        </section>
       )}
 
       <section>

@@ -1,5 +1,10 @@
 import { isGraphConfigured } from "@/lib/graph/config";
-import { getListColumns, getListItems, resolveSharedList } from "@/lib/graph/lists";
+import {
+  getListColumns,
+  getListItems,
+  inspectListItemAttachments,
+  resolveSharedList,
+} from "@/lib/graph/lists";
 
 export default async function SharePointInspectPage() {
   const listUrl = process.env.SHAREPOINT_CONTROLLER_LIST_URL;
@@ -28,6 +33,10 @@ export default async function SharePointInspectPage() {
       getListColumns(siteId, listId),
       getListItems(siteId, listId, 10),
     ]);
+    const itemWithAttachment = items.find((i) => i.fields.Attachments) ?? items[0];
+    const attachmentAttempts = itemWithAttachment
+      ? await inspectListItemAttachments(siteId, listId, itemWithAttachment.id)
+      : { note: "no items to test against" };
     result = {
       siteId,
       listId,
@@ -38,6 +47,10 @@ export default async function SharePointInspectPage() {
         .map((c) => ({ name: c.name, displayName: c.displayName, readOnly: c.readOnly })),
       itemCount: items.length,
       sampleItems: items,
+      attachmentInspection: {
+        testedItemId: itemWithAttachment?.id,
+        attempts: attachmentAttempts,
+      },
     };
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);

@@ -80,6 +80,41 @@ export async function getListItems(
   }));
 }
 
+// Microsoft Graph v1.0 has no documented endpoint for classic SharePoint
+// list-item attachments (the kind this list's "Image"/"Attachments" columns
+// use) — only modern document-library files have a driveItem relationship.
+// This tries the plausible angles against one real item so we know for sure
+// rather than guessing: site-level drives (to see if "Equipment Manuals" /
+// "Controller Downloads" are real libraries reachable the normal way), and
+// whether this specific item happens to expose a driveItem anyway.
+export async function inspectListItemAttachments(
+  siteId: string,
+  listId: string,
+  itemId: string
+) {
+  const client = await getGraphClient();
+  const attempts: Record<string, unknown> = {};
+
+  for (const [key, path] of [
+    ["site_drives", `/sites/${siteId}/drives`],
+    ["item_driveItem", `/sites/${siteId}/lists/${listId}/items/${itemId}/driveItem`],
+    [
+      "item_expand_driveItem",
+      `/sites/${siteId}/lists/${listId}/items/${itemId}?$expand=driveItem`,
+    ],
+  ] as const) {
+    try {
+      attempts[key] = await client.api(path).get();
+    } catch (err) {
+      attempts[key] = {
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
+  }
+
+  return attempts;
+}
+
 // Diagnostic dump of every relationship that might resolve a list share
 // link — kept around for re-inspecting if the list is ever moved/recreated
 // and resolveSharedList() starts failing.
