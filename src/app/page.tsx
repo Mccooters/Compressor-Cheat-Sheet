@@ -24,6 +24,12 @@ const cards = [
     description:
       "Look up service, factory, and user access codes by controller manufacturer and model.",
   },
+  {
+    href: "/calculators",
+    title: "Calculators",
+    description:
+      "Pressure vessel volume, motor electrical, airflow unit conversion, and more field calculators.",
+  },
 ];
 
 export default function Home() {
