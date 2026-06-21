@@ -6,6 +6,11 @@ import { isDevLoginEnabled, isEntraConfigured } from "@/lib/graph/config";
 
 const providers: Provider[] = [];
 
+// Shared with the refresh_token request in the jwt callback below — both
+// need to ask for the same scopes.
+const ENTRA_SCOPE =
+  "openid profile email offline_access User.Read Sites.Read.All Files.Read.All";
+
 if (isEntraConfigured()) {
   providers.push(
     MicrosoftEntraID({
@@ -15,8 +20,7 @@ if (isEntraConfigured()) {
       authorization: {
         params: {
           // Delegated Graph scopes used by src/lib/graph/sharepoint.ts.
-          scope:
-            "openid profile email offline_access User.Read Sites.Read.All Files.Read.All",
+          scope: ENTRA_SCOPE,
         },
       },
     })
@@ -54,14 +58,62 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, account }) {
-      if (account?.access_token) {
+      if (account) {
+        // Initial sign-in. account.expires_at is unix seconds; only the
+        // Entra ID provider sets refresh_token/expires_at (dev-login has
+        // neither, which is fine — it never needs refreshing).
         token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+        token.expiresAt = account.expires_at;
+        delete token.error;
+        return token;
       }
+
+      if (
+        !token.expiresAt ||
+        Date.now() < token.expiresAt * 1000 - 60_000 ||
+        !token.refreshToken
+      ) {
+        return token;
+      }
+
+      // Access token is expired (or about to be) and we have a refresh
+      // token — exchange it rather than letting Graph calls fail with
+      // "Lifetime validation failed" partway through a session.
+      try {
+        const tokenEndpoint = `${(process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER ?? "").replace(/\/v2\.0\/?$/, "")}/oauth2/v2.0/token`;
+        const response = await fetch(tokenEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: process.env.AUTH_MICROSOFT_ENTRA_ID_ID ?? "",
+            client_secret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET ?? "",
+            grant_type: "refresh_token",
+            refresh_token: token.refreshToken,
+            scope: ENTRA_SCOPE,
+          }),
+        });
+        const refreshed = await response.json();
+        if (!response.ok) throw refreshed;
+
+        token.accessToken = refreshed.access_token;
+        token.expiresAt = Math.floor(Date.now() / 1000) + refreshed.expires_in;
+        // Microsoft rotates refresh tokens — keep the new one if issued.
+        token.refreshToken = refreshed.refresh_token ?? token.refreshToken;
+        delete token.error;
+      } catch (err) {
+        console.error("Failed to refresh Microsoft access token:", err);
+        token.error = "RefreshAccessTokenError";
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token.accessToken) {
         session.accessToken = token.accessToken;
+      }
+      if (token.error) {
+        session.error = token.error;
       }
       return session;
     },

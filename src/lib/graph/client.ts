@@ -3,6 +3,11 @@ import { auth } from "@/auth";
 
 export async function getGraphClient(): Promise<Client> {
   const session = await auth();
+  if (session?.error === "RefreshAccessTokenError") {
+    throw new Error(
+      "Microsoft session expired and couldn't be refreshed — sign out and sign in with Microsoft again."
+    );
+  }
   if (!session?.accessToken) {
     throw new Error(
       "Not signed in with Microsoft — SharePoint access requires an active Microsoft session."
