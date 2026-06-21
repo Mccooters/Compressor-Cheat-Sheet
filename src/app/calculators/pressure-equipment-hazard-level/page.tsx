@@ -7,6 +7,10 @@ import {
   type ContentState,
   type Harmfulness,
 } from "@/lib/calculators/hazardLevel";
+import {
+  getInspectionRequirement,
+  type EquipmentCategory,
+} from "@/lib/calculators/inspectionPeriods";
 
 const STATE_OPTIONS: { value: ContentState; label: string }[] = [
   { value: "gas", label: "Gas" },
@@ -59,6 +63,32 @@ const CONDITIONS_C = [
   "Maximum membrane stress (corroded) ≤ 50 MPa, 20% of specified minimum yield stress at design temperature, or 50% of permissible design strength (f) — whichever is less",
 ];
 
+const EQUIPMENT_CATEGORY_OPTIONS: { value: EquipmentCategory; label: string }[] = [
+  {
+    value: "compressed-air-vessel",
+    label: "Compressed air containing vessel (e.g. air receiver)",
+  },
+  {
+    value: "auxiliary-vessel-other",
+    label: "Auxiliary vessel — e.g. intercooler, knock-out vessel, filter",
+  },
+  {
+    value: "auxiliary-vessel-accumulator",
+    label: "Accumulator — non-corrosive, non-toxic, non-flammable contents",
+  },
+  { value: "process-vessel", label: "Process vessel" },
+  { value: "steam-pressure-vessel", label: "Steam pressure vessel" },
+  {
+    value: "boiler-other",
+    label: "Boiler — all other types (incl. unattended/limited attendance)",
+  },
+  { value: "boiler-electric", label: "Boiler — electric" },
+  {
+    value: "boiler-coil-forced-circulation",
+    label: "Boiler — coil-type forced circulation",
+  },
+];
+
 const HAZARD_LEVEL_DESCRIPTIONS: Record<string, string> = {
   A: "High hazard — large vessels (e.g. large ethane/butane/propane/ammonia/chlorine vessels, large power boilers) and equipment above major hazard facility threshold quantities.",
   B: "Medium hazard — applies to most shop-fabricated boilers and pressure vessels.",
@@ -93,6 +123,9 @@ export default function PressureEquipmentHazardLevelCalculator() {
   const [harmfulness, setHarmfulness] = useState<Harmfulness>("non-harmful");
   const [conditionsA, setConditionsA] = useState(CONDITIONS_A.map(() => false));
   const [conditionsC, setConditionsC] = useState(CONDITIONS_C.map(() => false));
+  const [equipmentCategory, setEquipmentCategory] = useState<EquipmentCategory>(
+    "compressed-air-vessel",
+  );
 
   const result = useMemo(() => {
     const pKPa = parseOptionalNumber(pressureKPa);
@@ -121,6 +154,18 @@ export default function PressureEquipmentHazardLevelCalculator() {
   const isFiredEquipment = conditionsA[0];
   const pMPaForFsB = parseOptionalNumber(pressureKPa);
   const showFsBNote = pMPaForFsB !== null && pMPaForFsB / 1000 > 50;
+
+  const pvMPaL = useMemo(() => {
+    const pKPa = parseOptionalNumber(pressureKPa);
+    const v = parseOptionalNumber(volume);
+    if (pKPa === null || v === null || pKPa <= 0 || v <= 0) return null;
+    return (pKPa / 1000) * v;
+  }, [pressureKPa, volume]);
+
+  const inspection = useMemo(() => {
+    if (pvMPaL === null) return null;
+    return getInspectionRequirement(equipmentCategory, pvMPaL);
+  }, [equipmentCategory, pvMPaL]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -305,15 +350,105 @@ export default function PressureEquipmentHazardLevelCalculator() {
         </section>
       )}
 
+      {inspection && (
+        <section className="space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+          <div>
+            <h2 className="font-medium">
+              Inspection requirements (AS/NZS 3788:2001 Table 4.1)
+            </h2>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              In-service inspection periods are scheduled by equipment type
+              and PV value in AS/NZS 3788 — not directly by the AS 4343
+              hazard level above. Pick the category that matches this item.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            {EQUIPMENT_CATEGORY_OPTIONS.map((opt) => (
+              <label key={opt.value} className="flex items-start gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="equipmentCategory"
+                  className="mt-1"
+                  checked={equipmentCategory === opt.value}
+                  onChange={() => setEquipmentCategory(opt.value)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            {`PV = ${pvMPaL?.toFixed(1)} MPa·L (design pressure × volume, uncorrected — Table 4.1's own PV definition, not the AS 4343 H value above)`}
+          </p>
+
+          {inspection.lowRiskNote ? (
+            <p className="text-sm text-amber-600">
+              Low risk under normal operation — this equipment would not
+              normally need to be inspected during its lifetime by the
+              inspector (Table 4.1 Note 14). The owner must still keep it in a
+              fit and safe condition through regular in-house surveillance,
+              and any major repair or alteration must comply with Section 6
+              of the Standard.
+              {inspection.commissioningRequired
+                ? " A commissioning inspection is still required."
+                : ""}
+            </p>
+          ) : (
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Result
+                label="Commissioning inspection"
+                value={inspection.commissioningRequired ? "Required" : "Not required"}
+              />
+              <Result
+                label="First-year inspection"
+                value={inspection.firstYearlyRequired ? "Required" : "Not required"}
+              />
+              <Result
+                label="External inspection"
+                value={
+                  inspection.externalPeriodYears !== null
+                    ? `Every ${inspection.externalPeriodYears} years`
+                    : "—"
+                }
+              />
+              <Result
+                label="Internal inspection"
+                value={
+                  inspection.internalNominalYears !== null
+                    ? `Nominal ${inspection.internalNominalYears} yr / extended ${inspection.internalExtendedYears} yr`
+                    : "—"
+                }
+              />
+            </dl>
+          )}
+
+          {inspection.extraNote && (
+            <p className="text-sm text-amber-600">{inspection.extraNote}</p>
+          )}
+
+          <p className="text-xs text-neutral-500">
+            Extended internal periods may only be used after at least one
+            nominal-period inspection has demonstrated they&apos;re safe (Clause
+            4.4.4.3(b)), and inspection periods may be shortened for adverse
+            conditions or extended for favourable conditions (Clause
+            4.4.4.1). A maximum 3-month extension can be applied with
+            documented owner justification (Table 4.1 Note 1).
+          </p>
+        </section>
+      )}
+
       <p className="text-xs text-neutral-500">
         Guidance only — not a substitute for a qualified assessment under AS
-        4343:2014. Not covered: pressure piping, multi-chamber/multi-phase
-        volume rules (Clause 2.2.4), the AS 1210 application-curve adjustment
-        for very low pressure vessels (Clause 2.2.10), and fluid
-        classification from Table 3.1 — determine fluid harmfulness from the
-        Standard or an MSDS before relying on this result. Confirm design
-        registration and certification requirements with your State/Territory
-        regulator.
+        4343:2014 and AS/NZS 3788:2001. Not covered: pressure piping,
+        multi-chamber/multi-phase volume rules (Clause 2.2.4), the AS 1210
+        application-curve adjustment for very low pressure vessels (Clause
+        2.2.10), and fluid classification from Table 3.1 — determine fluid
+        harmfulness from the Standard or an MSDS before relying on this
+        result. &apos;Duty of care&apos; applies regardless of these
+        Standards — confirm inspection scheduling with a qualified in-service
+        inspector and design registration/certification requirements with
+        your State/Territory regulator.
       </p>
     </div>
   );
