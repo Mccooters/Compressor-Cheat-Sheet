@@ -677,9 +677,17 @@ async function main() {
     .filter((c) => ((c.specs as Record<string, unknown>) ?? {}).driveType === "vsd")
     .map((c) => c.id);
 
+  const existingTitles = new Set(
+    (await db.query.faultTree.findMany()).map((t) => t.title)
+  );
+
   console.log("Creating fault trees...");
 
   for (const spec of trees) {
+    if (existingTitles.has(spec.title)) {
+      console.log(`  - ${spec.title} (already exists, skipping)`);
+      continue;
+    }
     const equipmentIds = spec === vsdFault ? (vsdIds.length ? vsdIds : rotaryScrewIds) : rotaryScrewIds;
     await createFaultTree(spec, equipmentIds);
   }
