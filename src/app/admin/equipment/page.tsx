@@ -1,10 +1,33 @@
 import Link from "next/link";
-import { listEquipment } from "@/lib/equipment/queries";
+import {
+  listEquipment,
+  type EquipmentSortField,
+} from "@/lib/equipment/queries";
 import { DeleteEquipmentButton } from "@/components/equipment/DeleteEquipmentButton";
+import { SortableTh } from "@/components/admin/SortableTh";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
 
-export default async function AdminEquipmentListPage() {
-  const items = await listEquipment({ includeArchived: true });
+const SORT_FIELDS: EquipmentSortField[] = [
+  "displayName",
+  "type",
+  "manufacturer",
+  "status",
+];
+
+export default async function AdminEquipmentListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string; dir?: string }>;
+}) {
+  const { sort, dir } = await searchParams;
+  const sortField = SORT_FIELDS.includes(sort as EquipmentSortField)
+    ? (sort as EquipmentSortField)
+    : undefined;
+  const items = await listEquipment({
+    includeArchived: true,
+    sort: sortField,
+    dir: dir === "desc" ? "desc" : "asc",
+  });
   const photoSrcs = new Map(
     await Promise.all(
       items.map(async (item) => {
@@ -30,10 +53,38 @@ export default async function AdminEquipmentListPage() {
         <thead>
           <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
             <th className="py-2" />
-            <th className="py-2">Name</th>
-            <th className="py-2">Type</th>
-            <th className="py-2">Manufacturer / Model</th>
-            <th className="py-2">Status</th>
+            <SortableTh
+              basePath="/admin/equipment"
+              field="displayName"
+              label="Name"
+              currentSort={sort}
+              currentDir={dir}
+              defaultSort="manufacturer"
+            />
+            <SortableTh
+              basePath="/admin/equipment"
+              field="type"
+              label="Type"
+              currentSort={sort}
+              currentDir={dir}
+              defaultSort="manufacturer"
+            />
+            <SortableTh
+              basePath="/admin/equipment"
+              field="manufacturer"
+              label="Manufacturer / Model"
+              currentSort={sort}
+              currentDir={dir}
+              defaultSort="manufacturer"
+            />
+            <SortableTh
+              basePath="/admin/equipment"
+              field="status"
+              label="Status"
+              currentSort={sort}
+              currentDir={dir}
+              defaultSort="manufacturer"
+            />
             <th className="py-2" />
           </tr>
         </thead>

@@ -1,12 +1,16 @@
-import { and, asc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { documentLink, equipment } from "@/db/schema";
 import type { EquipmentType } from "@/lib/equipment/specSchemas";
+
+export type EquipmentSortField = "displayName" | "type" | "manufacturer" | "status";
 
 export type EquipmentListFilters = {
   type?: EquipmentType;
   q?: string;
   includeArchived?: boolean;
+  sort?: EquipmentSortField;
+  dir?: "asc" | "desc";
 };
 
 export async function listEquipment(filters: EquipmentListFilters = {}) {
@@ -29,9 +33,19 @@ export async function listEquipment(filters: EquipmentListFilters = {}) {
     );
   }
 
+  const dir = filters.dir === "desc" ? desc : asc;
+  const orderBy =
+    filters.sort === "displayName"
+      ? [dir(equipment.displayName)]
+      : filters.sort === "type"
+        ? [dir(equipment.type), asc(equipment.manufacturer), asc(equipment.modelNumber)]
+        : filters.sort === "status"
+          ? [dir(equipment.status), asc(equipment.manufacturer), asc(equipment.modelNumber)]
+          : [dir(equipment.manufacturer), dir(equipment.modelNumber)];
+
   return db.query.equipment.findMany({
     where: conditions.length ? and(...conditions) : undefined,
-    orderBy: [asc(equipment.manufacturer), asc(equipment.modelNumber)],
+    orderBy,
     with: {
       documents: { where: eq(documentLink.docType, "photo"), limit: 1 },
     },

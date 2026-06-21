@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { listControllers } from "@/lib/controllers/queries";
+import {
+  listControllers,
+  type ControllerSortField,
+} from "@/lib/controllers/queries";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
 import { DeleteControllerButton } from "@/components/controllers/DeleteControllerButton";
+import { SortableTh } from "@/components/admin/SortableTh";
 import { syncControllersFromSharePointAction } from "@/lib/controllers/actions";
+
+const SORT_FIELDS: ControllerSortField[] = ["manufacturer", "modelName"];
 
 export default async function AdminControllersListPage({
   searchParams,
@@ -12,10 +18,18 @@ export default async function AdminControllersListPage({
     created?: string;
     updated?: string;
     skipped?: string;
+    sort?: string;
+    dir?: string;
   }>;
 }) {
-  const items = await listControllers();
   const sp = await searchParams;
+  const sortField = SORT_FIELDS.includes(sp.sort as ControllerSortField)
+    ? (sp.sort as ControllerSortField)
+    : undefined;
+  const items = await listControllers({
+    sort: sortField,
+    dir: sp.dir === "desc" ? "desc" : "asc",
+  });
   const photoSrcs = new Map(
     await Promise.all(
       items.map(async (item) => {
@@ -58,8 +72,22 @@ export default async function AdminControllersListPage({
         <thead>
           <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
             <th className="py-2" />
-            <th className="py-2">Manufacturer</th>
-            <th className="py-2">Model</th>
+            <SortableTh
+              basePath="/admin/controllers"
+              field="manufacturer"
+              label="Manufacturer"
+              currentSort={sp.sort}
+              currentDir={sp.dir}
+              defaultSort="manufacturer"
+            />
+            <SortableTh
+              basePath="/admin/controllers"
+              field="modelName"
+              label="Model"
+              currentSort={sp.sort}
+              currentDir={sp.dir}
+              defaultSort="manufacturer"
+            />
             <th className="py-2" />
           </tr>
         </thead>

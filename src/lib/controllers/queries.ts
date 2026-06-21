@@ -1,9 +1,13 @@
-import { and, asc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
 import { controller, controllerPassword, documentLink } from "@/db/schema";
 
+export type ControllerSortField = "manufacturer" | "modelName";
+
 export type ControllerListFilters = {
   q?: string;
+  sort?: ControllerSortField;
+  dir?: "asc" | "desc";
 };
 
 export async function listControllers(filters: ControllerListFilters = {}) {
@@ -20,9 +24,15 @@ export async function listControllers(filters: ControllerListFilters = {}) {
     );
   }
 
+  const dir = filters.dir === "desc" ? desc : asc;
+  const orderBy =
+    filters.sort === "modelName"
+      ? [dir(controller.modelName)]
+      : [dir(controller.manufacturer), asc(controller.modelName)];
+
   return db.query.controller.findMany({
     where: conditions.length ? and(...conditions) : undefined,
-    orderBy: [asc(controller.manufacturer), asc(controller.modelName)],
+    orderBy,
     with: {
       documents: { where: eq(documentLink.docType, "photo"), limit: 1 },
     },
