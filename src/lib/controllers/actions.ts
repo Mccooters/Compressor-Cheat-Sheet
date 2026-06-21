@@ -7,6 +7,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { controller, controllerPassword } from "@/db/schema";
 import { getCurrentUserEmail } from "@/lib/auth/currentUser";
+import { syncControllersFromSharePoint } from "@/lib/controllers/sharepointSync";
 
 const controllerFieldsSchema = z.object({
   manufacturer: z.string().min(1, "Manufacturer is required"),
@@ -85,4 +86,19 @@ export async function deleteControllerPassword(
 
   revalidatePath(`/controllers/${controllerId}`);
   revalidatePath(`/admin/controllers/${controllerId}/edit`);
+}
+
+export async function syncControllersFromSharePointAction() {
+  const result = await syncControllersFromSharePoint();
+
+  revalidatePath("/controllers");
+  revalidatePath("/admin/controllers");
+
+  const params = new URLSearchParams({
+    synced: "1",
+    created: String(result.created),
+    updated: String(result.updated),
+    skipped: String(result.skipped),
+  });
+  redirect(`/admin/controllers?${params.toString()}`);
 }
