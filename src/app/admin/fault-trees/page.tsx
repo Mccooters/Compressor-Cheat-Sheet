@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { listFaultTrees } from "@/lib/faultTrees/queries";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { buttonClass } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export default async function AdminFaultTreesPage() {
   const trees = await listFaultTrees();
@@ -7,40 +11,33 @@ export default async function AdminFaultTreesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Fault trees</h1>
-        <Link
-          href="/admin/fault-trees/new"
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-        >
+        <PageHeader title="Fault trees" />
+        <Link href="/admin/fault-trees/new" className={buttonClass()}>
           New fault tree
         </Link>
       </div>
 
       {trees.length === 0 ? (
-        <p className="text-neutral-500">No fault trees yet.</p>
+        <EmptyState>No fault trees yet.</EmptyState>
       ) : (
         <ul className="space-y-2">
           {trees.map((tree) => (
             <li key={tree.id}>
               <Link
                 href={`/admin/fault-trees/${tree.id}/edit`}
-                className="flex items-center justify-between rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
               >
                 <span>
-                  <span className="font-medium">{tree.title}</span>
-                  <span className="ml-2 text-xs uppercase text-neutral-500">
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {tree.title}
+                  </span>
+                  <span className="ml-2 text-xs uppercase text-slate-500 dark:text-slate-500">
                     {tree.equipmentScope}
                   </span>
                 </span>
-                <span
-                  className={`rounded px-2 py-0.5 text-xs font-medium ${
-                    tree.status === "published"
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
-                      : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                  }`}
-                >
+                <Badge tone={tree.status === "published" ? "green" : "neutral"}>
                   {tree.status}
-                </span>
+                </Badge>
               </Link>
             </li>
           ))}

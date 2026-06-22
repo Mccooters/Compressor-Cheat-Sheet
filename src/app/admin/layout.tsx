@@ -13,12 +13,12 @@ export default function AdminLayout({
 }) {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <nav className="flex gap-4 border-b border-neutral-200 pb-3 text-sm dark:border-neutral-800">
+      <nav className="flex gap-4 border-b border-slate-200 pb-3 text-sm dark:border-slate-800">
         {adminLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+            className="font-medium text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400"
           >
             {link.label}
           </Link>

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { getControllerById } from "@/lib/controllers/queries";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { buttonClass } from "@/components/ui/Button";
 
 export default async function ControllerDetailPage({
   params,
@@ -28,20 +31,22 @@ export default async function ControllerDetailPage({
             <img
               src={photoSrc}
               alt={item.displayName}
-              className="max-h-32 w-32 shrink-0 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+              className="max-h-32 w-32 shrink-0 rounded-md border border-slate-200 object-contain dark:border-slate-700"
             />
           )}
           <div>
-            <span className="text-xs font-medium uppercase text-neutral-500">
+            <span className="font-mono text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
               {item.manufacturer}
             </span>
-            <h1 className="text-2xl font-semibold">{item.displayName}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {item.displayName}
+            </h1>
           </div>
         </div>
         {session?.user && (
           <Link
             href={`/admin/controllers/${item.id}/edit`}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+            className={buttonClass("secondary")}
           >
             Edit
           </Link>
@@ -50,52 +55,56 @@ export default async function ControllerDetailPage({
 
       {item.notes && (
         <section>
-          <h2 className="mb-2 text-lg font-medium">Password reset instructions</h2>
-          <p className="whitespace-pre-line text-neutral-700 dark:text-neutral-300">
+          <h2 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
+            Password reset instructions
+          </h2>
+          <p className="whitespace-pre-line text-slate-700 dark:text-slate-300">
             {item.notes}
           </p>
         </section>
       )}
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Access codes</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Access codes
+        </h2>
         {item.passwords.length === 0 ? (
-          <p className="text-sm text-neutral-500">
+          <EmptyState>
             No codes recorded yet.{" "}
             {session?.user && (
-              <Link href={`/admin/controllers/${item.id}/edit`} className="underline">
+              <Link
+                href={`/admin/controllers/${item.id}/edit`}
+                className="text-amber-600 underline dark:text-amber-400"
+              >
                 Add one
               </Link>
             )}
-          </p>
+          </EmptyState>
         ) : (
           <dl className="space-y-3">
             {item.passwords.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800"
-              >
-                <dt className="text-xs font-medium uppercase text-neutral-500">
-                  {p.label}
-                </dt>
-                <dd className="font-mono">{p.value}</dd>
-              </div>
+              <Stat key={p.id} label={p.label} value={<span className="font-mono">{p.value}</span>} />
             ))}
           </dl>
         )}
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Manuals</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Manuals
+        </h2>
         {manuals.length === 0 ? (
-          <p className="text-sm text-neutral-500">
+          <EmptyState>
             No manuals linked yet.{" "}
             {session?.user && (
-              <Link href={`/admin/controllers/${item.id}/edit`} className="underline">
+              <Link
+                href={`/admin/controllers/${item.id}/edit`}
+                className="text-amber-600 underline dark:text-amber-400"
+              >
                 Add one
               </Link>
             )}
-          </p>
+          </EmptyState>
         ) : (
           <ul className="space-y-2">
             {manuals.map((doc) => (
@@ -104,15 +113,17 @@ export default async function ControllerDetailPage({
                   href={doc.webUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                 >
                   <span>
-                    <span className="font-medium">{doc.title}</span>
-                    <span className="ml-2 text-xs uppercase text-neutral-500">
+                    <span className="font-medium text-slate-900 dark:text-white">
+                      {doc.title}
+                    </span>
+                    <span className="ml-2 text-xs uppercase text-slate-500 dark:text-slate-500">
                       {doc.docType}
                     </span>
                   </span>
-                  <span className="text-xs text-neutral-400">
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
                     {doc.source === "graph" ? "SharePoint" : "Link"}
                   </span>
                 </a>

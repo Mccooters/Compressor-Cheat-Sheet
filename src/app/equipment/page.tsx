@@ -2,8 +2,16 @@ import Link from "next/link";
 import { EquipmentCard } from "@/components/equipment/EquipmentCard";
 import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 import { listEquipment } from "@/lib/equipment/queries";
-import { EQUIPMENT_TYPES, type EquipmentType } from "@/lib/equipment/specSchemas";
+import {
+  EQUIPMENT_TYPES,
+  formatEquipmentTypeLabel,
+  type EquipmentType,
+} from "@/lib/equipment/specSchemas";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { fieldInputClass } from "@/components/ui/Field";
+import { buttonClass } from "@/components/ui/Button";
 
 export default async function EquipmentListPage({
   searchParams,
@@ -28,11 +36,8 @@ export default async function EquipmentListPage({
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Equipment</h1>
-        <Link
-          href="/admin/equipment/new"
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-        >
+        <PageHeader title="Equipment" />
+        <Link href="/admin/equipment/new" className={buttonClass()}>
           Add equipment
         </Link>
       </div>
@@ -43,24 +48,20 @@ export default async function EquipmentListPage({
           name="q"
           placeholder="Search manufacturer, model, name..."
           defaultValue={q}
-          className="min-w-64 flex-1 rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={`min-w-64 flex-1 ${fieldInputClass}`}
         />
-        <select
-          name="type"
-          defaultValue={validType ?? ""}
-          className="rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
-        >
+        <select name="type" defaultValue={validType ?? ""} className={fieldInputClass}>
           <option value="">All types</option>
           {EQUIPMENT_TYPES.map((t) => (
             <option key={t} value={t}>
-              {t}
+              {formatEquipmentTypeLabel(t)}
             </option>
           ))}
         </select>
       </LiveFilterForm>
 
       {results.length === 0 ? (
-        <p className="text-neutral-500">No equipment found.</p>
+        <EmptyState>No equipment found.</EmptyState>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {results.map((item) => (

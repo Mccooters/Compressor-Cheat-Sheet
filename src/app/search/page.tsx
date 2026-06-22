@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { searchAll } from "@/lib/search/queries";
 import { LiveFilterForm } from "@/components/search/LiveFilterForm";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { fieldInputClass } from "@/components/ui/Field";
 
 export default async function SearchPage({
   searchParams,
@@ -12,35 +15,37 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <h1 className="text-xl font-semibold">Search</h1>
+      <PageHeader title="Search" />
       <LiveFilterForm>
         <input
           type="search"
           name="q"
           defaultValue={q}
           placeholder="Search equipment and fault trees..."
-          className="flex-1 rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={`flex-1 ${fieldInputClass}`}
         />
       </LiveFilterForm>
 
       {q && (
         <>
           <section>
-            <h2 className="mb-3 text-lg font-medium">
+            <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
               Equipment ({results.equipment.length})
             </h2>
             {results.equipment.length === 0 ? (
-              <p className="text-sm text-neutral-500">No matches.</p>
+              <EmptyState>No matches.</EmptyState>
             ) : (
               <ul className="space-y-2">
                 {results.equipment.map((item) => (
                   <li key={item.id}>
                     <Link
                       href={`/equipment/${item.id}`}
-                      className="block rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                      className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                     >
-                      <span className="font-medium">{item.displayName}</span>{" "}
-                      <span className="text-sm text-neutral-500">
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        {item.displayName}
+                      </span>{" "}
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
                         {item.manufacturer} · {item.modelNumber}
                       </span>
                     </Link>
@@ -51,22 +56,24 @@ export default async function SearchPage({
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-medium">
+            <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
               Fault trees ({results.faultTrees.length})
             </h2>
             {results.faultTrees.length === 0 ? (
-              <p className="text-sm text-neutral-500">No matches.</p>
+              <EmptyState>No matches.</EmptyState>
             ) : (
               <ul className="space-y-2">
                 {results.faultTrees.map((tree) => (
                   <li key={tree.id}>
                     <Link
                       href={`/wizard/${tree.id}`}
-                      className="block rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                      className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                     >
-                      <span className="font-medium">{tree.title}</span>
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        {tree.title}
+                      </span>
                       {tree.description && (
-                        <span className="text-sm text-neutral-500">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
                           {" "}
                           — {tree.description}
                         </span>

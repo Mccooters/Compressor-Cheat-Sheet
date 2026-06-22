@@ -1,5 +1,9 @@
 import { signIn } from "@/auth";
 import { isDevLoginEnabled, isEntraConfigured } from "@/lib/graph/config";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { fieldInputClass } from "@/components/ui/Field";
 
 export default async function LoginPage({
   searchParams,
@@ -13,7 +17,7 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto mt-16 max-w-sm space-y-6 px-4">
-      <h1 className="text-xl font-semibold">Sign in</h1>
+      <PageHeader title="Sign in" />
 
       {entraEnabled && (
         <form
@@ -22,50 +26,42 @@ export default async function LoginPage({
             await signIn("microsoft-entra-id", { redirectTo });
           }}
         >
-          <button
-            type="submit"
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-          >
+          <Button type="submit" className="w-full">
             Sign in with Microsoft
-          </button>
+          </Button>
         </form>
       )}
 
       {devLoginEnabled && (
-        <form
-          action={async (formData: FormData) => {
-            "use server";
-            const name = formData.get("name")?.toString() ?? "";
-            const email = formData.get("email")?.toString() ?? "";
-            await signIn("dev-login", { name, email, redirectTo });
-          }}
-          className="space-y-3 rounded-md border border-dashed border-neutral-400 p-4"
-        >
-          <p className="text-sm text-neutral-500">
-            Dev login (no SSO) — disabled in production.
-          </p>
-          <input
-            name="name"
-            placeholder="Your name"
-            className="w-full rounded-md border px-3 py-2"
-          />
-          <input
-            name="email"
-            placeholder="you@example.com"
-            required
-            className="w-full rounded-md border px-3 py-2"
-          />
-          <button
-            type="submit"
-            className="w-full rounded-md bg-neutral-800 px-4 py-2 text-white hover:bg-neutral-900"
+        <Card>
+          <form
+            action={async (formData: FormData) => {
+              "use server";
+              const name = formData.get("name")?.toString() ?? "";
+              const email = formData.get("email")?.toString() ?? "";
+              await signIn("dev-login", { name, email, redirectTo });
+            }}
+            className="space-y-3"
           >
-            Continue
-          </button>
-        </form>
+            <p className="text-sm text-slate-500 dark:text-slate-500">
+              Dev login (no SSO) — disabled in production.
+            </p>
+            <input name="name" placeholder="Your name" className={fieldInputClass} />
+            <input
+              name="email"
+              placeholder="you@example.com"
+              required
+              className={fieldInputClass}
+            />
+            <Button type="submit" variant="secondary" className="w-full">
+              Continue
+            </Button>
+          </form>
+        </Card>
       )}
 
       {!entraEnabled && !devLoginEnabled && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-600 dark:text-red-400">
           No login method is configured. Set AUTH_MICROSOFT_ENTRA_ID_* env
           vars, or set AUTH_DEV_LOGIN_ENABLED=true for local development.
         </p>

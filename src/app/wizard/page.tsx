@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getEquipmentById } from "@/lib/equipment/queries";
 import type { EquipmentType } from "@/lib/equipment/specSchemas";
 import { getFaultTreesForEquipment, listFaultTrees } from "@/lib/faultTrees/queries";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function WizardIndexPage({
   searchParams,
@@ -16,19 +18,22 @@ export default async function WizardIndexPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold">Fault finder</h1>
+      <PageHeader title="Fault finder" />
       {equipment && (
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-slate-500 dark:text-slate-500">
           Showing fault trees for{" "}
-          <span className="font-medium">{equipment.displayName}</span>.{" "}
-          <Link href="/wizard" className="underline">
+          <span className="font-medium text-slate-700 dark:text-slate-300">
+            {equipment.displayName}
+          </span>
+          .{" "}
+          <Link href="/wizard" className="text-amber-600 underline dark:text-amber-400">
             Clear filter
           </Link>
         </p>
       )}
 
       {trees.length === 0 ? (
-        <p className="text-neutral-500">No published fault trees yet.</p>
+        <EmptyState>No published fault trees yet.</EmptyState>
       ) : (
         <ul className="space-y-2">
           {trees.map((tree) => (
@@ -39,11 +44,15 @@ export default async function WizardIndexPage({
                     ? `/wizard/${tree.id}?equipmentId=${equipment.id}`
                     : `/wizard/${tree.id}`
                 }
-                className="block rounded-lg border border-neutral-200 p-4 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
               >
-                <span className="font-medium">{tree.title}</span>
+                <span className="font-medium text-slate-900 dark:text-white">
+                  {tree.title}
+                </span>
                 {tree.description && (
-                  <p className="text-sm text-neutral-500">{tree.description}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {tree.description}
+                  </p>
                 )}
               </Link>
             </li>

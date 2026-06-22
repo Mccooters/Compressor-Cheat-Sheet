@@ -4,6 +4,10 @@ import {
   linkEquipmentController,
   unlinkEquipmentController,
 } from "@/lib/equipment/controllerLinks";
+import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { fieldInputClass } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 
 type LinkedController = { id: string; displayName: string };
 
@@ -21,29 +25,32 @@ export async function EquipmentControllersPanel({
   );
 
   return (
-    <section className="space-y-4 rounded-md border border-neutral-200 p-4 dark:border-neutral-800">
-      <h2 className="font-medium">Controllers</h2>
+    <Card as="section" className="space-y-4">
+      <h2 className="font-semibold text-slate-900 dark:text-white">Controllers</h2>
 
       {linkedControllers.length > 0 ? (
         <ul className="space-y-2">
           {linkedControllers.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between rounded-md border border-neutral-200 p-2 text-sm dark:border-neutral-800"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
             >
-              <Link href={`/controllers/${c.id}`} className="underline">
+              <Link
+                href={`/controllers/${c.id}`}
+                className="text-amber-600 underline dark:text-amber-400"
+              >
                 {c.displayName}
               </Link>
               <form action={unlinkEquipmentController.bind(null, equipmentId, c.id)}>
-                <button type="submit" className="text-red-600 hover:underline">
+                <Button type="submit" variant="danger">
                   Remove
-                </button>
+                </Button>
               </form>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-neutral-500">No controllers linked yet.</p>
+        <EmptyState>No controllers linked yet.</EmptyState>
       )}
 
       {availableControllers.length > 0 && (
@@ -53,7 +60,7 @@ export async function EquipmentControllersPanel({
             name="controllerId"
             required
             defaultValue=""
-            className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className={`flex-1 ${fieldInputClass}`}
           >
             <option value="" disabled>
               Select a controller...
@@ -64,14 +71,11 @@ export async function EquipmentControllersPanel({
               </option>
             ))}
           </select>
-          <button
-            type="submit"
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
-          >
+          <Button type="submit" variant="secondary">
             Add
-          </button>
+          </Button>
         </form>
       )}
-    </section>
+    </Card>
   );
 }

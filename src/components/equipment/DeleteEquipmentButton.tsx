@@ -24,7 +24,10 @@ export function DeleteEquipmentButton({
         }
       }}
     >
-      <button type="submit" className={className ?? "text-red-600 hover:underline"}>
+      <button
+        type="submit"
+        className={className ?? "text-red-600 hover:underline dark:text-red-400"}
+      >
         Delete
       </button>
     </form>

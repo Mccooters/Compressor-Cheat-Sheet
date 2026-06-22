@@ -6,6 +6,7 @@ import { DeleteEquipmentButton } from "@/components/equipment/DeleteEquipmentBut
 import { archiveEquipment, updateEquipment } from "@/lib/equipment/actions";
 import { getEquipmentById } from "@/lib/equipment/queries";
 import type { EquipmentType } from "@/lib/equipment/specSchemas";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default async function EditEquipmentPage({
   params,
@@ -19,12 +20,12 @@ export default async function EditEquipmentPage({
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Edit {item.displayName}</h1>
+        <PageHeader title={`Edit ${item.displayName}`} />
         <div className="flex items-center gap-2">
           <form action={archiveEquipment.bind(null, item.id)}>
             <button
               type="submit"
-              className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950"
+              className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
             >
               Archive
             </button>

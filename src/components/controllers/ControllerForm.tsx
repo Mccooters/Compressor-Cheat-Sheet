@@ -1,3 +1,6 @@
+import { Field, fieldInputClass } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
+
 export type ControllerFormValues = {
   manufacturer: string;
   modelName: string;
@@ -21,7 +24,7 @@ export function ControllerForm({
           name="manufacturer"
           required
           defaultValue={initialValues?.manufacturer}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         />
       </Field>
 
@@ -30,7 +33,7 @@ export function ControllerForm({
           name="modelName"
           required
           defaultValue={initialValues?.modelName}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         />
       </Field>
 
@@ -39,7 +42,7 @@ export function ControllerForm({
           name="displayName"
           required
           defaultValue={initialValues?.displayName}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         />
       </Field>
 
@@ -48,25 +51,11 @@ export function ControllerForm({
           name="notes"
           rows={3}
           defaultValue={initialValues?.notes ?? ""}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         />
       </Field>
 
-      <button
-        type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
-        {submitLabel}
-      </button>
+      <Button type="submit">{submitLabel}</Button>
     </form>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium">{label}</label>
-      {children}
-    </div>
   );
 }

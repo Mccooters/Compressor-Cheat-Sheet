@@ -7,6 +7,8 @@ import { resolvePhotoSrc } from "@/lib/documents/photo";
 import { DeleteControllerButton } from "@/components/controllers/DeleteControllerButton";
 import { SortableTh } from "@/components/admin/SortableTh";
 import { syncControllersFromSharePointAction } from "@/lib/controllers/actions";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { buttonClass, Button } from "@/components/ui/Button";
 
 const SORT_FIELDS: ControllerSortField[] = ["manufacturer", "modelName"];
 
@@ -42,20 +44,14 @@ export default async function AdminControllersListPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Manage controllers</h1>
+        <PageHeader title="Manage controllers" />
         <div className="flex items-center gap-3">
           <form action={syncControllersFromSharePointAction}>
-            <button
-              type="submit"
-              className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
-            >
+            <Button type="submit" variant="secondary">
               Sync from SharePoint
-            </button>
+            </Button>
           </form>
-          <Link
-            href="/admin/controllers/new"
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-          >
+          <Link href="/admin/controllers/new" className={buttonClass()}>
             Add controller
           </Link>
         </div>
@@ -70,7 +66,7 @@ export default async function AdminControllersListPage({
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
+          <tr className="border-b border-slate-200 text-left text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <th className="py-2" />
             <SortableTh
               basePath="/admin/controllers"
@@ -95,33 +91,33 @@ export default async function AdminControllersListPage({
           {items.map((item) => {
             const photoSrc = photoSrcs.get(item.id);
             return (
-            <tr key={item.id} className="border-b border-neutral-100 dark:border-neutral-900">
+            <tr key={item.id} className="border-b border-slate-100 dark:border-slate-900">
               <td className="py-2">
                 {photoSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL
                   <img
                     src={photoSrc}
                     alt=""
-                    className="h-8 w-8 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+                    className="h-8 w-8 rounded-md border border-slate-200 object-contain dark:border-slate-700"
                   />
                 ) : (
-                  <div className="h-8 w-8 rounded-md border border-dashed border-neutral-200 dark:border-neutral-800" />
+                  <div className="h-8 w-8 rounded-md border border-dashed border-slate-200 dark:border-slate-700" />
                 )}
               </td>
-              <td className="py-2">{item.manufacturer}</td>
-              <td className="py-2">{item.modelName}</td>
+              <td className="py-2 text-slate-900 dark:text-white">{item.manufacturer}</td>
+              <td className="py-2 text-slate-700 dark:text-slate-300">{item.modelName}</td>
               <td className="py-2 text-right">
                 <div className="flex items-center justify-end gap-3">
                   <Link
                     href={`/admin/controllers/${item.id}/edit`}
-                    className="underline"
+                    className="text-amber-600 underline dark:text-amber-400"
                   >
                     Edit
                   </Link>
                   <DeleteControllerButton
                     controllerId={item.id}
                     displayName={item.displayName}
-                    className="text-red-600 hover:underline"
+                    className="text-red-600 hover:underline dark:text-red-400"
                   />
                 </div>
               </td>

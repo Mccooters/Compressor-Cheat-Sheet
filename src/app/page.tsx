@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const cards = [
   {
@@ -14,11 +15,6 @@ const cards = [
       "Walk through a guided question tree to diagnose a problem and find the recommended fix.",
   },
   {
-    href: "/search",
-    title: "Search",
-    description: "Search across equipment and fault trees at once.",
-  },
-  {
     href: "/controllers",
     title: "Controller passwords",
     description:
@@ -30,26 +26,31 @@ const cards = [
     description:
       "Pressure vessel volume, motor electrical, airflow unit conversion, and more field calculators.",
   },
+  {
+    href: "/search",
+    title: "Search",
+    description: "Search across equipment and fault trees at once.",
+  },
 ];
 
 export default function Home() {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold">Compressor Cheat Sheet</h1>
-        <p className="mt-1 text-neutral-600 dark:text-neutral-400">
-          The internal reference for compressors, controllers, and dryers.
-        </p>
-      </div>
+      <PageHeader
+        title="Compressor Cheat Sheet"
+        description="The internal reference for compressors, controllers, and dryers."
+      />
       <div className="grid gap-4 sm:grid-cols-2">
         {cards.map((card) => (
           <Link
             key={card.href}
             href={card.href}
-            className="rounded-lg border border-neutral-200 p-4 transition hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
           >
-            <h2 className="font-medium">{card.title}</h2>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+            <h2 className="font-semibold text-slate-900 dark:text-white">
+              {card.title}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {card.description}
             </p>
           </Link>

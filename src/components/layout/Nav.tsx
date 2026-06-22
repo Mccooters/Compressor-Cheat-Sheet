@@ -1,38 +1,33 @@
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { NavLinks } from "@/components/layout/NavLinks";
 
 const links = [
   { href: "/equipment", label: "Equipment" },
   { href: "/wizard", label: "Fault Finder" },
-  { href: "/search", label: "Search" },
   { href: "/controllers", label: "Controllers" },
   { href: "/calculators", label: "Calculators" },
-  { href: "/admin/equipment", label: "Admin" },
+  { href: "/admin", label: "Admin" },
+  { href: "/search", label: "Search" },
 ];
 
 export async function Nav() {
   const session = await auth();
 
   return (
-    <nav className="flex items-center justify-between border-b border-neutral-200 px-6 py-3 dark:border-neutral-800">
+    <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-800 dark:bg-slate-950">
       <div className="flex items-center gap-6">
-        <Link href="/" className="font-semibold">
+        <Link href="/" className="font-semibold text-slate-900 dark:text-white">
           Compressor Cheat Sheet
         </Link>
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
-          >
-            {link.label}
-          </Link>
-        ))}
+        <NavLinks links={links} />
       </div>
       <div className="flex items-center gap-3 text-sm">
+        <ThemeToggle />
         {session?.user ? (
           <>
-            <span className="text-neutral-500">
+            <span className="text-slate-500 dark:text-slate-400">
               {session.user.email ?? session.user.name}
             </span>
             <form
@@ -41,13 +36,19 @@ export async function Nav() {
                 await signOut({ redirectTo: "/" });
               }}
             >
-              <button type="submit" className="underline">
+              <button
+                type="submit"
+                className="text-amber-600 underline hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              >
                 Sign out
               </button>
             </form>
           </>
         ) : (
-          <Link href="/login" className="underline">
+          <Link
+            href="/login"
+            className="text-amber-600 underline hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+          >
             Sign in
           </Link>
         )}

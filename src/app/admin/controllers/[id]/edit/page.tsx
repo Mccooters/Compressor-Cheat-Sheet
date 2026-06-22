@@ -5,6 +5,7 @@ import { ControllerDocumentLinksPanel } from "@/components/controllers/Controlle
 import { DeleteControllerButton } from "@/components/controllers/DeleteControllerButton";
 import { updateController } from "@/lib/controllers/actions";
 import { getControllerById } from "@/lib/controllers/queries";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default async function EditControllerPage({
   params,
@@ -18,7 +19,7 @@ export default async function EditControllerPage({
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Edit {item.displayName}</h1>
+        <PageHeader title={`Edit ${item.displayName}`} />
         <DeleteControllerButton
           controllerId={item.id}
           displayName={item.displayName}

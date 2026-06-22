@@ -5,13 +5,14 @@ import {
   inspectListItemAttachments,
   resolveSharedList,
 } from "@/lib/graph/lists";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default async function SharePointInspectPage() {
   const listUrl = process.env.SHAREPOINT_CONTROLLER_LIST_URL;
 
   if (!isGraphConfigured()) {
     return (
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-slate-500 dark:text-slate-500">
         Microsoft Entra ID / Graph isn&apos;t configured — see docs/azure-ad-setup.md.
       </p>
     );
@@ -19,7 +20,7 @@ export default async function SharePointInspectPage() {
 
   if (!listUrl) {
     return (
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-slate-500 dark:text-slate-500">
         SHAREPOINT_CONTROLLER_LIST_URL isn&apos;t set.
       </p>
     );
@@ -58,17 +59,16 @@ export default async function SharePointInspectPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">SharePoint list inspector</h1>
-      <p className="text-sm text-neutral-500">
-        One-off diagnostic page — not linked from anywhere. Shows the resolved
-        site/list ids, columns, and first 10 items for {listUrl}.
-      </p>
+      <PageHeader
+        title="SharePoint list inspector"
+        description={`One-off diagnostic page — not linked from anywhere. Shows the resolved site/list ids, columns, and first 10 items for ${listUrl}.`}
+      />
       {error ? (
         <pre className="overflow-auto rounded-md bg-red-50 p-4 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
           {error}
         </pre>
       ) : (
-        <pre className="overflow-auto rounded-md bg-neutral-100 p-4 text-xs dark:bg-neutral-900">
+        <pre className="overflow-auto rounded-md bg-slate-100 p-4 text-xs dark:bg-slate-900">
           {JSON.stringify(result, null, 2)}
         </pre>
       )}

@@ -2,6 +2,9 @@ import {
   addControllerPassword,
   deleteControllerPassword,
 } from "@/lib/controllers/actions";
+import { Card } from "@/components/ui/Card";
+import { fieldInputClass } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 
 type ControllerPasswordRow = {
   id: string;
@@ -17,26 +20,28 @@ export function ControllerPasswordsPanel({
   passwords: ControllerPasswordRow[];
 }) {
   return (
-    <section className="space-y-4 rounded-md border border-neutral-200 p-4 dark:border-neutral-800">
-      <h2 className="font-medium">Access codes</h2>
+    <Card as="section" className="space-y-4">
+      <h2 className="font-semibold text-slate-900 dark:text-white">Access codes</h2>
 
       {passwords.length > 0 && (
         <ul className="space-y-2">
           {passwords.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-md border border-neutral-200 p-2 text-sm dark:border-neutral-800"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
             >
               <span>
-                <span className="font-medium">{p.label}</span>{" "}
-                <span className="font-mono text-neutral-600 dark:text-neutral-400">
+                <span className="font-medium text-slate-900 dark:text-white">
+                  {p.label}
+                </span>{" "}
+                <span className="font-mono text-slate-600 dark:text-slate-400">
                   {p.value}
                 </span>
               </span>
               <form action={deleteControllerPassword.bind(null, p.id, controllerId)}>
-                <button type="submit" className="text-red-600 hover:underline">
+                <Button type="submit" variant="danger">
                   Remove
-                </button>
+                </Button>
               </form>
             </li>
           ))}
@@ -50,22 +55,19 @@ export function ControllerPasswordsPanel({
             name="label"
             placeholder="Label (e.g. Service, User, Factory)"
             required
-            className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className={`flex-1 ${fieldInputClass}`}
           />
           <input
             name="value"
             placeholder="Code or instructions"
             required
-            className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className={`flex-1 ${fieldInputClass}`}
           />
         </div>
-        <button
-          type="submit"
-          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
-        >
+        <Button type="submit" variant="secondary">
           Add code
-        </button>
+        </Button>
       </form>
-    </section>
+    </Card>
   );
 }

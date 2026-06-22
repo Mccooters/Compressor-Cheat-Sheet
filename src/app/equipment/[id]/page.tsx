@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
-import { specFieldsByType, type EquipmentType } from "@/lib/equipment/specSchemas";
+import {
+  formatEquipmentTypeLabel,
+  specFieldsByType,
+  type EquipmentType,
+} from "@/lib/equipment/specSchemas";
 import { getEquipmentById } from "@/lib/equipment/queries";
 import { getFaultTreesForEquipment } from "@/lib/faultTrees/queries";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { buttonClass } from "@/components/ui/Button";
 
 export default async function EquipmentDetailPage({
   params,
@@ -36,15 +43,17 @@ export default async function EquipmentDetailPage({
             <img
               src={photoSrc}
               alt={item.displayName}
-              className="max-h-32 w-32 shrink-0 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
+              className="max-h-32 w-32 shrink-0 rounded-md border border-slate-200 object-contain dark:border-slate-700"
             />
           )}
           <div>
-            <span className="text-xs font-medium uppercase text-neutral-500">
-              {item.type}
+            <span className="font-mono text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              {formatEquipmentTypeLabel(item.type)}
             </span>
-            <h1 className="text-2xl font-semibold">{item.displayName}</h1>
-            <p className="text-neutral-600 dark:text-neutral-400">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {item.displayName}
+            </h1>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {item.manufacturer} · {item.modelNumber}
             </p>
           </div>
@@ -52,7 +61,7 @@ export default async function EquipmentDetailPage({
         {session?.user && (
           <Link
             href={`/admin/equipment/${item.id}/edit`}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+            className={buttonClass("secondary")}
           >
             Edit
           </Link>
@@ -60,49 +69,56 @@ export default async function EquipmentDetailPage({
       </div>
 
       {item.description && (
-        <p className="text-neutral-700 dark:text-neutral-300">{item.description}</p>
+        <p className="text-slate-700 dark:text-slate-300">{item.description}</p>
       )}
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Specs</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Specs
+        </h2>
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {fields
             .filter((f) => specs[f.key] !== undefined && specs[f.key] !== "")
             .map((f) => (
-              <div key={f.key} className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-                <dt className="text-xs text-neutral-500">{f.label}</dt>
-                <dd className="font-medium">
-                  {String(specs[f.key])}
-                  {f.unit ? ` ${f.unit}` : ""}
-                </dd>
-              </div>
+              <Stat
+                key={f.key}
+                label={f.label}
+                value={`${String(specs[f.key])}${f.unit ? ` ${f.unit}` : ""}`}
+              />
             ))}
-          {fields.every((f) => specs[f.key] === undefined || specs[f.key] === "") && (
-            <p className="text-sm text-neutral-500">No specs recorded yet.</p>
-          )}
         </dl>
+        {fields.every((f) => specs[f.key] === undefined || specs[f.key] === "") && (
+          <EmptyState>No specs recorded yet.</EmptyState>
+        )}
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Controllers</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Controllers
+        </h2>
         {item.controllerLinks.length === 0 ? (
-          <p className="text-sm text-neutral-500">
+          <EmptyState>
             No controllers linked yet.{" "}
             {session?.user && (
-              <Link href={`/admin/equipment/${item.id}/edit`} className="underline">
+              <Link
+                href={`/admin/equipment/${item.id}/edit`}
+                className="text-amber-600 underline dark:text-amber-400"
+              >
                 Add one
               </Link>
             )}
-          </p>
+          </EmptyState>
         ) : (
           <ul className="space-y-2">
             {item.controllerLinks.map((link) => (
               <li key={link.controller.id}>
                 <Link
                   href={`/controllers/${link.controller.id}`}
-                  className="block rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                  className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                 >
-                  <span className="font-medium">{link.controller.displayName}</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {link.controller.displayName}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -111,16 +127,21 @@ export default async function EquipmentDetailPage({
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Manuals &amp; datasheets</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Manuals &amp; datasheets
+        </h2>
         {manuals.length === 0 ? (
-          <p className="text-sm text-neutral-500">
+          <EmptyState>
             No manuals linked yet.{" "}
             {session?.user && (
-              <Link href={`/admin/equipment/${item.id}/edit`} className="underline">
+              <Link
+                href={`/admin/equipment/${item.id}/edit`}
+                className="text-amber-600 underline dark:text-amber-400"
+              >
                 Add one
               </Link>
             )}
-          </p>
+          </EmptyState>
         ) : (
           <ul className="space-y-2">
             {manuals.map((doc) => (
@@ -129,15 +150,17 @@ export default async function EquipmentDetailPage({
                   href={doc.webUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                 >
                   <span>
-                    <span className="font-medium">{doc.title}</span>
-                    <span className="ml-2 text-xs uppercase text-neutral-500">
+                    <span className="font-medium text-slate-900 dark:text-white">
+                      {doc.title}
+                    </span>
+                    <span className="ml-2 text-xs uppercase text-slate-500 dark:text-slate-500">
                       {doc.docType}
                     </span>
                   </span>
-                  <span className="text-xs text-neutral-400">
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
                     {doc.source === "graph" ? "SharePoint" : "Link"}
                   </span>
                 </a>
@@ -148,22 +171,26 @@ export default async function EquipmentDetailPage({
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Fault finding</h2>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Fault finding
+        </h2>
         {faultTrees.length === 0 ? (
-          <p className="text-sm text-neutral-500">
-            No fault trees published for this equipment yet.
-          </p>
+          <EmptyState>No fault trees published for this equipment yet.</EmptyState>
         ) : (
           <ul className="space-y-2">
             {faultTrees.map((tree) => (
               <li key={tree.id}>
                 <Link
                   href={`/wizard/${tree.id}?equipmentId=${item.id}`}
-                  className="block rounded-md border border-neutral-200 p-3 hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                  className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                 >
-                  <span className="font-medium">{tree.title}</span>
+                  <span className="font-medium text-slate-900 dark:text-white">
+                    {tree.title}
+                  </span>
                   {tree.description && (
-                    <p className="text-sm text-neutral-500">{tree.description}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {tree.description}
+                    </p>
                   )}
                 </Link>
               </li>

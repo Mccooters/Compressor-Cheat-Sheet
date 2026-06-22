@@ -1,4 +1,6 @@
 import { createBranch, deleteBranch } from "@/lib/faultTrees/actions";
+import { fieldInputClass } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 
 export function BranchManager({
   faultTreeId,
@@ -16,19 +18,21 @@ export function BranchManager({
   const targets = allNodes.filter((n) => n.id !== node.id);
 
   return (
-    <div className="ml-4 mt-2 space-y-2 border-l border-neutral-200 pl-4 dark:border-neutral-800">
+    <div className="ml-4 mt-2 space-y-2 border-l border-slate-200 pl-4 dark:border-slate-700">
       {node.outgoingBranches.map((branch) => (
         <div key={branch.id} className="flex items-center justify-between text-sm">
           <span>
-            <span className="font-medium">{branch.label}</span>{" "}
-            <span className="text-neutral-500">
+            <span className="font-medium text-slate-900 dark:text-white">
+              {branch.label}
+            </span>{" "}
+            <span className="text-slate-500 dark:text-slate-500">
               &rarr; {promptById.get(branch.toNodeId) ?? "(unknown)"}
             </span>
           </span>
           <form action={deleteBranch.bind(null, branch.id, faultTreeId)}>
-            <button type="submit" className="text-red-600 hover:underline">
+            <Button type="submit" variant="danger">
               Remove
-            </button>
+            </Button>
           </form>
         </div>
       ))}
@@ -42,14 +46,9 @@ export function BranchManager({
             name="label"
             required
             placeholder="Answer label"
-            className="flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+            className={`flex-1 ${fieldInputClass}`}
           />
-          <select
-            name="toNodeId"
-            required
-            defaultValue=""
-            className="flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-900"
-          >
+          <select name="toNodeId" required defaultValue="" className={`flex-1 ${fieldInputClass}`}>
             <option value="" disabled>
               Then go to...
             </option>
@@ -60,15 +59,12 @@ export function BranchManager({
             ))}
           </select>
           <input type="hidden" name="sortOrder" value={node.outgoingBranches.length} />
-          <button
-            type="submit"
-            className="rounded-md border border-neutral-300 px-2 py-1 text-sm dark:border-neutral-700"
-          >
+          <Button type="submit" variant="secondary">
             Add
-          </button>
+          </Button>
         </form>
       ) : (
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-slate-500 dark:text-slate-500">
           Add another node first to link a branch to it.
         </p>
       )}

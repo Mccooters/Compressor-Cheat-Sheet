@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { EQUIPMENT_TYPES } from "@/lib/equipment/specSchemas";
+import { EQUIPMENT_TYPES, formatEquipmentTypeLabel } from "@/lib/equipment/specSchemas";
+import { Field, fieldInputClass } from "@/components/ui/Field";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 type EquipmentSummary = { id: string; displayName: string };
 type Scope = "generic" | "type_scoped" | "model_scoped";
@@ -25,67 +28,59 @@ export function TreeMetaForm({
   const [scope, setScope] = useState<Scope>(initialValues.equipmentScope);
 
   return (
-    <form
-      action={action}
-      className="max-w-xl space-y-4 rounded-md border border-neutral-200 p-4 dark:border-neutral-800"
-    >
-      <div>
-        <label className="block text-sm font-medium">Title</label>
+    <Card as="form" action={action} className="max-w-xl space-y-4">
+      <Field label="Title">
         <input
           name="title"
           required
           defaultValue={initialValues.title}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Description</label>
+      </Field>
+      <Field label="Description">
         <textarea
           name="description"
           rows={2}
           defaultValue={initialValues.description ?? ""}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Applies to</label>
+      </Field>
+      <Field label="Applies to">
         <select
           name="equipmentScope"
           value={scope}
           onChange={(e) => setScope(e.target.value as Scope)}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+          className={fieldInputClass}
         >
           <option value="generic">Any equipment (generic)</option>
           <option value="type_scoped">All equipment of one type</option>
           <option value="model_scoped">Specific equipment</option>
         </select>
-      </div>
+      </Field>
 
       {scope === "type_scoped" && (
-        <div>
-          <label className="block text-sm font-medium">Equipment type</label>
+        <Field label="Equipment type">
           <select
             name="scopedEquipmentType"
             defaultValue={initialValues.scopedEquipmentType ?? ""}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+            className={fieldInputClass}
           >
             {EQUIPMENT_TYPES.map((t) => (
               <option key={t} value={t}>
-                {t}
+                {formatEquipmentTypeLabel(t)}
               </option>
             ))}
           </select>
-        </div>
+        </Field>
       )}
 
       {scope === "model_scoped" && (
-        <div>
-          <label className="block text-sm font-medium">Equipment</label>
+        <Field label="Equipment" helper="Cmd/Ctrl-click to select multiple">
           <select
             name="equipmentIds"
             multiple
             defaultValue={selectedEquipmentIds}
-            className="mt-1 h-40 w-full rounded-md border border-neutral-300 px-3 py-2 dark:border-neutral-700 dark:bg-neutral-900"
+            className={`h-40 ${fieldInputClass}`}
           >
             {equipmentList.map((eq) => (
               <option key={eq.id} value={eq.id}>
@@ -93,18 +88,10 @@ export function TreeMetaForm({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-neutral-500">
-            Cmd/Ctrl-click to select multiple.
-          </p>
-        </div>
+        </Field>
       )}
 
-      <button
-        type="submit"
-        className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-      >
-        Save
-      </button>
-    </form>
+      <Button type="submit">Save</Button>
+    </Card>
   );
 }
