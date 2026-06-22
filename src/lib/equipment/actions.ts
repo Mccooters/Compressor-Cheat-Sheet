@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -82,4 +82,13 @@ export async function deleteEquipment(id: string) {
   revalidatePath("/equipment");
   revalidatePath("/admin/equipment");
   redirect("/admin/equipment");
+}
+
+export async function deleteManyEquipment(ids: string[]) {
+  if (ids.length === 0) return;
+
+  await db.delete(equipment).where(inArray(equipment.id, ids));
+
+  revalidatePath("/equipment");
+  revalidatePath("/admin/equipment");
 }

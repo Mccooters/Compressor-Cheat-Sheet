@@ -3,9 +3,10 @@ import {
   listEquipment,
   type EquipmentSortField,
 } from "@/lib/equipment/queries";
-import { DeleteEquipmentButton } from "@/components/equipment/DeleteEquipmentButton";
-import { SortableTh } from "@/components/admin/SortableTh";
+import { AdminEquipmentTable } from "@/components/admin/AdminEquipmentTable";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { buttonClass } from "@/components/ui/Button";
 
 const SORT_FIELDS: EquipmentSortField[] = [
   "displayName",
@@ -36,101 +37,26 @@ export default async function AdminEquipmentListPage({
       })
     )
   );
+  const rows = items.map((item) => ({
+    id: item.id,
+    displayName: item.displayName,
+    type: item.type,
+    manufacturer: item.manufacturer,
+    modelNumber: item.modelNumber,
+    status: item.status,
+    photoSrc: photoSrcs.get(item.id) ?? null,
+  }));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Manage equipment</h1>
-        <Link
-          href="/admin/equipment/new"
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-        >
+        <PageHeader title="Manage equipment" />
+        <Link href="/admin/equipment/new" className={buttonClass()}>
           Add equipment
         </Link>
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-neutral-200 text-left text-neutral-500 dark:border-neutral-800">
-            <th className="py-2" />
-            <SortableTh
-              basePath="/admin/equipment"
-              field="displayName"
-              label="Name"
-              currentSort={sort}
-              currentDir={dir}
-              defaultSort="manufacturer"
-            />
-            <SortableTh
-              basePath="/admin/equipment"
-              field="type"
-              label="Type"
-              currentSort={sort}
-              currentDir={dir}
-              defaultSort="manufacturer"
-            />
-            <SortableTh
-              basePath="/admin/equipment"
-              field="manufacturer"
-              label="Manufacturer / Model"
-              currentSort={sort}
-              currentDir={dir}
-              defaultSort="manufacturer"
-            />
-            <SortableTh
-              basePath="/admin/equipment"
-              field="status"
-              label="Status"
-              currentSort={sort}
-              currentDir={dir}
-              defaultSort="manufacturer"
-            />
-            <th className="py-2" />
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => {
-            const photoSrc = photoSrcs.get(item.id);
-            return (
-            <tr key={item.id} className="border-b border-neutral-100 dark:border-neutral-900">
-              <td className="py-2">
-                {photoSrc ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL
-                  <img
-                    src={photoSrc}
-                    alt=""
-                    className="h-8 w-8 rounded-md border border-neutral-200 object-contain dark:border-neutral-800"
-                  />
-                ) : (
-                  <div className="h-8 w-8 rounded-md border border-dashed border-neutral-200 dark:border-neutral-800" />
-                )}
-              </td>
-              <td className="py-2">{item.displayName}</td>
-              <td className="py-2 capitalize">{item.type}</td>
-              <td className="py-2">
-                {item.manufacturer} / {item.modelNumber}
-              </td>
-              <td className="py-2">{item.status}</td>
-              <td className="py-2 text-right">
-                <div className="flex items-center justify-end gap-3">
-                  <Link
-                    href={`/admin/equipment/${item.id}/edit`}
-                    className="underline"
-                  >
-                    Edit
-                  </Link>
-                  <DeleteEquipmentButton
-                    equipmentId={item.id}
-                    displayName={item.displayName}
-                    className="text-red-600 hover:underline"
-                  />
-                </div>
-              </td>
-            </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <AdminEquipmentTable rows={rows} sort={sort} dir={dir} />
     </div>
   );
 }
