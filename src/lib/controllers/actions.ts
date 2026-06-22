@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
-import { controller, controllerPassword } from "@/db/schema";
+import { controller, controllerFaultCode, controllerPassword } from "@/db/schema";
 import { getCurrentUserEmail } from "@/lib/auth/currentUser";
 import { syncControllersFromSharePoint } from "@/lib/controllers/sharepointSync";
 
@@ -83,6 +83,35 @@ export async function deleteControllerPassword(
   controllerId: string
 ) {
   await db.delete(controllerPassword).where(eq(controllerPassword.id, id));
+
+  revalidatePath(`/controllers/${controllerId}`);
+  revalidatePath(`/admin/controllers/${controllerId}/edit`);
+}
+
+const faultCodeFieldsSchema = z.object({
+  controllerId: z.string().uuid(),
+  code: z.string().min(1, "Code is required"),
+  description: z.string().min(1, "Description is required"),
+});
+
+export async function addControllerFaultCode(formData: FormData) {
+  const values = faultCodeFieldsSchema.parse({
+    controllerId: formData.get("controllerId"),
+    code: formData.get("code"),
+    description: formData.get("description"),
+  });
+
+  await db.insert(controllerFaultCode).values(values);
+
+  revalidatePath(`/controllers/${values.controllerId}`);
+  revalidatePath(`/admin/controllers/${values.controllerId}/edit`);
+}
+
+export async function deleteControllerFaultCode(
+  id: string,
+  controllerId: string
+) {
+  await db.delete(controllerFaultCode).where(eq(controllerFaultCode.id, id));
 
   revalidatePath(`/controllers/${controllerId}`);
   revalidatePath(`/admin/controllers/${controllerId}/edit`);

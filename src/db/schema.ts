@@ -130,6 +130,24 @@ export const controllerPassword = pgTable("controller_password", {
     .defaultNow(),
 });
 
+export const controllerFaultCode = pgTable("controller_fault_code", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  controllerId: uuid("controller_id")
+    .notNull()
+    .references(() => controller.id, { onDelete: "cascade" }),
+  // The fault/alarm code as shown on the controller display, e.g. "E:0119",
+  // "F062", "SR Fault 33", or a bare number like "110".
+  code: text("code").notNull(),
+  // What the code means and/or how to clear it.
+  description: text("description").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  source: recordSourceEnum("source").notNull().default("manual"),
+  sharepointItemId: text("sharepoint_item_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const equipmentController = pgTable(
   "equipment_controller",
   {
@@ -263,6 +281,7 @@ export const equipmentRelations = relations(equipment, ({ many }) => ({
 
 export const controllerRelations = relations(controller, ({ many }) => ({
   passwords: many(controllerPassword),
+  faultCodes: many(controllerFaultCode),
   documents: many(documentLink),
   equipmentLinks: many(equipmentController),
 }));
@@ -286,6 +305,16 @@ export const controllerPasswordRelations = relations(
   ({ one }) => ({
     controller: one(controller, {
       fields: [controllerPassword.controllerId],
+      references: [controller.id],
+    }),
+  })
+);
+
+export const controllerFaultCodeRelations = relations(
+  controllerFaultCode,
+  ({ one }) => ({
+    controller: one(controller, {
+      fields: [controllerFaultCode.controllerId],
       references: [controller.id],
     }),
   })

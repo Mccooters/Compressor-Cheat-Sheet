@@ -91,6 +91,35 @@ export default async function ControllerDetailPage({
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+          Fault codes
+        </h2>
+        {item.faultCodes.length === 0 ? (
+          <EmptyState>
+            No fault codes recorded yet.{" "}
+            {session?.user && (
+              <Link
+                href={`/admin/controllers/${item.id}/edit`}
+                className="text-amber-600 underline dark:text-amber-400"
+              >
+                Add one
+              </Link>
+            )}
+          </EmptyState>
+        ) : (
+          <dl className="space-y-3">
+            {item.faultCodes.map((f) => (
+              <Stat
+                key={f.id}
+                label={f.code}
+                value={<span className="font-normal">{f.description}</span>}
+              />
+            ))}
+          </dl>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
           Manuals
         </h2>
         {manuals.length === 0 ? (

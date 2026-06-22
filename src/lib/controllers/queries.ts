@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
-import { controller, controllerPassword, documentLink } from "@/db/schema";
+import { controller, controllerFaultCode, controllerPassword, documentLink } from "@/db/schema";
 
 export type ControllerSortField = "manufacturer" | "modelName";
 
@@ -44,6 +44,7 @@ export async function getControllerById(id: string) {
     where: eq(controller.id, id),
     with: {
       passwords: { orderBy: [asc(controllerPassword.sortOrder)] },
+      faultCodes: { orderBy: [asc(controllerFaultCode.sortOrder)] },
       documents: true,
     },
   });
