@@ -8,7 +8,7 @@ const links = [
   { href: "/wizard", label: "Fault Finder" },
   { href: "/controllers", label: "Controllers" },
   { href: "/calculators", label: "Calculators" },
-  { href: "/admin", label: "Admin" },
+  { href: "/admin/equipment", label: "Admin" },
   { href: "/search", label: "Search" },
 ];
 

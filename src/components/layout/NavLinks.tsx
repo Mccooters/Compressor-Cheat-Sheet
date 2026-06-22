@@ -10,7 +10,9 @@ export function NavLinks({ links }: { links: { href: string; label: string }[] }
     <>
       {links.map((link) => {
         const isActive =
-          link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+          link.href === "/"
+            ? pathname === "/"
+            : pathname.startsWith(`/${link.href.split("/").filter(Boolean)[0]}`);
         return (
           <Link
             key={link.href}
