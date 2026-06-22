@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
+import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
+import { Card } from "@/components/calculators/Card";
+import { ResultStat } from "@/components/calculators/ResultStat";
+import { EmptyState } from "@/components/calculators/EmptyState";
 import {
   calculateHazardLevel,
   type ContentState,
@@ -97,6 +101,14 @@ const HAZARD_LEVEL_DESCRIPTIONS: Record<string, string> = {
   E: "Negligible hazard — usually exempt from special regulatory control, but covered by general plant safety regulations.",
 };
 
+const SECTION_HEADING = "font-semibold text-slate-900 dark:text-white";
+const MUTED_TEXT = "text-sm text-slate-600 dark:text-slate-400";
+const AMBER_NOTE = "text-sm text-amber-600 dark:text-amber-400";
+const TOGGLE_ACTIVE =
+  "bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950";
+const TOGGLE_INACTIVE =
+  "border border-slate-300 text-slate-600 hover:border-amber-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-amber-500/60";
+
 function parseOptionalNumber(value: string): number | null {
   if (value.trim() === "") return null;
   const n = parseFloat(value);
@@ -151,6 +163,11 @@ export default function PressureEquipmentHazardLevelCalculator() {
     setConditionsC((prev) => prev.map((v, i) => (i === index ? !v : v)));
   }
 
+  const requiresRegistration =
+    result?.hazardLevel === "A" ||
+    result?.hazardLevel === "B" ||
+    result?.hazardLevel === "C";
+
   const isFiredEquipment = conditionsA[0];
   const pMPaForFsB = parseOptionalNumber(pressureKPa);
   const showFsBNote = pMPaForFsB !== null && pMPaForFsB / 1000 > 50;
@@ -169,19 +186,21 @@ export default function PressureEquipmentHazardLevelCalculator() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-xl font-semibold">
-          Pressure equipment hazard level (AS 4343:2014)
-        </h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Numerical method (Clause 2.2, Equation 2.1) for pressure vessels and
-          boilers. Pressure piping uses a different tabular method (Appendix
-          B) with its own breakpoints and isn&apos;t covered here.
-        </p>
-      </div>
+      <CalculatorHeader
+        eyebrow="AS 4343:2014"
+        title="Pressure equipment hazard level"
+        description={
+          <>
+            Numerical method (Clause 2.2, Equation 2.1) for pressure vessels
+            and boilers. Pressure piping uses a different tabular method
+            (Appendix B) with its own breakpoints and isn&apos;t covered
+            here.
+          </>
+        }
+      />
 
-      <section className="space-y-4">
-        <h2 className="font-medium">Design parameters</h2>
+      <Card className="space-y-4">
+        <h2 className={SECTION_HEADING}>Design parameters</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <NumberField
             label="Design pressure"
@@ -198,20 +217,18 @@ export default function PressureEquipmentHazardLevelCalculator() {
             placeholder="e.g. 500"
           />
         </div>
-      </section>
+      </Card>
 
-      <section className="space-y-4">
-        <h2 className="font-medium">Contents</h2>
+      <Card className="space-y-4">
+        <h2 className={SECTION_HEADING}>Contents</h2>
         <div className="flex gap-2">
           {STATE_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => setState(opt.value)}
-              className={`rounded-md px-3 py-1.5 text-sm ${
-                state === opt.value
-                  ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-                  : "border border-neutral-300 dark:border-neutral-700"
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+                state === opt.value ? TOGGLE_ACTIVE : TOGGLE_INACTIVE
               }`}
             >
               {opt.label}
@@ -219,9 +236,10 @@ export default function PressureEquipmentHazardLevelCalculator() {
           ))}
         </div>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
           <input
             type="checkbox"
+            className="accent-amber-500"
             checked={isAir}
             onChange={(e) => setIsAir(e.target.checked)}
           />
@@ -230,8 +248,9 @@ export default function PressureEquipmentHazardLevelCalculator() {
         </label>
 
         <NumberField
-          label="Design temperature (optional — checks Clause 3.2.6 thresholds)"
+          label="Design temperature"
           unit="°C"
+          helper="optional — checks Clause 3.2.6 thresholds"
           value={temperature}
           onChange={setTemperature}
           placeholder="e.g. 20"
@@ -239,38 +258,46 @@ export default function PressureEquipmentHazardLevelCalculator() {
 
         <div className="space-y-2">
           {HARMFULNESS_OPTIONS.map((opt) => (
-            <label key={opt.value} className="flex items-start gap-2 text-sm">
+            <label
+              key={opt.value}
+              className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+            >
               <input
                 type="radio"
                 name="harmfulness"
-                className="mt-1"
+                className="mt-1 accent-amber-500"
                 checked={harmfulness === opt.value}
                 onChange={() => setHarmfulness(opt.value)}
               />
               <span>
-                <span className="font-medium">{opt.label}</span>
+                <span className="font-medium text-slate-900 dark:text-white">
+                  {opt.label}
+                </span>
                 {" — "}
-                <span className="text-neutral-600 dark:text-neutral-400">
+                <span className="text-slate-600 dark:text-slate-400">
                   {opt.description}
                 </span>
               </span>
             </label>
           ))}
         </div>
-      </section>
+      </Card>
 
-      <section className="space-y-4">
-        <h2 className="font-medium">Location / service factor</h2>
+      <Card className="space-y-4">
+        <h2 className={SECTION_HEADING}>Location / service factor</h2>
 
         <div className="space-y-2">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className={MUTED_TEXT}>
             Conditions that increase the hazard level (Clause 2.2.5(a)):
           </p>
           {CONDITIONS_A.map((text, i) => (
-            <label key={text} className="flex items-start gap-2 text-sm">
+            <label
+              key={text}
+              className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+            >
               <input
                 type="checkbox"
-                className="mt-1"
+                className="mt-1 accent-amber-500"
                 checked={conditionsA[i]}
                 onChange={() => toggleA(i)}
               />
@@ -280,27 +307,27 @@ export default function PressureEquipmentHazardLevelCalculator() {
         </div>
 
         {showFsBNote && (
-          <p className="text-sm text-amber-600">
+          <p className={AMBER_NOTE}>
             Design pressure exceeds 50 MPa — a ×30 factor is applied
             automatically (Clause 2.2.5(b)).
           </p>
         )}
 
         <div className="space-y-2">
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            Conditions that reduce the hazard level (Clause 2.2.5(c)) — ignored
-            for fired equipment:
+          <p className={MUTED_TEXT}>
+            Conditions that reduce the hazard level (Clause 2.2.5(c)) —
+            ignored for fired equipment:
           </p>
           {CONDITIONS_C.map((text, i) => (
             <label
               key={text}
-              className={`flex items-start gap-2 text-sm ${
+              className={`flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 ${
                 isFiredEquipment ? "opacity-50" : ""
               }`}
             >
               <input
                 type="checkbox"
-                className="mt-1"
+                className="mt-1 accent-amber-500"
                 checked={conditionsC[i]}
                 disabled={isFiredEquipment}
                 onChange={() => toggleC(i)}
@@ -309,136 +336,164 @@ export default function PressureEquipmentHazardLevelCalculator() {
             </label>
           ))}
         </div>
-      </section>
+      </Card>
 
-      {result && (
-        <section className="space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-          <h2 className="font-medium">Result</h2>
+      <Card className="space-y-4">
+        <h2 className={SECTION_HEADING}>Result</h2>
 
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Result label="Fc" value={formatFactor(result.Fc)} />
-            <Result label="Ff" value={formatFactor(result.Ff)} />
-            <Result
-              label="Fs"
-              value={`${formatFactor(result.FsA)} × ${formatFactor(
-                result.FsB,
-              )} × ${formatFactor(result.FsC)} = ${formatFactor(result.Fs)}`}
-            />
-            <Result label="H" value={`${formatScientific(result.H)} MPa·L`} />
-          </dl>
-
-          {result.harmfulnessUpgradedByTemperature && (
-            <p className="text-sm text-amber-600">
-              Contents upgraded from non-harmful to harmful: design
-              temperature is outside the {isAir ? "120°C" : "90°C"} / −30°C
-              band (Clause 3.2.6).
-            </p>
-          )}
-
-          {result.overrideApplied && (
-            <p className="text-sm text-amber-600">{result.overrideApplied}</p>
-          )}
-
-          <div className="flex items-center gap-3">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-xl font-semibold text-white dark:bg-white dark:text-neutral-900">
-              {result.hazardLevel}
-            </span>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              {HAZARD_LEVEL_DESCRIPTIONS[result.hazardLevel]}
-            </p>
-          </div>
-        </section>
-      )}
-
-      {inspection && (
-        <section className="space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
-          <div>
-            <h2 className="font-medium">
-              Inspection requirements (AS/NZS 3788:2001 Table 4.1)
-            </h2>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-              In-service inspection periods are scheduled by equipment type
-              and PV value in AS/NZS 3788 — not directly by the AS 4343
-              hazard level above. Pick the category that matches this item.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            {EQUIPMENT_CATEGORY_OPTIONS.map((opt) => (
-              <label key={opt.value} className="flex items-start gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="equipmentCategory"
-                  className="mt-1"
-                  checked={equipmentCategory === opt.value}
-                  onChange={() => setEquipmentCategory(opt.value)}
-                />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            {`PV = ${pvMPaL?.toFixed(1)} MPa·L (design pressure × volume, uncorrected — Table 4.1's own PV definition, not the AS 4343 H value above)`}
-          </p>
-
-          {inspection.lowRiskNote ? (
-            <p className="text-sm text-amber-600">
-              Low risk under normal operation — this equipment would not
-              normally need to be inspected during its lifetime by the
-              inspector (Table 4.1 Note 14). The owner must still keep it in a
-              fit and safe condition through regular in-house surveillance,
-              and any major repair or alteration must comply with Section 6
-              of the Standard.
-              {inspection.commissioningRequired
-                ? " A commissioning inspection is still required."
-                : ""}
-            </p>
-          ) : (
+        {result ? (
+          <>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Result
-                label="Commissioning inspection"
-                value={inspection.commissioningRequired ? "Required" : "Not required"}
+              <ResultStat label="Fc" value={formatFactor(result.Fc)} />
+              <ResultStat label="Ff" value={formatFactor(result.Ff)} />
+              <ResultStat
+                label="Fs"
+                value={`${formatFactor(result.FsA)} × ${formatFactor(
+                  result.FsB,
+                )} × ${formatFactor(result.FsC)} = ${formatFactor(result.Fs)}`}
               />
-              <Result
-                label="First-year inspection"
-                value={inspection.firstYearlyRequired ? "Required" : "Not required"}
-              />
-              <Result
-                label="External inspection"
-                value={
-                  inspection.externalPeriodYears !== null
-                    ? `Every ${inspection.externalPeriodYears} years`
-                    : "—"
-                }
-              />
-              <Result
-                label="Internal inspection"
-                value={
-                  inspection.internalNominalYears !== null
-                    ? `Nominal ${inspection.internalNominalYears} yr / extended ${inspection.internalExtendedYears} yr`
-                    : "—"
-                }
-              />
+              <ResultStat label="H" value={`${formatScientific(result.H)} MPa·L`} />
             </dl>
-          )}
 
-          {inspection.extraNote && (
-            <p className="text-sm text-amber-600">{inspection.extraNote}</p>
-          )}
+            {result.harmfulnessUpgradedByTemperature && (
+              <p className={AMBER_NOTE}>
+                Contents upgraded from non-harmful to harmful: design
+                temperature is outside the {isAir ? "120°C" : "90°C"} /
+                −30°C band (Clause 3.2.6).
+              </p>
+            )}
 
-          <p className="text-xs text-neutral-500">
-            Extended internal periods may only be used after at least one
-            nominal-period inspection has demonstrated they&apos;re safe (Clause
-            4.4.4.3(b)), and inspection periods may be shortened for adverse
-            conditions or extended for favourable conditions (Clause
-            4.4.4.1). A maximum 3-month extension can be applied with
-            documented owner justification (Table 4.1 Note 1).
+            {result.overrideApplied && (
+              <p className={AMBER_NOTE}>{result.overrideApplied}</p>
+            )}
+
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-xl font-semibold text-white dark:bg-white dark:text-slate-900">
+                {result.hazardLevel}
+              </span>
+              <p className={MUTED_TEXT}>
+                {HAZARD_LEVEL_DESCRIPTIONS[result.hazardLevel]}
+              </p>
+            </div>
+
+            <div
+              className={`rounded-md border p-3 text-sm ${
+                requiresRegistration
+                  ? "border-amber-300 text-amber-700 dark:border-amber-800 dark:text-amber-400"
+                  : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400"
+              }`}
+            >
+              {requiresRegistration
+                ? `Hazard level ${result.hazardLevel} pressure equipment is registrable plant under the model WHS Regulations (Schedule 5 covers hazard levels A, B, and C) — design registration is required, and most States/Territories also require item registration.`
+                : `Hazard level ${result.hazardLevel} pressure equipment isn't registrable plant under the model WHS Regulations — Schedule 5 only covers hazard levels A, B, and C.`}
+            </div>
+          </>
+        ) : (
+          <EmptyState>
+            Enter design pressure and volume to calculate the hazard level.
+          </EmptyState>
+        )}
+      </Card>
+
+      <Card className="space-y-4">
+        <div>
+          <h2 className={SECTION_HEADING}>
+            Inspection requirements (AS/NZS 3788:2001 Table 4.1)
+          </h2>
+          <p className={`mt-1 ${MUTED_TEXT}`}>
+            In-service inspection periods are scheduled by equipment type
+            and PV value in AS/NZS 3788 — not directly by the AS 4343 hazard
+            level above. Pick the category that matches this item.
           </p>
-        </section>
-      )}
+        </div>
 
-      <p className="text-xs text-neutral-500">
+        <div className="space-y-2">
+          {EQUIPMENT_CATEGORY_OPTIONS.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+            >
+              <input
+                type="radio"
+                name="equipmentCategory"
+                className="mt-1 accent-amber-500"
+                checked={equipmentCategory === opt.value}
+                onChange={() => setEquipmentCategory(opt.value)}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+
+        {inspection ? (
+          <>
+            <p className={MUTED_TEXT}>
+              {`PV = ${pvMPaL?.toFixed(1)} MPa·L (design pressure × volume, uncorrected — Table 4.1's own PV definition, not the AS 4343 H value above)`}
+            </p>
+
+            {inspection.lowRiskNote ? (
+              <p className={AMBER_NOTE}>
+                Low risk under normal operation — this equipment would not
+                normally need to be inspected during its lifetime by the
+                inspector (Table 4.1 Note 14). The owner must still keep it
+                in a fit and safe condition through regular in-house
+                surveillance, and any major repair or alteration must comply
+                with Section 6 of the Standard.
+                {inspection.commissioningRequired
+                  ? " A commissioning inspection is still required."
+                  : ""}
+              </p>
+            ) : (
+              <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <ResultStat
+                  label="Commissioning inspection"
+                  value={inspection.commissioningRequired ? "Required" : "Not required"}
+                />
+                <ResultStat
+                  label="First-year inspection"
+                  value={inspection.firstYearlyRequired ? "Required" : "Not required"}
+                />
+                <ResultStat
+                  label="External inspection"
+                  value={
+                    inspection.externalPeriodYears !== null
+                      ? `Every ${inspection.externalPeriodYears} years`
+                      : "—"
+                  }
+                />
+                <ResultStat
+                  label="Internal inspection"
+                  value={
+                    inspection.internalNominalYears !== null
+                      ? `Nominal ${inspection.internalNominalYears} yr / extended ${inspection.internalExtendedYears} yr`
+                      : "—"
+                  }
+                />
+              </dl>
+            )}
+
+            {inspection.extraNote && (
+              <p className={AMBER_NOTE}>{inspection.extraNote}</p>
+            )}
+
+            <p className="text-xs text-slate-500 dark:text-slate-500">
+              Extended internal periods may only be used after at least one
+              nominal-period inspection has demonstrated they&apos;re safe
+              (Clause 4.4.4.3(b)), and inspection periods may be shortened
+              for adverse conditions or extended for favourable conditions
+              (Clause 4.4.4.1). A maximum 3-month extension can be applied
+              with documented owner justification (Table 4.1 Note 1).
+            </p>
+          </>
+        ) : (
+          <EmptyState>
+            Enter design pressure and volume above to see inspection
+            requirements.
+          </EmptyState>
+        )}
+      </Card>
+
+      <p className="text-xs text-slate-500 dark:text-slate-500">
         Guidance only — not a substitute for a qualified assessment under AS
         4343:2014 and AS/NZS 3788:2001. Not covered: pressure piping,
         multi-chamber/multi-phase volume rules (Clause 2.2.4), the AS 1210
@@ -450,15 +505,6 @@ export default function PressureEquipmentHazardLevelCalculator() {
         inspector and design registration/certification requirements with
         your State/Territory regulator.
       </p>
-    </div>
-  );
-}
-
-function Result({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="font-medium">{value}</dd>
     </div>
   );
 }

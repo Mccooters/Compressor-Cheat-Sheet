@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
+import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
+import { Card } from "@/components/calculators/Card";
 
 type Unit = "cfm" | "lpm" | "lph" | "lps" | "cfh";
 
@@ -48,14 +50,13 @@ export default function AirflowConversionCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Air flow rate conversion</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Type into any field — the rest convert automatically.
-        </p>
-      </div>
+      <CalculatorHeader
+        eyebrow="Unit conversion"
+        title="Air flow rate conversion"
+        description="Type into any field — the rest convert automatically."
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <Card className="grid gap-4 sm:grid-cols-2">
         {UNITS.map(({ key, label }) => (
           <NumberField
             key={key}
@@ -64,7 +65,7 @@ export default function AirflowConversionCalculator() {
             onChange={(v) => handleChange(key, v)}
           />
         ))}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
+import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
+import { Card } from "@/components/calculators/Card";
+import { ResultStat } from "@/components/calculators/ResultStat";
+import { EmptyState } from "@/components/calculators/EmptyState";
 
 // Treats the two dome ends together as equivalent to one sphere of the
 // vessel's diameter (i.e. each dome is assumed hemispherical) — agreed
@@ -38,50 +42,57 @@ export default function PressureVesselVolumeCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Pressure vessel volume</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Standard cylindrical vessel with two dome ends, measured
-          tip-to-tip. Assumes hemispherical dome ends (combined volume of the
-          two ends = one sphere of the vessel&apos;s diameter) — a quick
-          field estimate, not a certified figure for dished/torispherical
-          heads.
-        </p>
-      </div>
+      <CalculatorHeader
+        eyebrow="Field estimate"
+        title="Pressure vessel volume"
+        description={
+          <>
+            Standard cylindrical vessel with two dome ends, measured
+            tip-to-tip. Assumes hemispherical dome ends (combined volume of
+            the two ends = one sphere of the vessel&apos;s diameter) — a
+            quick field estimate, not a certified figure for
+            dished/torispherical heads.
+          </>
+        }
+      />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <NumberField
-          label="Overall length (tip-to-tip)"
-          unit="mm"
-          value={length}
-          onChange={setLength}
-          placeholder="e.g. 1800"
-        />
-        <NumberField
-          label="Diameter"
-          unit="mm"
-          value={diameter}
-          onChange={setDiameter}
-          placeholder="e.g. 500"
-        />
-      </div>
+      <Card className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <NumberField
+            label="Overall length"
+            unit="mm"
+            helper="tip-to-tip"
+            value={length}
+            onChange={setLength}
+            placeholder="e.g. 1800"
+          />
+          <NumberField
+            label="Diameter"
+            unit="mm"
+            value={diameter}
+            onChange={setDiameter}
+            placeholder="e.g. 500"
+          />
+        </div>
+      </Card>
 
-      {result && "error" in result && (
-        <p className="text-sm text-red-600">{result.error}</p>
-      )}
-
-      {result && !("error" in result) && (
-        <dl className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-            <dt className="text-xs text-neutral-500">Volume</dt>
-            <dd className="font-medium">{result.liters.toFixed(1)} L</dd>
-          </div>
-          <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-            <dt className="text-xs text-neutral-500">Volume</dt>
-            <dd className="font-medium">{result.cubicMeters.toFixed(4)} m³</dd>
-          </div>
-        </dl>
-      )}
+      <Card>
+        {result && "error" in result ? (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {result.error}
+          </p>
+        ) : result ? (
+          <dl className="grid gap-3 sm:grid-cols-2">
+            <ResultStat label="Volume" value={`${result.liters.toFixed(1)} L`} />
+            <ResultStat
+              label="Volume"
+              value={`${result.cubicMeters.toFixed(4)} m³`}
+            />
+          </dl>
+        ) : (
+          <EmptyState>Enter length and diameter to calculate.</EmptyState>
+        )}
+      </Card>
     </div>
   );
 }

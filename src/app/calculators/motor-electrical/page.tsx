@@ -2,6 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
+import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
+import { Card } from "@/components/calculators/Card";
+import { ResultStat } from "@/components/calculators/ResultStat";
+import { EmptyState } from "@/components/calculators/EmptyState";
 
 type Quantity = "V" | "I" | "R" | "P";
 
@@ -72,6 +76,11 @@ function parseInput(value: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+const TOGGLE_ACTIVE =
+  "bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950";
+const TOGGLE_INACTIVE =
+  "border border-slate-300 text-slate-600 hover:border-amber-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-amber-500/60";
+
 export default function MotorElectricalCalculator() {
   const [phase, setPhase] = useState<"single" | "three">("single");
 
@@ -124,24 +133,25 @@ export default function MotorElectricalCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Motor electrical calculator</h1>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Single-phase: enter any two of voltage, current, resistance, or
-          power and the other two are calculated. Three-phase: enter any two
-          of voltage, current, or power (plus power factor) to solve for the
-          rest.
-        </p>
-      </div>
+      <CalculatorHeader
+        eyebrow="Ohm's law"
+        title="Motor electrical calculator"
+        description={
+          <>
+            Single-phase: enter any two of voltage, current, resistance, or
+            power and the other two are calculated. Three-phase: enter any
+            two of voltage, current, or power (plus power factor) to solve
+            for the rest.
+          </>
+        }
+      />
 
       <div className="flex gap-2">
         <button
           type="button"
           onClick={() => switchPhase("single")}
-          className={`rounded-md px-3 py-1.5 text-sm ${
-            phase === "single"
-              ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-              : "border border-neutral-300 dark:border-neutral-700"
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            phase === "single" ? TOGGLE_ACTIVE : TOGGLE_INACTIVE
           }`}
         >
           Single-phase
@@ -149,120 +159,113 @@ export default function MotorElectricalCalculator() {
         <button
           type="button"
           onClick={() => switchPhase("three")}
-          className={`rounded-md px-3 py-1.5 text-sm ${
-            phase === "three"
-              ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
-              : "border border-neutral-300 dark:border-neutral-700"
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
+            phase === "three" ? TOGGLE_ACTIVE : TOGGLE_INACTIVE
           }`}
         >
           Three-phase
         </button>
       </div>
 
-      {phase === "single" ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <NumberField label="Voltage" unit="V" value={v} onChange={setV} />
-          <NumberField label="Current" unit="A" value={i} onChange={setI} />
-          <NumberField
-            label="Resistance"
-            unit="Ω"
-            value={r}
-            onChange={setR}
-          />
-          <NumberField label="Power" unit="W" value={p} onChange={setP} />
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <NumberField
-            label="Voltage (line-to-line)"
-            unit="V"
-            value={v}
-            onChange={setV}
-          />
-          <NumberField
-            label="Current (line)"
-            unit="A"
-            value={i}
-            onChange={setI}
-          />
-          <NumberField label="Power" unit="W" value={p} onChange={setP} />
-          <NumberField
-            label="Power factor"
-            value={pf}
-            onChange={setPf}
-            placeholder="default 1.0"
-          />
-        </div>
-      )}
+      <Card className="space-y-4">
+        {phase === "single" ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <NumberField label="Voltage" unit="V" value={v} onChange={setV} />
+            <NumberField label="Current" unit="A" value={i} onChange={setI} />
+            <NumberField
+              label="Resistance"
+              unit="Ω"
+              value={r}
+              onChange={setR}
+            />
+            <NumberField label="Power" unit="W" value={p} onChange={setP} />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <NumberField
+              label="Voltage"
+              unit="V"
+              helper="line-to-line"
+              value={v}
+              onChange={setV}
+            />
+            <NumberField
+              label="Current"
+              unit="A"
+              helper="line"
+              value={i}
+              onChange={setI}
+            />
+            <NumberField label="Power" unit="W" value={p} onChange={setP} />
+            <NumberField
+              label="Power factor"
+              value={pf}
+              onChange={setPf}
+              placeholder="default 1.0"
+            />
+          </div>
+        )}
+      </Card>
 
-      {filledCount < 2 && (
-        <p className="text-sm text-neutral-500">
-          Enter at least two values to calculate the rest.
-        </p>
-      )}
+      <Card>
+        {filledCount < 2 && (
+          <EmptyState>Enter at least two values to calculate the rest.</EmptyState>
+        )}
 
-      {filledCount > 2 && (
-        <p className="text-sm text-amber-600">
-          Only the first two recognized values are used — clear extra fields
-          to avoid confusion.
-        </p>
-      )}
-
-      {phase === "single" &&
-        filledCount === 2 &&
-        singlePhaseResult === "divide-by-zero" && (
-          <p className="text-sm text-red-600">
-            Can&apos;t solve — that combination requires dividing by zero.
+        {filledCount > 2 && (
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            Only the first two recognized values are used — clear extra
+            fields to avoid confusion.
           </p>
         )}
 
-      {phase === "single" &&
-        singlePhaseResult &&
-        singlePhaseResult !== "divide-by-zero" && (
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Result label="V" value={`${singlePhaseResult.V.toFixed(2)} V`} />
-            <Result label="I" value={`${singlePhaseResult.I.toFixed(3)} A`} />
-            <Result label="R" value={`${singlePhaseResult.R.toFixed(2)} Ω`} />
-            <Result label="P" value={`${singlePhaseResult.P.toFixed(1)} W`} />
-          </dl>
-        )}
+        {phase === "single" &&
+          filledCount === 2 &&
+          singlePhaseResult === "divide-by-zero" && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Can&apos;t solve — that combination requires dividing by zero.
+            </p>
+          )}
 
-      {phase === "three" &&
-        filledCount === 2 &&
-        threePhaseResult === "divide-by-zero" && (
-          <p className="text-sm text-red-600">
-            Can&apos;t solve — that combination requires dividing by zero.
-          </p>
-        )}
-
-      {phase === "three" &&
-        threePhaseResult &&
-        threePhaseResult !== "divide-by-zero" && (
-          <>
-            <dl className="grid grid-cols-3 gap-3">
-              <Result label="V" value={`${threePhaseResult.V.toFixed(2)} V`} />
-              <Result label="I" value={`${threePhaseResult.I.toFixed(3)} A`} />
-              <Result
-                label="P"
-                value={`${(threePhaseResult.P / 1000).toFixed(3)} kW`}
-              />
+        {phase === "single" &&
+          singlePhaseResult &&
+          singlePhaseResult !== "divide-by-zero" && (
+            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <ResultStat label="V" value={`${singlePhaseResult.V.toFixed(2)} V`} />
+              <ResultStat label="I" value={`${singlePhaseResult.I.toFixed(3)} A`} />
+              <ResultStat label="R" value={`${singlePhaseResult.R.toFixed(2)} Ω`} />
+              <ResultStat label="P" value={`${singlePhaseResult.P.toFixed(1)} W`} />
             </dl>
-            {pf.trim() === "" && (
-              <p className="text-sm text-neutral-500">
-                Power factor not entered — assumed 1.0 (unity).
-              </p>
-            )}
-          </>
-        )}
-    </div>
-  );
-}
+          )}
 
-function Result({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-neutral-200 p-3 dark:border-neutral-800">
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="font-medium">{value}</dd>
+        {phase === "three" &&
+          filledCount === 2 &&
+          threePhaseResult === "divide-by-zero" && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Can&apos;t solve — that combination requires dividing by zero.
+            </p>
+          )}
+
+        {phase === "three" &&
+          threePhaseResult &&
+          threePhaseResult !== "divide-by-zero" && (
+            <>
+              <dl className="grid grid-cols-3 gap-3">
+                <ResultStat label="V" value={`${threePhaseResult.V.toFixed(2)} V`} />
+                <ResultStat label="I" value={`${threePhaseResult.I.toFixed(3)} A`} />
+                <ResultStat
+                  label="P"
+                  value={`${(threePhaseResult.P / 1000).toFixed(3)} kW`}
+                />
+              </dl>
+              {pf.trim() === "" && (
+                <p className="mt-3 text-sm text-slate-500 dark:text-slate-500">
+                  Power factor not entered — assumed 1.0 (unity).
+                </p>
+              )}
+            </>
+          )}
+      </Card>
     </div>
   );
 }
