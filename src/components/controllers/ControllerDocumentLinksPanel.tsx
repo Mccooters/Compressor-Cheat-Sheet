@@ -72,7 +72,7 @@ export function ControllerDocumentLinksPanel({
             required
             className={`flex-1 ${fieldInputClass}`}
           />
-          <select name="docType" className={fieldInputClass}>
+          <select name="docType" className={`flex-1 ${fieldInputClass}`}>
             <option value="photo">Photo</option>
             <option value="manual">Manual</option>
             <option value="datasheet">Datasheet</option>

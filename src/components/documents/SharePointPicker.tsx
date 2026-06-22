@@ -63,7 +63,7 @@ export function SharePointPicker({ equipmentId }: { equipmentId: string }) {
           onChange={(e) =>
             setDocType(e.target.value as (typeof docTypeOptions)[number]["value"])
           }
-          className={fieldInputClass}
+          className={`flex-1 ${fieldInputClass}`}
         >
           {docTypeOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>

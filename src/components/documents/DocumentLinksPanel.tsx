@@ -65,7 +65,7 @@ export function DocumentLinksPanel({
             required
             className={`flex-1 ${fieldInputClass}`}
           />
-          <select name="docType" className={fieldInputClass}>
+          <select name="docType" className={`flex-1 ${fieldInputClass}`}>
             <option value="manual">Manual</option>
             <option value="datasheet">Datasheet</option>
             <option value="wiring_diagram">Wiring diagram</option>

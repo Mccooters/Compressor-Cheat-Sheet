@@ -49,7 +49,7 @@ export function NodeForm({
           name="nodeType"
           value={nodeType}
           onChange={(e) => setNodeType(e.target.value as NodeType)}
-          className={fieldInputClass}
+          className={`flex-1 ${fieldInputClass}`}
         >
           <option value="question">Question</option>
           <option value="diagnosis">Diagnosis</option>
