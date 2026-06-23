@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatEquipmentTypeLabel } from "@/lib/equipment/specSchemas";
+import { linkCardClass } from "@/components/ui/Card";
 
 const typeColors: Record<string, string> = {
   compressor: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -37,7 +38,7 @@ export function EquipmentCard({
   return (
     <Link
       href={`/equipment/${equipment.id}`}
-      className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+      className={linkCardClass("flex items-start gap-3 p-4")}
     >
       {photoSrc ? (
         // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL

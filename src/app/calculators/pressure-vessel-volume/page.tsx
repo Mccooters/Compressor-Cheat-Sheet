@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 // Treats the two dome ends together as equivalent to one sphere of the
 // vessel's diameter (i.e. each dome is assumed hemispherical) — agreed
@@ -42,7 +42,7 @@ export default function PressureVesselVolumeCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="Field estimate"
         title="Pressure vessel volume"
         description={
@@ -83,8 +83,8 @@ export default function PressureVesselVolumeCalculator() {
           </p>
         ) : result ? (
           <dl className="grid gap-3 sm:grid-cols-2">
-            <ResultStat label="Volume" value={`${result.liters.toFixed(1)} L`} />
-            <ResultStat
+            <Stat label="Volume" value={`${result.liters.toFixed(1)} L`} />
+            <Stat
               label="Volume"
               value={`${result.cubicMeters.toFixed(4)} m³`}
             />

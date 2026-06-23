@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
@@ -49,7 +50,7 @@ if (isDevLoginEnabled()) {
   );
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const { handlers, auth: uncachedAuth, signIn, signOut } = NextAuth({
   providers,
   trustHost: true,
   session: { strategy: "jwt" },
@@ -119,3 +120,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+// Dedupes concurrent auth() calls within a single request render — without
+// this, rendering N items in parallel (e.g. resolving N SharePoint photo
+// URLs) re-runs the jwt callback N times, which can fire N simultaneous
+// token-refresh requests once the access token is near expiry. Entra
+// rotates refresh tokens on use, so only one of those would actually
+// succeed.
+const auth = cache(uncachedAuth);
+
+export { handlers, auth, signIn, signOut };

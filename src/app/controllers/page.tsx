@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fieldInputClass } from "@/components/ui/Field";
 import { buttonClass } from "@/components/ui/Button";
+import { linkCardClass } from "@/components/ui/Card";
 
 export default async function ControllersListPage({
   searchParams,
@@ -66,7 +67,7 @@ export default async function ControllersListPage({
                     <li key={item.id}>
                       <Link
                         href={`/controllers/${item.id}`}
-                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                        className={linkCardClass("flex items-center gap-3 p-3")}
                       >
                         {photoSrc ? (
                           // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL

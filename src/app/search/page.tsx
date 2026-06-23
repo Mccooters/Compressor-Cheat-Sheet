@@ -4,6 +4,7 @@ import { LiveFilterForm } from "@/components/search/LiveFilterForm";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fieldInputClass } from "@/components/ui/Field";
+import { linkCardClass } from "@/components/ui/Card";
 
 export default async function SearchPage({
   searchParams,
@@ -40,7 +41,7 @@ export default async function SearchPage({
                   <li key={item.id}>
                     <Link
                       href={`/equipment/${item.id}`}
-                      className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                      className={linkCardClass("block p-3")}
                     >
                       <span className="font-medium text-slate-900 dark:text-white">
                         {item.displayName}
@@ -67,7 +68,7 @@ export default async function SearchPage({
                   <li key={item.id}>
                     <Link
                       href={`/controllers/${item.id}`}
-                      className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                      className={linkCardClass("block p-3")}
                     >
                       <span className="font-medium text-slate-900 dark:text-white">
                         {item.displayName}
@@ -94,7 +95,7 @@ export default async function SearchPage({
                   <li key={tree.id}>
                     <Link
                       href={`/wizard/${tree.id}`}
-                      className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                      className={linkCardClass("block p-3")}
                     >
                       <span className="font-medium text-slate-900 dark:text-white">
                         {tree.title}

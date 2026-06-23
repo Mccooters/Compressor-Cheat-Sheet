@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function SolenoidResistanceCalculator() {
   const [voltage, setVoltage] = useState("");
@@ -25,7 +25,7 @@ export default function SolenoidResistanceCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="Ohm's law"
         title="Solenoid resistance"
         description="Coil resistance and current from rated voltage and wattage (R = V²/P, I = P/V)."
@@ -51,8 +51,8 @@ export default function SolenoidResistanceCalculator() {
       <Card>
         {result ? (
           <dl className="grid gap-3 sm:grid-cols-2">
-            <ResultStat label="Coil resistance" value={`${result.resistance.toFixed(2)} Ω`} />
-            <ResultStat label="Current draw" value={`${result.current.toFixed(3)} A`} />
+            <Stat label="Coil resistance" value={`${result.resistance.toFixed(2)} Ω`} />
+            <Stat label="Current draw" value={`${result.current.toFixed(3)} A`} />
           </dl>
         ) : (
           <EmptyState>Enter voltage and wattage to calculate.</EmptyState>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { linkCardClass } from "@/components/ui/Card";
 
 const CATEGORIES = [
   {
@@ -103,7 +104,7 @@ export default function CalculatorsIndexPage() {
               <Link
                 key={calc.href}
                 href={calc.href}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                className={linkCardClass("p-4")}
               >
                 <h3 className="font-semibold text-slate-900 dark:text-white">
                   {calc.title}

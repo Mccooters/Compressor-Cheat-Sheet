@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 function parseOptionalNumber(value: string): number | null {
   if (value.trim() === "") return null;
@@ -36,7 +36,7 @@ export default function HydrostaticTestPressureCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS 1210"
         title="Hydrostatic test pressure"
         description="P_test = 1.5 × MAWP × (S_test / S_design). Required after manufacture, after weld repairs, or when mandated by AS 3788. Leave the stress fields blank if the vessel only ever sees ambient temperature (stress ratio = 1)."
@@ -70,7 +70,7 @@ export default function HydrostaticTestPressureCalculator() {
         {result ? (
           <div className="space-y-3">
             <dl>
-              <ResultStat
+              <Stat
                 label="Hydrostatic test pressure"
                 value={`${result.testPressure.toFixed(0)} kPa`}
               />

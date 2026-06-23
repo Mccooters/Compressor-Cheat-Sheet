@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
 
 type Unit = "kpa" | "mpa" | "bar" | "psi" | "kgfcm2";
 
@@ -47,7 +47,7 @@ export default function PressureConversionCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="Unit conversion"
         title="Pressure unit conversion"
         description="Type into any field — the rest convert automatically."

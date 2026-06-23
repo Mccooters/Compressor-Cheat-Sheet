@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Quantity = "V" | "I" | "R" | "P";
 
@@ -133,7 +133,7 @@ export default function MotorElectricalCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="Ohm's law"
         title="Motor electrical calculator"
         description={
@@ -231,10 +231,10 @@ export default function MotorElectricalCalculator() {
           singlePhaseResult &&
           singlePhaseResult !== "divide-by-zero" && (
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <ResultStat label="V" value={`${singlePhaseResult.V.toFixed(2)} V`} />
-              <ResultStat label="I" value={`${singlePhaseResult.I.toFixed(3)} A`} />
-              <ResultStat label="R" value={`${singlePhaseResult.R.toFixed(2)} Ω`} />
-              <ResultStat label="P" value={`${singlePhaseResult.P.toFixed(1)} W`} />
+              <Stat label="V" value={`${singlePhaseResult.V.toFixed(2)} V`} />
+              <Stat label="I" value={`${singlePhaseResult.I.toFixed(3)} A`} />
+              <Stat label="R" value={`${singlePhaseResult.R.toFixed(2)} Ω`} />
+              <Stat label="P" value={`${singlePhaseResult.P.toFixed(1)} W`} />
             </dl>
           )}
 
@@ -251,9 +251,9 @@ export default function MotorElectricalCalculator() {
           threePhaseResult !== "divide-by-zero" && (
             <>
               <dl className="grid grid-cols-3 gap-3">
-                <ResultStat label="V" value={`${threePhaseResult.V.toFixed(2)} V`} />
-                <ResultStat label="I" value={`${threePhaseResult.I.toFixed(3)} A`} />
-                <ResultStat
+                <Stat label="V" value={`${threePhaseResult.V.toFixed(2)} V`} />
+                <Stat label="I" value={`${threePhaseResult.I.toFixed(3)} A`} />
+                <Stat
                   label="P"
                   value={`${(threePhaseResult.P / 1000).toFixed(3)} kW`}
                 />

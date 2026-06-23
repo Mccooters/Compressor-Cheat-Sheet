@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   calculateHazardLevel,
   type ContentState,
@@ -186,7 +186,7 @@ export default function PressureEquipmentHazardLevelCalculator() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS 4343:2014"
         title="Pressure equipment hazard level"
         description={
@@ -344,15 +344,15 @@ export default function PressureEquipmentHazardLevelCalculator() {
         {result ? (
           <>
             <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <ResultStat label="Fc" value={formatFactor(result.Fc)} />
-              <ResultStat label="Ff" value={formatFactor(result.Ff)} />
-              <ResultStat
+              <Stat label="Fc" value={formatFactor(result.Fc)} />
+              <Stat label="Ff" value={formatFactor(result.Ff)} />
+              <Stat
                 label="Fs"
                 value={`${formatFactor(result.FsA)} × ${formatFactor(
                   result.FsB,
                 )} × ${formatFactor(result.FsC)} = ${formatFactor(result.Fs)}`}
               />
-              <ResultStat label="H" value={`${formatScientific(result.H)} MPa·L`} />
+              <Stat label="H" value={`${formatScientific(result.H)} MPa·L`} />
             </dl>
 
             {result.harmfulnessUpgradedByTemperature && (
@@ -445,15 +445,15 @@ export default function PressureEquipmentHazardLevelCalculator() {
               </p>
             ) : (
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <ResultStat
+                <Stat
                   label="Commissioning inspection"
                   value={inspection.commissioningRequired ? "Required" : "Not required"}
                 />
-                <ResultStat
+                <Stat
                   label="First-year inspection"
                   value={inspection.firstYearlyRequired ? "Required" : "Not required"}
                 />
-                <ResultStat
+                <Stat
                   label="External inspection"
                   value={
                     inspection.externalPeriodYears !== null
@@ -461,7 +461,7 @@ export default function PressureEquipmentHazardLevelCalculator() {
                       : "—"
                   }
                 />
-                <ResultStat
+                <Stat
                   label="Internal inspection"
                   value={
                     inspection.internalNominalYears !== null

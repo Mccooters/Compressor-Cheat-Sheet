@@ -1,3 +1,8 @@
+/** Shared styling for a clickable card linking to a detail page — pass padding/layout utilities in className (e.g. "p-3 flex items-center gap-3"). */
+export function linkCardClass(className = "") {
+  return `rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60 ${className}`;
+}
+
 export function Card({
   children,
   className = "",

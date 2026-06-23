@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 type ThemeChoice = "system" | "light" | "dark";
+
+const STORAGE_KEY = "theme";
+const THEME_CHANGE_EVENT = "theme-change";
 
 function applyTheme(choice: ThemeChoice) {
   const isDark =
@@ -17,16 +20,29 @@ const OPTIONS: { value: ThemeChoice; label: string }[] = [
   { value: "dark", label: "Dark" },
 ];
 
+function getSnapshot(): ThemeChoice {
+  return (localStorage.getItem(STORAGE_KEY) as ThemeChoice | null) ?? "system";
+}
+
+function getServerSnapshot(): ThemeChoice {
+  return "system";
+}
+
+// Native "storage" events only fire in other tabs, not the one that made the
+// write, so a same-tab click needs its own event to update the toggle's
+// highlighted option without a setState-in-effect.
+function subscribe(onStoreChange: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, onStoreChange);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, onStoreChange);
+}
+
 export function ThemeToggle() {
-  const [choice, setChoice] = useState<ThemeChoice | null>(null);
+  const choice = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   useEffect(() => {
-    const stored = (localStorage.getItem("theme") as ThemeChoice | null) ?? "system";
-    setChoice(stored);
-
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     function onSystemChange() {
-      if ((localStorage.getItem("theme") ?? "system") === "system") {
+      if ((localStorage.getItem(STORAGE_KEY) ?? "system") === "system") {
         applyTheme("system");
       }
     }
@@ -35,9 +51,9 @@ export function ThemeToggle() {
   }, []);
 
   function select(next: ThemeChoice) {
-    setChoice(next);
-    localStorage.setItem("theme", next);
+    localStorage.setItem(STORAGE_KEY, next);
     applyTheme(next);
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   }
 
   return (

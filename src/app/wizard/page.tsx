@@ -4,6 +4,7 @@ import type { EquipmentType } from "@/lib/equipment/specSchemas";
 import { getFaultTreesForEquipment, listFaultTrees } from "@/lib/faultTrees/queries";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { linkCardClass } from "@/components/ui/Card";
 
 type Category =
   | "electrical"
@@ -66,7 +67,7 @@ function FaultTreeList({
                 ? `/wizard/${tree.id}?equipmentId=${equipmentId}`
                 : `/wizard/${tree.id}`
             }
-            className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+            className={linkCardClass("block p-4")}
           >
             <span className="font-medium text-slate-900 dark:text-white">
               {tree.title}
@@ -142,7 +143,7 @@ export default async function WizardIndexPage({
             <Link
               key={info.value}
               href={`/wizard?category=${info.value}`}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+              className={linkCardClass("p-4")}
             >
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold text-slate-900 dark:text-white">

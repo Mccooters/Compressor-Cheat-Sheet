@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   getInspectionRequirement,
   type EquipmentCategory,
@@ -65,7 +65,7 @@ export default function PvValueCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS/NZS 3788:2001 — Table 4.1"
         title="PV value"
         description={
@@ -105,7 +105,7 @@ export default function PvValueCalculator() {
       <Card>
         {pvMPaL !== null ? (
           <dl>
-            <ResultStat label="PV value" value={`${pvMPaL.toFixed(1)} MPa·L`} />
+            <Stat label="PV value" value={`${pvMPaL.toFixed(1)} MPa·L`} />
           </dl>
         ) : (
           <EmptyState>Enter design pressure and volume to calculate.</EmptyState>
@@ -154,15 +154,15 @@ export default function PvValueCalculator() {
           ) : (
             inspection && (
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <ResultStat
+                <Stat
                   label="Commissioning inspection"
                   value={inspection.commissioningRequired ? "Required" : "Not required"}
                 />
-                <ResultStat
+                <Stat
                   label="First-year inspection"
                   value={inspection.firstYearlyRequired ? "Required" : "Not required"}
                 />
-                <ResultStat
+                <Stat
                   label="External inspection"
                   value={
                     inspection.externalPeriodYears !== null
@@ -170,7 +170,7 @@ export default function PvValueCalculator() {
                       : "—"
                   }
                 />
-                <ResultStat
+                <Stat
                   label="Internal inspection"
                   value={
                     inspection.internalNominalYears !== null

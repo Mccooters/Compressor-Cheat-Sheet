@@ -6,6 +6,7 @@ import { resolvePhotoSrc } from "@/lib/documents/photo";
 import { Stat } from "@/components/ui/Stat";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { buttonClass } from "@/components/ui/Button";
+import { linkCardClass } from "@/components/ui/Card";
 
 export default async function ControllerDetailPage({
   params,
@@ -142,7 +143,7 @@ export default async function ControllerDetailPage({
                   href={doc.webUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                  className={linkCardClass("flex items-center justify-between p-3")}
                 >
                   <span>
                     <span className="font-medium text-slate-900 dark:text-white">

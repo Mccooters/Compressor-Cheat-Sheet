@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { buttonClass } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { linkCardClass } from "@/components/ui/Card";
 
 export default async function AdminFaultTreesPage() {
   const trees = await listFaultTrees();
@@ -25,7 +26,7 @@ export default async function AdminFaultTreesPage() {
             <li key={tree.id}>
               <Link
                 href={`/admin/fault-trees/${tree.id}/edit`}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                className={linkCardClass("flex items-center justify-between p-3")}
               >
                 <span>
                   <span className="font-medium text-slate-900 dark:text-white">

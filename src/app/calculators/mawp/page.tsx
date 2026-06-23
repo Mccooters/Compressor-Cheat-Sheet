@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { calculateMAWP } from "@/lib/calculators/wallThickness";
 
 function parseOptionalNumber(value: string): number | null {
@@ -54,7 +54,7 @@ export default function MawpCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS 1210"
         title="Maximum allowable working pressure"
         description="Thin-wall cylindrical shell, rearranged from t_min: MAWP = 2SEt / (D + 2yt). Use the current measured (UT) thickness to find the working pressure the vessel can still be safely rated at — relevant when corrosion or pitting is found and a derate is being considered."
@@ -100,8 +100,8 @@ export default function MawpCalculator() {
       <Card>
         {result ? (
           <dl className="grid gap-3 sm:grid-cols-2">
-            <ResultStat label="MAWP" value={`${result.mawpMPa.toFixed(3)} MPa`} />
-            <ResultStat label="MAWP" value={`${result.mawpKPa.toFixed(0)} kPa`} />
+            <Stat label="MAWP" value={`${result.mawpMPa.toFixed(3)} MPa`} />
+            <Stat label="MAWP" value={`${result.mawpKPa.toFixed(0)} kPa`} />
           </dl>
         ) : (
           <EmptyState>Enter all required values to calculate.</EmptyState>

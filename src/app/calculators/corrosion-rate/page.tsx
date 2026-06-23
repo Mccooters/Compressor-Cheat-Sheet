@@ -4,10 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { NumberField } from "@/components/calculators/NumberField";
 import { DateField } from "@/components/calculators/DateField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { calculateCorrosionRate } from "@/lib/calculators/corrosionRate";
 
 function parseOptionalNumber(value: string): number | null {
@@ -51,7 +51,7 @@ export default function CorrosionRateCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS 3788:2001 — Table 4.1"
         title="Corrosion rate & remaining life"
         description={
@@ -117,11 +117,11 @@ export default function CorrosionRateCalculator() {
         ) : result ? (
           <div className="space-y-4">
             <dl className="grid gap-3 sm:grid-cols-2">
-              <ResultStat
+              <Stat
                 label="Years between inspections"
                 value={`${result.yearsBetweenInspections.toFixed(2)} yr`}
               />
-              <ResultStat
+              <Stat
                 label="Corrosion rate"
                 value={`${result.corrosionRateMmPerYear.toFixed(4)} mm/yr`}
               />
@@ -143,11 +143,11 @@ export default function CorrosionRateCalculator() {
               </p>
             ) : (
               <dl className="grid gap-3 sm:grid-cols-2">
-                <ResultStat
+                <Stat
                   label="Remaining life"
                   value={`${result.remainingLifeYears.toFixed(1)} yr`}
                 />
-                <ResultStat
+                <Stat
                   label="Next inspection date"
                   value={result.nextInspectionDate ?? "—"}
                 />

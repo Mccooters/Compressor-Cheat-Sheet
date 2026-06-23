@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 function parseOptionalNumber(value: string): number | null {
   if (value.trim() === "") return null;
@@ -44,7 +44,7 @@ export default function SrvSetPressureVerificationCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS 1210"
         title="SRV set pressure verification"
         description="Confirms the SRV set pressure doesn't exceed the vessel's design pressure or MAWP, and that relief occurs before pressure exceeds 110% of design pressure."
@@ -79,13 +79,13 @@ export default function SrvSetPressureVerificationCalculator() {
         {result ? (
           <>
             <dl className="grid gap-3 sm:grid-cols-2">
-              <ResultStat
+              <Stat
                 label="MAWP used"
                 value={`${result.mawpValue.toFixed(0)} kPa${
                   result.mawpDefaulted ? " (defaulted)" : ""
                 }`}
               />
-              <ResultStat
+              <Stat
                 label="110% design pressure ceiling"
                 value={`${result.overpressureLimit.toFixed(0)} kPa`}
               />

@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
-import { CalculatorHeader } from "@/components/calculators/CalculatorHeader";
-import { Card } from "@/components/calculators/Card";
-import { ResultStat } from "@/components/calculators/ResultStat";
-import { EmptyState } from "@/components/calculators/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Stat } from "@/components/ui/Stat";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { calculateMinWallThickness } from "@/lib/calculators/wallThickness";
 
 function parseOptionalNumber(value: string): number | null {
@@ -54,7 +54,7 @@ export default function MinimumWallThicknessCalculator() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <CalculatorHeader
+      <PageHeader
         eyebrow="AS 1210"
         title="Minimum wall thickness (t_min)"
         description="Thin-wall cylindrical shell: t_min = PD / (2SE + 2yP). Compare a measured UT thickness against this baseline to assess corrosion loss — get S and y from the vessel's design data or an AS 1210 material table."
@@ -99,7 +99,7 @@ export default function MinimumWallThicknessCalculator() {
       <Card>
         {result ? (
           <dl>
-            <ResultStat
+            <Stat
               label="Minimum wall thickness"
               value={`${result.tMin.toFixed(3)} mm`}
             />
