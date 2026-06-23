@@ -7,7 +7,6 @@ import {
   type EquipmentType,
 } from "@/lib/equipment/specSchemas";
 import { getEquipmentById } from "@/lib/equipment/queries";
-import { getFaultTreesForEquipment } from "@/lib/faultTrees/queries";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
 import { Stat } from "@/components/ui/Stat";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -22,10 +21,7 @@ export default async function EquipmentDetailPage({
   const item = await getEquipmentById(id);
   if (!item) notFound();
 
-  const [session, faultTrees] = await Promise.all([
-    auth(),
-    getFaultTreesForEquipment(item.id, item.type as EquipmentType),
-  ]);
+  const session = await auth();
 
   const fields = specFieldsByType[item.type as EquipmentType];
   const specs = (item.specs as Record<string, unknown>) ?? {};
@@ -33,6 +29,16 @@ export default async function EquipmentDetailPage({
   const photo = item.documents.find((d) => d.docType === "photo");
   const manuals = item.documents.filter((d) => d.docType !== "photo");
   const photoSrc = photo ? await resolvePhotoSrc(photo) : null;
+
+  const linkedControllers = await Promise.all(
+    item.controllerLinks.map(async (link) => {
+      const controllerPhoto = link.controller.documents[0];
+      return {
+        controller: link.controller,
+        photoSrc: controllerPhoto ? await resolvePhotoSrc(controllerPhoto) : null,
+      };
+    })
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -96,7 +102,7 @@ export default async function EquipmentDetailPage({
         <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
           Controllers
         </h2>
-        {item.controllerLinks.length === 0 ? (
+        {linkedControllers.length === 0 ? (
           <EmptyState>
             No controllers linked yet.{" "}
             {session?.user && (
@@ -110,14 +116,24 @@ export default async function EquipmentDetailPage({
           </EmptyState>
         ) : (
           <ul className="space-y-2">
-            {item.controllerLinks.map((link) => (
-              <li key={link.controller.id}>
+            {linkedControllers.map(({ controller, photoSrc: controllerPhotoSrc }) => (
+              <li key={controller.id}>
                 <Link
-                  href={`/controllers/${link.controller.id}`}
-                  className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                  href={`/controllers/${controller.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
                 >
+                  {controllerPhotoSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL, not a static asset next/image can optimize
+                    <img
+                      src={controllerPhotoSrc}
+                      alt=""
+                      className="h-12 w-12 shrink-0 rounded-md border border-slate-200 object-contain dark:border-slate-700"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 shrink-0 rounded-md border border-dashed border-slate-200 dark:border-slate-700" />
+                  )}
                   <span className="font-medium text-slate-900 dark:text-white">
-                    {link.controller.displayName}
+                    {controller.displayName}
                   </span>
                 </Link>
               </li>
@@ -164,35 +180,6 @@ export default async function EquipmentDetailPage({
                     {doc.source === "graph" ? "SharePoint" : "Link"}
                   </span>
                 </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
-          Fault finding
-        </h2>
-        {faultTrees.length === 0 ? (
-          <EmptyState>No fault trees published for this equipment yet.</EmptyState>
-        ) : (
-          <ul className="space-y-2">
-            {faultTrees.map((tree) => (
-              <li key={tree.id}>
-                <Link
-                  href={`/wizard/${tree.id}?equipmentId=${item.id}`}
-                  className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
-                >
-                  <span className="font-medium text-slate-900 dark:text-white">
-                    {tree.title}
-                  </span>
-                  {tree.description && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {tree.description}
-                    </p>
-                  )}
-                </Link>
               </li>
             ))}
           </ul>

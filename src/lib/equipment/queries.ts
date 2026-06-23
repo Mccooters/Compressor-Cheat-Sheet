@@ -57,7 +57,15 @@ export async function getEquipmentById(id: string) {
     where: eq(equipment.id, id),
     with: {
       documents: true,
-      controllerLinks: { with: { controller: true } },
+      controllerLinks: {
+        with: {
+          controller: {
+            with: {
+              documents: { where: eq(documentLink.docType, "photo"), limit: 1 },
+            },
+          },
+        },
+      },
     },
   });
 }
