@@ -63,6 +63,11 @@ export const recordSourceEnum = pgEnum("record_source", [
   "sharepoint_sync",
 ]);
 
+export const pviResourceCategoryEnum = pgEnum("pvi_resource_category", [
+  "cheat_sheet",
+  "other",
+]);
+
 export const equipment = pgTable("equipment", {
   id: uuid("id").defaultRandom().primaryKey(),
   type: equipmentTypeEnum("type").notNull(),
@@ -183,6 +188,24 @@ export const documentLink = pgTable("document_link", {
   fileName: text("file_name"),
   lastModifiedAt: timestamp("last_modified_at", { withTimezone: true }),
   cachedAt: timestamp("cached_at", { withTimezone: true }),
+  addedBy: text("added_by"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Standalone resources for the Pressure Vessel Inspection page — not tied
+// to any specific equipment or controller record, just titled links
+// (SharePoint or pasted URLs) grouped by category.
+export const pviResource = pgTable("pvi_resource", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  category: pviResourceCategoryEnum("category").notNull().default("other"),
+  source: documentSourceEnum("source").notNull(),
+  sharepointDriveId: text("sharepoint_drive_id"),
+  sharepointItemId: text("sharepoint_item_id"),
+  webUrl: text("web_url").notNull(),
+  fileName: text("file_name"),
   addedBy: text("added_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

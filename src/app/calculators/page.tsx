@@ -2,56 +2,33 @@ import Link from "next/link";
 
 const CATEGORIES = [
   {
-    name: "Pressure vessel inspection",
-    standard: "AS 4343 · AS 1210 · AS/NZS 3788",
+    name: "Pressure",
+    standard: "AS 4343 · AS 1210",
+    note: (
+      <>
+        Need the full hazard level, MAWP, corrosion-rate, and inspection
+        toolkit, plus cheat sheets?{" "}
+        <Link
+          href="/pressure-vessel-inspection"
+          className="text-amber-600 underline dark:text-amber-400"
+        >
+          Visit Pressure Vessel Inspection
+        </Link>
+        .
+      </>
+    ),
     calculators: [
-      {
-        href: "/calculators/pressure-equipment-hazard-level",
-        title: "Pressure equipment hazard level (AS 4343)",
-        description:
-          "Numerical method from AS 4343:2014 for hazard level A–E of pressure vessels and boilers.",
-      },
-      {
-        href: "/calculators/pv-value",
-        title: "PV value",
-        description:
-          "Design pressure × volume against AS/NZS 3788 Table 4.1 inspection thresholds.",
-      },
-      {
-        href: "/calculators/minimum-wall-thickness",
-        title: "Minimum wall thickness (t_min)",
-        description:
-          "Baseline cylindrical shell thickness per AS 1210 — compare measured UT readings against it.",
-      },
-      {
-        href: "/calculators/corrosion-rate",
-        title: "Corrosion rate & remaining life",
-        description:
-          "From two UT readings: corrosion rate, remaining life, and next inspection date.",
-      },
-      {
-        href: "/calculators/mawp",
-        title: "Maximum allowable working pressure (MAWP)",
-        description:
-          "Working pressure a vessel can still be rated at from its current measured wall thickness.",
-      },
-      {
-        href: "/calculators/srv-set-pressure-verification",
-        title: "SRV set pressure verification",
-        description:
-          "Checks the safety relief valve set pressure against design pressure, MAWP, and the 110% limit.",
-      },
-      {
-        href: "/calculators/hydrostatic-test-pressure",
-        title: "Hydrostatic test pressure",
-        description:
-          "Required test pressure from MAWP and a temperature-derated stress ratio, per AS 1210.",
-      },
       {
         href: "/calculators/pressure-vessel-volume",
         title: "Pressure vessel volume",
         description:
           "Volume of a standard cylindrical vessel with two dome ends, from overall length and diameter.",
+      },
+      {
+        href: "/calculators/hazard-level-quick",
+        title: "Quick hazard level (AS 4343)",
+        description:
+          "Fast hazard level A–E estimate from pressure, volume, state, and harmfulness.",
       },
     ],
   },
@@ -114,6 +91,11 @@ export default function CalculatorsIndexPage() {
             <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
               {category.name}
             </h2>
+            {category.note && (
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {category.note}
+              </p>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
