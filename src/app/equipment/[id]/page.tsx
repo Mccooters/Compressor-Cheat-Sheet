@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@/auth";
+import { getCurrentUserRole } from "@/lib/auth/currentUser";
 import {
   formatEquipmentTypeLabel,
   specFieldsByType,
@@ -22,8 +22,7 @@ export default async function EquipmentDetailPage({
   const item = await getEquipmentById(id);
   if (!item) notFound();
 
-  const session = await auth();
-  const isAdmin = session?.user?.role === "admin";
+  const isAdmin = (await getCurrentUserRole()) === "admin";
 
   const fields = specFieldsByType[item.type as EquipmentType];
   const specs = (item.specs as Record<string, unknown>) ?? {};

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@/auth";
+import { getCurrentUserRole } from "@/lib/auth/currentUser";
 import { getControllerById } from "@/lib/controllers/queries";
 import { resolvePhotoSrc } from "@/lib/documents/photo";
 import { Stat } from "@/components/ui/Stat";
@@ -17,8 +17,7 @@ export default async function ControllerDetailPage({
   const item = await getControllerById(id);
   if (!item) notFound();
 
-  const session = await auth();
-  const isAdmin = session?.user?.role === "admin";
+  const isAdmin = (await getCurrentUserRole()) === "admin";
 
   const photo = item.documents.find((d) => d.docType === "photo");
   const manuals = item.documents.filter((d) => d.docType !== "photo");

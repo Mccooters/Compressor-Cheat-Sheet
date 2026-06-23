@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUserRole } from "@/lib/auth/currentUser";
 
 const adminLinks = [
   { href: "/admin/equipment", label: "Equipment" },
@@ -7,11 +9,14 @@ const adminLinks = [
   { href: "/admin/users", label: "Users" },
 ];
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") redirect("/");
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <nav className="flex gap-4 border-b border-slate-200 pb-3 text-sm dark:border-slate-800">

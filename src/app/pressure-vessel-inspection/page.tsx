@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth } from "@/auth";
+import { getCurrentUserRole } from "@/lib/auth/currentUser";
 import { listPviResources } from "@/lib/pvi/queries";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { linkCardClass } from "@/components/ui/Card";
@@ -57,8 +57,11 @@ const CALCULATORS = [
 ];
 
 export default async function PressureVesselInspectionPage() {
-  const [session, resources] = await Promise.all([auth(), listPviResources()]);
-  const canEdit = session?.user?.role === "admin";
+  const [role, resources] = await Promise.all([
+    getCurrentUserRole(),
+    listPviResources(),
+  ]);
+  const canEdit = role === "admin";
 
   const cheatSheets = resources.filter((r) => r.category === "cheat_sheet");
   const other = resources.filter((r) => r.category === "other");

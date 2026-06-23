@@ -4,7 +4,6 @@ import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { isDevLoginEnabled, isEntraConfigured } from "@/lib/graph/config";
-import { resolveUserRole } from "@/lib/auth/roles";
 
 const providers: Provider[] = [];
 
@@ -103,16 +102,6 @@ const { handlers, auth: uncachedAuth, signIn, signOut } = NextAuth({
         }
       }
 
-      // Resolved on every call (not just sign-in) so a role change made from
-      // /admin/users takes effect on the user's next request rather than
-      // requiring them to sign out and back in.
-      if (typeof token.email === "string") {
-        token.role = await resolveUserRole(
-          token.email,
-          typeof token.name === "string" ? token.name : null
-        );
-      }
-
       return token;
     },
     async session({ session, token }) {
@@ -121,9 +110,6 @@ const { handlers, auth: uncachedAuth, signIn, signOut } = NextAuth({
       }
       if (token.error) {
         session.error = token.error;
-      }
-      if (token.role) {
-        session.user.role = token.role;
       }
       return session;
     },
