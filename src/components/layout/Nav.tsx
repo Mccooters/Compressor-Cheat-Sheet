@@ -8,9 +8,11 @@ const links = [
   { href: "/wizard", label: "Fault Finder" },
   { href: "/controllers", label: "Controllers" },
   { href: "/calculators", label: "Calculators" },
-  { href: "/admin/equipment", label: "Admin" },
+  { href: "/pressure-vessel-inspection", label: "Pressure Vessels" },
   { href: "/search", label: "Search" },
 ];
+
+const adminLink = [{ href: "/admin/equipment", label: "Admin" }];
 
 export async function Nav() {
   const session = await auth();
@@ -25,6 +27,7 @@ export async function Nav() {
       </div>
       <div className="flex items-center gap-3 text-sm">
         <ThemeToggle />
+        <NavLinks links={adminLink} />
         {session?.user ? (
           <>
             <span className="text-slate-500 dark:text-slate-400">
