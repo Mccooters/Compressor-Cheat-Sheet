@@ -14,7 +14,8 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:seed-fault-trees": "tsx src/db/seed-rotary-screw-fault-trees.ts",
     "db:import-controllers": "tsx src/db/import-controller-codes.ts",
-    "db:reclassify-fault-codes": "tsx src/db/reclassify-fault-codes.ts"
+    "db:reclassify-fault-codes": "tsx src/db/reclassify-fault-codes.ts",
+    "db:categorize-fault-trees": "tsx src/db/categorize-fault-trees.ts"
   },
   "dependencies": {
     "@microsoft/microsoft-graph-client": "^3.0.7",

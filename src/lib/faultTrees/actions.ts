@@ -16,9 +16,19 @@ import { EQUIPMENT_TYPES } from "@/lib/equipment/specSchemas";
 import { canPublish, lintFaultTree } from "@/lib/faultTrees/lint";
 import { getTreeWithNodes } from "@/lib/faultTrees/queries";
 
+const FAULT_TREE_CATEGORIES = [
+  "electrical",
+  "mechanical",
+  "lubrication",
+  "controls",
+  "safety",
+  "moisture",
+] as const;
+
 const treeMetaSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  category: z.enum(FAULT_TREE_CATEGORIES),
   equipmentScope: z.enum(["generic", "type_scoped", "model_scoped"]),
   scopedEquipmentType: z.enum(EQUIPMENT_TYPES).optional(),
 });
@@ -27,6 +37,7 @@ export async function createFaultTree(formData: FormData) {
   const values = treeMetaSchema.parse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
+    category: formData.get("category") || "mechanical",
     equipmentScope: formData.get("equipmentScope") || "generic",
     scopedEquipmentType: formData.get("scopedEquipmentType") || undefined,
   });
@@ -45,6 +56,7 @@ export async function updateFaultTreeMeta(id: string, formData: FormData) {
   const values = treeMetaSchema.parse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
+    category: formData.get("category") || "mechanical",
     equipmentScope: formData.get("equipmentScope") || "generic",
     scopedEquipmentType: formData.get("scopedEquipmentType") || undefined,
   });

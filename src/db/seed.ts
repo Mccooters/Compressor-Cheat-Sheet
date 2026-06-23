@@ -88,6 +88,7 @@ async function main() {
     .values({
       title: "Compressor won't start",
       description: "Start here when a rotary screw compressor fails to start.",
+      category: "electrical",
       equipmentScope: "type_scoped",
       scopedEquipmentType: "compressor",
       status: "draft",

@@ -17,8 +17,8 @@ export function NewFaultTreeForm() {
         <textarea name="description" rows={2} className={fieldInputClass} />
       </Field>
       <p className="text-xs text-slate-500 dark:text-slate-500">
-        You can set equipment scope and start adding nodes after creating the
-        tree.
+        You can set the category, equipment scope, and start adding nodes
+        after creating the tree.
       </p>
       <Button type="submit">Create</Button>
     </form>

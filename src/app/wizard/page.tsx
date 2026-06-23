@@ -5,21 +5,99 @@ import { getFaultTreesForEquipment, listFaultTrees } from "@/lib/faultTrees/quer
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 
+type Category =
+  | "electrical"
+  | "mechanical"
+  | "lubrication"
+  | "controls"
+  | "safety"
+  | "moisture";
+
+const CATEGORY_INFO: { value: Category; label: string; description: string }[] = [
+  {
+    value: "electrical",
+    label: "Electrical",
+    description: "Won't start, motor/contactor faults, wrong rotation, drive trips, controller issues.",
+  },
+  {
+    value: "mechanical",
+    label: "Mechanical",
+    description: "Noise, vibration, low output, and valve faults.",
+  },
+  {
+    value: "lubrication",
+    label: "Lubrication & Cooling",
+    description: "Oil pressure, oil carryover, leaks, contamination, and overheating.",
+  },
+  {
+    value: "controls",
+    label: "Controls & Cycling",
+    description: "Won't load, won't unload, or cycles too frequently.",
+  },
+  {
+    value: "safety",
+    label: "Safety & Pressure Relief",
+    description: "Relief valve and overpressure issues.",
+  },
+  {
+    value: "moisture",
+    label: "Moisture & Drainage",
+    description: "Condensate drain faults.",
+  },
+];
+
+function FaultTreeList({
+  trees,
+  equipmentId,
+}: {
+  trees: { id: string; title: string; description: string | null }[];
+  equipmentId?: string;
+}) {
+  if (trees.length === 0) {
+    return <EmptyState>No published fault trees here yet.</EmptyState>;
+  }
+  return (
+    <ul className="space-y-2">
+      {trees.map((tree) => (
+        <li key={tree.id}>
+          <Link
+            href={
+              equipmentId
+                ? `/wizard/${tree.id}?equipmentId=${equipmentId}`
+                : `/wizard/${tree.id}`
+            }
+            className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+          >
+            <span className="font-medium text-slate-900 dark:text-white">
+              {tree.title}
+            </span>
+            {tree.description && (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {tree.description}
+              </p>
+            )}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function WizardIndexPage({
   searchParams,
 }: {
-  searchParams: Promise<{ equipmentId?: string }>;
+  searchParams: Promise<{ equipmentId?: string; category?: string }>;
 }) {
-  const { equipmentId } = await searchParams;
+  const { equipmentId, category } = await searchParams;
   const equipment = equipmentId ? await getEquipmentById(equipmentId) : null;
-  const trees = equipment
-    ? await getFaultTreesForEquipment(equipment.id, equipment.type as EquipmentType)
-    : await listFaultTrees({ status: "published" });
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="Fault finder" />
-      {equipment && (
+  // Equipment-scoped browsing keeps the existing flat list — it's already
+  // narrowed down to what's relevant for that specific item.
+  if (equipment) {
+    const trees = await getFaultTreesForEquipment(equipment.id, equipment.type as EquipmentType);
+    return (
+      <div className="mx-auto max-w-2xl space-y-6">
+        <PageHeader title="Fault finder" />
         <p className="text-sm text-slate-500 dark:text-slate-500">
           Showing fault trees for{" "}
           <span className="font-medium text-slate-700 dark:text-slate-300">
@@ -30,35 +108,57 @@ export default async function WizardIndexPage({
             Clear filter
           </Link>
         </p>
-      )}
+        <FaultTreeList trees={trees} equipmentId={equipment.id} />
+      </div>
+    );
+  }
 
-      {trees.length === 0 ? (
-        <EmptyState>No published fault trees yet.</EmptyState>
-      ) : (
-        <ul className="space-y-2">
-          {trees.map((tree) => (
-            <li key={tree.id}>
-              <Link
-                href={
-                  equipment
-                    ? `/wizard/${tree.id}?equipmentId=${equipment.id}`
-                    : `/wizard/${tree.id}`
-                }
-                className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
-              >
-                <span className="font-medium text-slate-900 dark:text-white">
-                  {tree.title}
+  const allTrees = await listFaultTrees({ status: "published" });
+
+  if (category) {
+    const info = CATEGORY_INFO.find((c) => c.value === category);
+    const trees = allTrees.filter((t) => t.category === category);
+    return (
+      <div className="mx-auto max-w-2xl space-y-6">
+        <PageHeader title={info?.label ?? "Fault finder"} description={info?.description} />
+        <Link href="/wizard" className="text-sm text-amber-600 underline dark:text-amber-400">
+          ← Back to categories
+        </Link>
+        <FaultTreeList trees={trees} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <PageHeader
+        title="Fault finder"
+        description="Start with what kind of problem this is, then pick the closest match."
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        {CATEGORY_INFO.map((info) => {
+          const count = allTrees.filter((t) => t.category === info.value).length;
+          return (
+            <Link
+              key={info.value}
+              href={`/wizard?category=${info.value}`}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-slate-900 dark:text-white">
+                  {info.label}
+                </h2>
+                <span className="text-xs text-slate-400 dark:text-slate-500">
+                  {count}
                 </span>
-                {tree.description && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {tree.description}
-                  </p>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+              </div>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {info.description}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

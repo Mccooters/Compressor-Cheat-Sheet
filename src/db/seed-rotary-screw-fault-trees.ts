@@ -19,9 +19,18 @@ type DiagnosisNode = {
 };
 type NodeSpec = QuestionNode | DiagnosisNode;
 
+type Category =
+  | "electrical"
+  | "mechanical"
+  | "lubrication"
+  | "controls"
+  | "safety"
+  | "moisture";
+
 type TreeSpec = {
   title: string;
   description: string;
+  category: Category;
   root: string;
   nodes: Record<string, NodeSpec>;
   edges: { from: string; label: string; to: string }[];
@@ -34,6 +43,7 @@ type TreeSpec = {
 
 const overloadTrip: TreeSpec = {
   title: "Compressor trips on motor overload / high current draw",
+  category: "electrical",
   description: "Start here when the motor overload relay or breaker trips.",
   root: "q1",
   nodes: {
@@ -107,6 +117,7 @@ const overloadTrip: TreeSpec = {
 
 const lowPressure: TreeSpec = {
   title: "Won't build or reach discharge pressure",
+  category: "mechanical",
   description: "Start here when the compressor runs loaded but pressure is low or falls quickly under demand.",
   root: "q1",
   nodes: {
@@ -169,6 +180,7 @@ const lowPressure: TreeSpec = {
 
 const highTemperature: TreeSpec = {
   title: "High discharge/sump temperature or thermal shutdown",
+  category: "lubrication",
   description: "Start here when the compressor is running hot or has tripped on high temperature.",
   root: "q1",
   nodes: {
@@ -231,6 +243,7 @@ const highTemperature: TreeSpec = {
 
 const oilCarryover: TreeSpec = {
   title: "Excessive oil carryover into the air system",
+  category: "lubrication",
   description: "Start here when oil is showing up downstream in the compressed air.",
   root: "q1",
   nodes: {
@@ -283,6 +296,7 @@ const oilCarryover: TreeSpec = {
 
 const wontLoad: TreeSpec = {
   title: "Runs but won't load (no output)",
+  category: "controls",
   description: "Start here when the motor is running but the unit stays unloaded with no air output.",
   root: "q1",
   nodes: {
@@ -326,6 +340,7 @@ const wontLoad: TreeSpec = {
 
 const shortCycling: TreeSpec = {
   title: "Cycles (starts/stops or loads/unloads) too frequently",
+  category: "controls",
   description: "Start here when the compressor starts and stops, or loads and unloads, far more often than expected.",
   root: "q1",
   nodes: {
@@ -387,6 +402,7 @@ const shortCycling: TreeSpec = {
 
 const lowOilPressure: TreeSpec = {
   title: "Low oil pressure / lubrication alarm",
+  category: "lubrication",
   description: "Start here when a low oil pressure or lubrication fault is active.",
   root: "q1",
   nodes: {
@@ -439,6 +455,7 @@ const lowOilPressure: TreeSpec = {
 
 const noiseVibration: TreeSpec = {
   title: "Abnormal noise or vibration",
+  category: "mechanical",
   description: "Start here when the compressor is making unusual noise or vibrating more than normal.",
   root: "q1",
   nodes: {
@@ -490,6 +507,7 @@ const noiseVibration: TreeSpec = {
 
 const vsdFault: TreeSpec = {
   title: "VSD/inverter fault trip",
+  category: "electrical",
   description: "Start here when a variable speed drive (VFD/inverter) compressor has tripped on a drive fault.",
   root: "q1",
   nodes: {
@@ -543,6 +561,7 @@ const vsdFault: TreeSpec = {
 
 const separatorDifferential: TreeSpec = {
   title: "High air/oil separator differential pressure",
+  category: "lubrication",
   description: "Start here when the separator differential pressure indicator is reading high.",
   root: "q1",
   nodes: {
@@ -578,6 +597,7 @@ const separatorDifferential: TreeSpec = {
 
 const wontStart: TreeSpec = {
   title: "Won't start — no response to the start command",
+  category: "electrical",
   description: "Start here when pressing start produces no reaction at all, or the unit stops responding before the motor ever turns.",
   root: "q1",
   nodes: {
@@ -642,6 +662,7 @@ const wontStart: TreeSpec = {
 
 const motorWontTurn: TreeSpec = {
   title: "Contactor closes but motor hums, won't turn, or trips instantly",
+  category: "electrical",
   description: "Start here when the main contactor closes but the motor doesn't run normally — it hums without turning, or trips immediately.",
   root: "q1",
   nodes: {
@@ -689,6 +710,7 @@ const motorWontTurn: TreeSpec = {
 
 const wrongRotation: TreeSpec = {
   title: "Wrong rotation direction after rewiring or a supply change",
+  category: "electrical",
   description: "Start here when checking rotation direction after electrical work, a motor replacement, or a supply/generator changeover.",
   root: "q1",
   nodes: {
@@ -735,6 +757,7 @@ const wrongRotation: TreeSpec = {
 
 const condensateDrain: TreeSpec = {
   title: "Condensate drain not working correctly",
+  category: "moisture",
   description: "Start here for a separator/receiver condensate drain that won't discharge water, runs continuously, or lets the vessel flood.",
   root: "q1",
   nodes: {
@@ -802,6 +825,7 @@ const condensateDrain: TreeSpec = {
 
 const reliefValve: TreeSpec = {
   title: "Pressure relief/safety valve lifts or won't reseat",
+  category: "safety",
   description: "Start here when a sump, receiver, or line safety relief valve has discharged, or won't stop venting after lifting.",
   root: "q1",
   nodes: {
@@ -846,6 +870,7 @@ const reliefValve: TreeSpec = {
 
 const controllerFrozen: TreeSpec = {
   title: "Controller display frozen, unresponsive, or showing incorrect data",
+  category: "electrical",
   description: "Start here when the control panel is powered but won't respond to keypresses, is frozen, or shows garbled or clearly wrong readings.",
   root: "q1",
   nodes: {
@@ -890,6 +915,7 @@ const controllerFrozen: TreeSpec = {
 
 const externalOilLeak: TreeSpec = {
   title: "Oil leaking externally from the unit",
+  category: "lubrication",
   description: "Start here when oil is visibly leaking or pooling outside the compressor package. For oil appearing downstream in the air system instead, use the oil carryover fault tree.",
   root: "q1",
   nodes: {
@@ -947,6 +973,7 @@ const externalOilLeak: TreeSpec = {
 
 const wontUnload: TreeSpec = {
   title: "Runs continuously loaded and never unloads",
+  category: "controls",
   description: "Start here when the compressor stays loaded even though downstream demand should let it unload, or it ignores the unload setpoint.",
   root: "q1",
   nodes: {
@@ -990,6 +1017,7 @@ const wontUnload: TreeSpec = {
 
 const blowdownValve: TreeSpec = {
   title: "Blowdown (sump vent) valve fault",
+  category: "mechanical",
   description: "Start here for a hard or slow restart after stopping, a loud venting/backspin noise at shutdown, or continuous hissing while running.",
   root: "q1",
   nodes: {
@@ -1025,6 +1053,7 @@ const blowdownValve: TreeSpec = {
 
 const milkyOil: TreeSpec = {
   title: "Oil appears milky or water-contaminated",
+  category: "lubrication",
   description: "Start here when sump oil looks cloudy or milky rather than clear, indicating water contamination rather than a mechanical fault.",
   root: "q1",
   nodes: {
@@ -1095,6 +1124,7 @@ async function createFaultTree(spec: TreeSpec, equipmentIds: string[]) {
     .values({
       title: spec.title,
       description: spec.description,
+      category: spec.category,
       equipmentScope: equipmentIds.length ? "model_scoped" : "type_scoped",
       scopedEquipmentType: equipmentIds.length ? null : "compressor",
       status: "draft",

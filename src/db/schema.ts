@@ -53,6 +53,18 @@ export const faultTreeStatusEnum = pgEnum("fault_tree_status", [
   "published",
 ]);
 
+// Top-level grouping shown on the Fault Finder's category picker, so
+// technicians start from "what kind of problem is this" rather than
+// scanning every fault tree at once.
+export const faultTreeCategoryEnum = pgEnum("fault_tree_category", [
+  "electrical",
+  "mechanical",
+  "lubrication",
+  "controls",
+  "safety",
+  "moisture",
+]);
+
 export const faultTreeNodeTypeEnum = pgEnum("fault_tree_node_type", [
   "question",
   "diagnosis",
@@ -220,6 +232,7 @@ export const faultTree = pgTable("fault_tree", {
     .notNull()
     .default("generic"),
   scopedEquipmentType: equipmentTypeEnum("scoped_equipment_type"),
+  category: faultTreeCategoryEnum("category").notNull().default("mechanical"),
   // No FK constraint here on purpose: fault_tree_node.fault_tree_id already
   // points back at this row, so enforcing both directions would create a
   // circular FK. Root validity (must point at a node belonging to this tree)
