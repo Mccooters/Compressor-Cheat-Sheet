@@ -11,7 +11,7 @@ import {
   faultTreeEquipment,
   faultTreeNode,
 } from "@/db/schema";
-import { getCurrentUserEmail } from "@/lib/auth/currentUser";
+import { getCurrentUserEmail, requireAdmin } from "@/lib/auth/currentUser";
 import { EQUIPMENT_TYPES } from "@/lib/equipment/specSchemas";
 import { canPublish, lintFaultTree } from "@/lib/faultTrees/lint";
 import { getTreeWithNodes } from "@/lib/faultTrees/queries";
@@ -34,6 +34,7 @@ const treeMetaSchema = z.object({
 });
 
 export async function createFaultTree(formData: FormData) {
+  await requireAdmin();
   const values = treeMetaSchema.parse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
@@ -53,6 +54,7 @@ export async function createFaultTree(formData: FormData) {
 }
 
 export async function updateFaultTreeMeta(id: string, formData: FormData) {
+  await requireAdmin();
   const values = treeMetaSchema.parse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
@@ -78,6 +80,7 @@ export async function updateFaultTreeMeta(id: string, formData: FormData) {
 }
 
 export async function deleteFaultTree(id: string) {
+  await requireAdmin();
   await db.delete(faultTree).where(eq(faultTree.id, id));
   revalidatePath("/admin/fault-trees");
   redirect("/admin/fault-trees");
@@ -111,6 +114,7 @@ function parseNodeFormData(formData: FormData) {
 }
 
 export async function createNode(faultTreeId: string, formData: FormData) {
+  await requireAdmin();
   const values = parseNodeFormData(formData);
 
   await db.insert(faultTreeNode).values({ ...values, faultTreeId });
@@ -123,6 +127,7 @@ export async function updateNode(
   faultTreeId: string,
   formData: FormData
 ) {
+  await requireAdmin();
   const values = parseNodeFormData(formData);
 
   await db
@@ -134,6 +139,7 @@ export async function updateNode(
 }
 
 export async function deleteNode(nodeId: string, faultTreeId: string) {
+  await requireAdmin();
   await db.delete(faultTreeNode).where(eq(faultTreeNode.id, nodeId));
 
   const tree = await db.query.faultTree.findFirst({
@@ -150,6 +156,7 @@ export async function deleteNode(nodeId: string, faultTreeId: string) {
 }
 
 export async function setRootNode(faultTreeId: string, nodeId: string) {
+  await requireAdmin();
   await db
     .update(faultTree)
     .set({ rootNodeId: nodeId, updatedAt: new Date() })
@@ -169,6 +176,7 @@ export async function createBranch(
   faultTreeId: string,
   formData: FormData
 ) {
+  await requireAdmin();
   const values = branchSchema.parse({
     label: formData.get("label"),
     toNodeId: formData.get("toNodeId"),
@@ -181,11 +189,13 @@ export async function createBranch(
 }
 
 export async function deleteBranch(branchId: string, faultTreeId: string) {
+  await requireAdmin();
   await db.delete(faultTreeBranch).where(eq(faultTreeBranch.id, branchId));
   revalidatePath(`/admin/fault-trees/${faultTreeId}/edit`);
 }
 
 export async function publishFaultTree(faultTreeId: string) {
+  await requireAdmin();
   const result = await getTreeWithNodes(faultTreeId);
   if (!result) return;
 
@@ -206,6 +216,7 @@ export async function publishFaultTree(faultTreeId: string) {
 }
 
 export async function unpublishFaultTree(faultTreeId: string) {
+  await requireAdmin();
   await db
     .update(faultTree)
     .set({ status: "draft", updatedAt: new Date() })

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { documentLink } from "@/db/schema";
-import { getCurrentUserEmail } from "@/lib/auth/currentUser";
+import { getCurrentUserEmail, requireAdmin } from "@/lib/auth/currentUser";
 import { isGraphConfigured } from "@/lib/graph/config";
 import {
   getDriveItemMetadata,
@@ -30,6 +30,7 @@ const manualLinkSchema = z.object({
 });
 
 export async function addControllerManualLink(formData: FormData) {
+  await requireAdmin();
   const values = manualLinkSchema.parse({
     controllerId: formData.get("controllerId"),
     title: formData.get("title"),
@@ -52,6 +53,7 @@ export async function deleteControllerDocumentLink(
   id: string,
   controllerId: string
 ) {
+  await requireAdmin();
   await db.delete(documentLink).where(eq(documentLink.id, id));
   revalidatePath(`/controllers/${controllerId}`);
   revalidatePath(`/admin/controllers/${controllerId}/edit`);
@@ -60,6 +62,7 @@ export async function deleteControllerDocumentLink(
 export async function searchControllerSharePointAction(
   query: string
 ): Promise<SharePointHit[]> {
+  await requireAdmin();
   if (!isGraphConfigured()) return [];
   if (!query.trim()) return [];
   return searchDriveItems(query);
@@ -70,6 +73,7 @@ export async function addControllerGraphDocumentLink(
   docType: (typeof docTypes)[number],
   hit: SharePointHit
 ) {
+  await requireAdmin();
   const userEmail = await getCurrentUserEmail();
 
   await db.insert(documentLink).values({
@@ -94,6 +98,7 @@ export async function refreshControllerDocumentLinkMetadata(
   documentLinkId: string,
   controllerId: string
 ) {
+  await requireAdmin();
   if (!isGraphConfigured()) return;
 
   const doc = await db.query.documentLink.findFirst({

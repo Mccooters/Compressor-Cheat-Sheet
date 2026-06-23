@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { controller, controllerFaultCode, controllerPassword } from "@/db/schema";
-import { getCurrentUserEmail } from "@/lib/auth/currentUser";
+import { getCurrentUserEmail, requireAdmin } from "@/lib/auth/currentUser";
 import { syncControllersFromSharePoint } from "@/lib/controllers/sharepointSync";
 
 const controllerFieldsSchema = z.object({
@@ -26,6 +26,7 @@ function parseControllerFormData(formData: FormData) {
 }
 
 export async function createController(formData: FormData) {
+  await requireAdmin();
   const values = parseControllerFormData(formData);
   const userEmail = await getCurrentUserEmail();
 
@@ -39,6 +40,7 @@ export async function createController(formData: FormData) {
 }
 
 export async function updateController(id: string, formData: FormData) {
+  await requireAdmin();
   const values = parseControllerFormData(formData);
 
   await db
@@ -52,6 +54,7 @@ export async function updateController(id: string, formData: FormData) {
 }
 
 export async function deleteController(id: string) {
+  await requireAdmin();
   await db.delete(controller).where(eq(controller.id, id));
 
   revalidatePath("/controllers");
@@ -66,6 +69,7 @@ const passwordFieldsSchema = z.object({
 });
 
 export async function addControllerPassword(formData: FormData) {
+  await requireAdmin();
   const values = passwordFieldsSchema.parse({
     controllerId: formData.get("controllerId"),
     label: formData.get("label"),
@@ -82,6 +86,7 @@ export async function deleteControllerPassword(
   id: string,
   controllerId: string
 ) {
+  await requireAdmin();
   await db.delete(controllerPassword).where(eq(controllerPassword.id, id));
 
   revalidatePath(`/controllers/${controllerId}`);
@@ -95,6 +100,7 @@ const faultCodeFieldsSchema = z.object({
 });
 
 export async function addControllerFaultCode(formData: FormData) {
+  await requireAdmin();
   const values = faultCodeFieldsSchema.parse({
     controllerId: formData.get("controllerId"),
     code: formData.get("code"),
@@ -111,6 +117,7 @@ export async function deleteControllerFaultCode(
   id: string,
   controllerId: string
 ) {
+  await requireAdmin();
   await db.delete(controllerFaultCode).where(eq(controllerFaultCode.id, id));
 
   revalidatePath(`/controllers/${controllerId}`);
@@ -118,6 +125,7 @@ export async function deleteControllerFaultCode(
 }
 
 export async function syncControllersFromSharePointAction() {
+  await requireAdmin();
   const result = await syncControllersFromSharePoint();
 
   revalidatePath("/controllers");

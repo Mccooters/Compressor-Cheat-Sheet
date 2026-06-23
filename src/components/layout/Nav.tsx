@@ -32,7 +32,7 @@ export async function Nav() {
         <NavLinks links={links} />
       </div>
       <div className="flex items-center gap-3 text-sm">
-        <NavLinks links={adminLink} />
+        {session?.user?.role === "admin" && <NavLinks links={adminLink} />}
         {session?.user ? (
           <AccountMenu
             email={session.user.email ?? session.user.name ?? "Account"}

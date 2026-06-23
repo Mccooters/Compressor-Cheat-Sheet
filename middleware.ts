@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 export default auth((req) => {
+  const isLoginRoute = req.nextUrl.pathname === "/login";
   const isAdminRoute = req.nextUrl.pathname.startsWith("/admin");
-  if (isAdminRoute && !req.auth) {
+
+  if (!isLoginRoute && !req.auth) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAdminRoute && req.auth?.user?.role !== "admin") {
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 });
 

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { pviResource } from "@/db/schema";
-import { getCurrentUserEmail } from "@/lib/auth/currentUser";
+import { getCurrentUserEmail, requireAdmin } from "@/lib/auth/currentUser";
 import type { SharePointHit } from "@/lib/graph/sharepoint";
 
 const categories = ["cheat_sheet", "other"] as const;
@@ -18,6 +18,7 @@ const manualLinkSchema = z.object({
 });
 
 export async function addPviManualLink(formData: FormData) {
+  await requireAdmin();
   const values = manualLinkSchema.parse({
     title: formData.get("title"),
     category: formData.get("category"),
@@ -38,6 +39,7 @@ export async function addPviGraphResource(
   category: PviResourceCategory,
   hit: SharePointHit
 ) {
+  await requireAdmin();
   const userEmail = await getCurrentUserEmail();
 
   await db.insert(pviResource).values({
@@ -55,6 +57,7 @@ export async function addPviGraphResource(
 }
 
 export async function deletePviResource(id: string) {
+  await requireAdmin();
   await db.delete(pviResource).where(eq(pviResource.id, id));
   revalidatePath("/pressure-vessel-inspection");
 }

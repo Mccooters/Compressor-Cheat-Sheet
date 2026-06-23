@@ -58,7 +58,7 @@ const CALCULATORS = [
 
 export default async function PressureVesselInspectionPage() {
   const [session, resources] = await Promise.all([auth(), listPviResources()]);
-  const canEdit = !!session?.user;
+  const canEdit = session?.user?.role === "admin";
 
   const cheatSheets = resources.filter((r) => r.category === "cheat_sheet");
   const other = resources.filter((r) => r.category === "other");

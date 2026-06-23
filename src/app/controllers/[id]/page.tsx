@@ -18,6 +18,7 @@ export default async function ControllerDetailPage({
   if (!item) notFound();
 
   const session = await auth();
+  const isAdmin = session?.user?.role === "admin";
 
   const photo = item.documents.find((d) => d.docType === "photo");
   const manuals = item.documents.filter((d) => d.docType !== "photo");
@@ -44,7 +45,7 @@ export default async function ControllerDetailPage({
             </h1>
           </div>
         </div>
-        {session?.user && (
+        {isAdmin && (
           <Link
             href={`/admin/controllers/${item.id}/edit`}
             className={buttonClass("secondary")}
@@ -72,7 +73,7 @@ export default async function ControllerDetailPage({
         {item.passwords.length === 0 ? (
           <EmptyState>
             No codes recorded yet.{" "}
-            {session?.user && (
+            {isAdmin && (
               <Link
                 href={`/admin/controllers/${item.id}/edit`}
                 className="text-amber-600 underline dark:text-amber-400"
@@ -97,7 +98,7 @@ export default async function ControllerDetailPage({
         {item.faultCodes.length === 0 ? (
           <EmptyState>
             No fault codes recorded yet.{" "}
-            {session?.user && (
+            {isAdmin && (
               <Link
                 href={`/admin/controllers/${item.id}/edit`}
                 className="text-amber-600 underline dark:text-amber-400"
@@ -126,7 +127,7 @@ export default async function ControllerDetailPage({
         {manuals.length === 0 ? (
           <EmptyState>
             No manuals linked yet.{" "}
-            {session?.user && (
+            {isAdmin && (
               <Link
                 href={`/admin/controllers/${item.id}/edit`}
                 className="text-amber-600 underline dark:text-amber-400"

@@ -80,6 +80,29 @@ export const pviResourceCategoryEnum = pgEnum("pvi_resource_category", [
   "other",
 ]);
 
+export const userRoleEnum = pgEnum("user_role", ["admin", "viewer"]);
+
+// Every signed-in email gets a row here, created on first login (see
+// resolveUserRole in src/lib/auth/roles.ts). The very first person ever to
+// sign in becomes admin automatically; everyone after defaults to viewer
+// until an admin promotes them from /admin/users.
+export const appUser = pgTable(
+  "app_user",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull(),
+    name: text("name"),
+    role: userRoleEnum("role").notNull().default("viewer"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("app_user_email_idx").on(table.email)]
+);
+
 export const equipment = pgTable("equipment", {
   id: uuid("id").defaultRandom().primaryKey(),
   type: equipmentTypeEnum("type").notNull(),

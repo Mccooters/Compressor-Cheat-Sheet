@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/db";
 import { equipmentController } from "@/db/schema";
+import { requireAdmin } from "@/lib/auth/currentUser";
 
 const linkSchema = z.object({
   equipmentId: z.string().uuid(),
@@ -12,6 +13,7 @@ const linkSchema = z.object({
 });
 
 export async function linkEquipmentController(formData: FormData) {
+  await requireAdmin();
   const values = linkSchema.parse({
     equipmentId: formData.get("equipmentId"),
     controllerId: formData.get("controllerId"),
@@ -30,6 +32,7 @@ export async function unlinkEquipmentController(
   equipmentId: string,
   controllerId: string
 ) {
+  await requireAdmin();
   await db
     .delete(equipmentController)
     .where(

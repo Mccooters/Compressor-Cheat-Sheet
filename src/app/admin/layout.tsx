@@ -4,6 +4,7 @@ const adminLinks = [
   { href: "/admin/equipment", label: "Equipment" },
   { href: "/admin/fault-trees", label: "Fault trees" },
   { href: "/admin/controllers", label: "Controllers" },
+  { href: "/admin/users", label: "Users" },
 ];
 
 export default function AdminLayout({

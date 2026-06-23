@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/db";
 import { equipment } from "@/db/schema";
-import { getCurrentUserEmail } from "@/lib/auth/currentUser";
+import { getCurrentUserEmail, requireAdmin } from "@/lib/auth/currentUser";
 import { EQUIPMENT_TYPES, parseSpecs } from "@/lib/equipment/specSchemas";
 
 const equipmentFieldsSchema = z.object({
@@ -40,6 +40,7 @@ function parseEquipmentFormData(formData: FormData) {
 }
 
 export async function createEquipment(formData: FormData) {
+  await requireAdmin();
   const values = parseEquipmentFormData(formData);
   const userEmail = await getCurrentUserEmail();
 
@@ -53,6 +54,7 @@ export async function createEquipment(formData: FormData) {
 }
 
 export async function updateEquipment(id: string, formData: FormData) {
+  await requireAdmin();
   const values = parseEquipmentFormData(formData);
 
   await db
@@ -66,6 +68,7 @@ export async function updateEquipment(id: string, formData: FormData) {
 }
 
 export async function archiveEquipment(id: string) {
+  await requireAdmin();
   await db
     .update(equipment)
     .set({ status: "archived", updatedAt: new Date() })
@@ -77,6 +80,7 @@ export async function archiveEquipment(id: string) {
 }
 
 export async function deleteEquipment(id: string) {
+  await requireAdmin();
   await db.delete(equipment).where(eq(equipment.id, id));
 
   revalidatePath("/equipment");
@@ -85,6 +89,7 @@ export async function deleteEquipment(id: string) {
 }
 
 export async function deleteManyEquipment(ids: string[]) {
+  await requireAdmin();
   if (ids.length === 0) return;
 
   await db.delete(equipment).where(inArray(equipment.id, ids));

@@ -23,6 +23,7 @@ export default async function EquipmentDetailPage({
   if (!item) notFound();
 
   const session = await auth();
+  const isAdmin = session?.user?.role === "admin";
 
   const fields = specFieldsByType[item.type as EquipmentType];
   const specs = (item.specs as Record<string, unknown>) ?? {};
@@ -65,7 +66,7 @@ export default async function EquipmentDetailPage({
             </p>
           </div>
         </div>
-        {session?.user && (
+        {isAdmin && (
           <Link
             href={`/admin/equipment/${item.id}/edit`}
             className={buttonClass("secondary")}
@@ -106,7 +107,7 @@ export default async function EquipmentDetailPage({
         {linkedControllers.length === 0 ? (
           <EmptyState>
             No controllers linked yet.{" "}
-            {session?.user && (
+            {isAdmin && (
               <Link
                 href={`/admin/equipment/${item.id}/edit`}
                 className="text-amber-600 underline dark:text-amber-400"
@@ -150,7 +151,7 @@ export default async function EquipmentDetailPage({
         {manuals.length === 0 ? (
           <EmptyState>
             No manuals linked yet.{" "}
-            {session?.user && (
+            {isAdmin && (
               <Link
                 href={`/admin/equipment/${item.id}/edit`}
                 className="text-amber-600 underline dark:text-amber-400"
