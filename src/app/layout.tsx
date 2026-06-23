@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Compressor Cheat Sheet",
+  title: "Air Assist",
   description:
     "Equipment reference and fault-finding tool for compressors, controllers, and dryers.",
 };
