@@ -81,6 +81,11 @@ const CATEGORIES = [
         title: "Air flow rate conversion",
         description: "Convert between CFM, LPM, LPS, LPH, and CFH.",
       },
+      {
+        href: "/calculators/pressure-conversion",
+        title: "Pressure unit conversion",
+        description: "Convert between kPa, MPa, Bar, PSI, and kgf/cm².",
+      },
     ],
   },
 ];
