@@ -11,7 +11,7 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const results = q ? await searchAll(q) : { equipment: [], faultTrees: [] };
+  const results = q ? await searchAll(q) : { equipment: [], controllers: [], faultTrees: [] };
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -21,7 +21,7 @@ export default async function SearchPage({
           type="search"
           name="q"
           defaultValue={q}
-          placeholder="Search equipment and fault trees..."
+          placeholder="Search equipment, controllers, and fault trees..."
           className={`flex-1 ${fieldInputClass}`}
         />
       </LiveFilterForm>
@@ -47,6 +47,33 @@ export default async function SearchPage({
                       </span>{" "}
                       <span className="text-sm text-slate-500 dark:text-slate-400">
                         {item.manufacturer} · {item.modelNumber}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+              Controllers ({results.controllers.length})
+            </h2>
+            {results.controllers.length === 0 ? (
+              <EmptyState>No matches.</EmptyState>
+            ) : (
+              <ul className="space-y-2">
+                {results.controllers.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      href={`/controllers/${item.id}`}
+                      className="block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-amber-500/60"
+                    >
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        {item.displayName}
+                      </span>{" "}
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                        {item.manufacturer} · {item.modelName}
                       </span>
                     </Link>
                   </li>

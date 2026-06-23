@@ -1,12 +1,12 @@
 import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
-import { equipment, faultTree, faultTreeNode } from "@/db/schema";
+import { controller, equipment, faultTree, faultTreeNode } from "@/db/schema";
 
 export async function searchAll(q: string) {
-  if (!q.trim()) return { equipment: [], faultTrees: [] };
+  if (!q.trim()) return { equipment: [], controllers: [], faultTrees: [] };
   const term = `%${q.trim()}%`;
 
-  const [equipmentResults, treesByTitle, nodesWithTree] = await Promise.all([
+  const [equipmentResults, controllerResults, treesByTitle, nodesWithTree] = await Promise.all([
     db.query.equipment.findMany({
       where: or(
         ilike(equipment.displayName, term),
@@ -14,6 +14,15 @@ export async function searchAll(q: string) {
         ilike(equipment.modelNumber, term)
       ),
       orderBy: [asc(equipment.manufacturer), asc(equipment.modelNumber)],
+      limit: 20,
+    }),
+    db.query.controller.findMany({
+      where: or(
+        ilike(controller.displayName, term),
+        ilike(controller.manufacturer, term),
+        ilike(controller.modelName, term)
+      ),
+      orderBy: [asc(controller.manufacturer), asc(controller.modelName)],
       limit: 20,
     }),
     db.query.faultTree.findMany({
@@ -50,6 +59,7 @@ export async function searchAll(q: string) {
 
   return {
     equipment: equipmentResults,
+    controllers: controllerResults,
     faultTrees: Array.from(faultTreeMatches.values()).sort((a, b) =>
       a.title.localeCompare(b.title)
     ),
