@@ -5,17 +5,17 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { MobileNavMenu } from "@/components/layout/MobileNavMenu";
+import { NavSearch } from "@/components/layout/NavSearch";
 
 const links = [
   { href: "/equipment", label: "Equipment" },
-  { href: "/wizard", label: "Fault Finder" },
   { href: "/controllers", label: "Controllers" },
-  { href: "/calculators", label: "Calculators" },
   { href: "/pressure-vessel-inspection", label: "Pressure Vessels" },
-  { href: "/breathing-air-inspections", label: "Breathing Air" },
   { href: "/installations", label: "Installations" },
+  { href: "/breathing-air-inspections", label: "Breathing Air" },
+  { href: "/calculators", label: "Calculators" },
+  { href: "/wizard", label: "Fault Finder" },
   { href: "/swms", label: "SWMS" },
-  { href: "/search", label: "Search" },
 ];
 
 const adminLink = [{ href: "/admin/equipment", label: "Admin" }];
@@ -39,6 +39,9 @@ export async function Nav() {
         <div className="hidden items-center gap-6 md:flex">
           <NavLinks links={links} />
         </div>
+      </div>
+      <div className="hidden md:flex md:w-56 lg:w-72">
+        <NavSearch />
       </div>
       <div className="hidden items-center gap-3 text-sm md:flex">
         {role === "admin" && <NavLinks links={adminLink} />}
