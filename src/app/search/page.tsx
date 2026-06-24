@@ -12,7 +12,9 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const results = q ? await searchAll(q) : { equipment: [], controllers: [], faultTrees: [] };
+  const results = q
+    ? await searchAll(q)
+    : { equipment: [], controllers: [], faultTrees: [], swms: [] };
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -22,7 +24,7 @@ export default async function SearchPage({
           type="search"
           name="q"
           defaultValue={q}
-          placeholder="Search equipment, controllers, and fault trees..."
+          placeholder="Search equipment, controllers, fault trees, and SWMS..."
           className={`flex-1 ${fieldInputClass}`}
         />
       </LiveFilterForm>
@@ -107,6 +109,36 @@ export default async function SearchPage({
                         </span>
                       )}
                     </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section>
+            <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+              SWMS ({results.swms.length})
+            </h2>
+            {results.swms.length === 0 ? (
+              <EmptyState>No matches.</EmptyState>
+            ) : (
+              <ul className="space-y-2">
+                {results.swms.map((doc) => (
+                  <li key={doc.id}>
+                    <a
+                      href={
+                        doc.source === "graph"
+                          ? `/api/resources/${doc.id}/pdf`
+                          : doc.webUrl
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={linkCardClass("block p-3")}
+                    >
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        {doc.title}
+                      </span>
+                    </a>
                   </li>
                 ))}
               </ul>

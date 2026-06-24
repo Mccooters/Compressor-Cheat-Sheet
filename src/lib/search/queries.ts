@@ -1,12 +1,12 @@
 import { and, asc, eq, ilike, or } from "drizzle-orm";
 import { db } from "@/db";
-import { controller, equipment, faultTree, faultTreeNode } from "@/db/schema";
+import { controller, equipment, faultTree, faultTreeNode, resource } from "@/db/schema";
 
 export async function searchAll(q: string) {
-  if (!q.trim()) return { equipment: [], controllers: [], faultTrees: [] };
+  if (!q.trim()) return { equipment: [], controllers: [], faultTrees: [], swms: [] };
   const term = `%${q.trim()}%`;
 
-  const [equipmentResults, controllerResults, treesByTitle, nodesWithTree] = await Promise.all([
+  const [equipmentResults, controllerResults, treesByTitle, nodesWithTree, swmsResults] = await Promise.all([
     db.query.equipment.findMany({
       where: or(
         ilike(equipment.displayName, term),
@@ -42,6 +42,11 @@ export async function searchAll(q: string) {
       with: { faultTree: true },
       limit: 20,
     }),
+    db.query.resource.findMany({
+      where: and(eq(resource.area, "swms"), ilike(resource.title, term)),
+      orderBy: [asc(resource.title)],
+      limit: 20,
+    }),
   ]);
 
   const faultTreeMatches = new Map<
@@ -63,5 +68,6 @@ export async function searchAll(q: string) {
     faultTrees: Array.from(faultTreeMatches.values()).sort((a, b) =>
       a.title.localeCompare(b.title)
     ),
+    swms: swmsResults,
   };
 }
