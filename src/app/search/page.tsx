@@ -25,7 +25,7 @@ export default async function SearchPage({
           name="q"
           defaultValue={q}
           placeholder="Search equipment, controllers, fault trees, and SWMS..."
-          className={`flex-1 ${fieldInputClass}`}
+          className={`min-w-0 flex-1 ${fieldInputClass}`}
         />
       </LiveFilterForm>
 

@@ -30,7 +30,7 @@ export default async function SwmsPage({
           name="q"
           defaultValue={q}
           placeholder="Search SWMS documents..."
-          className={`flex-1 ${fieldInputClass}`}
+          className={`min-w-0 flex-1 ${fieldInputClass}`}
         />
       </LiveFilterForm>
 

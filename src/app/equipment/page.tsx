@@ -53,7 +53,7 @@ export default async function EquipmentListPage({
         <select
           name="type"
           defaultValue={validType ?? ""}
-          className={`flex-1 ${fieldInputClass}`}
+          className={`min-w-0 flex-1 ${fieldInputClass}`}
         >
           <option value="">All types</option>
           {EQUIPMENT_TYPES.map((t) => (
