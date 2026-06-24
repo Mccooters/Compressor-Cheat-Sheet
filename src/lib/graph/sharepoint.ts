@@ -1,4 +1,4 @@
-import { ResponseType } from "@microsoft/microsoft-graph-client";
+import { Client, ResponseType } from "@microsoft/microsoft-graph-client";
 import { getGraphClient } from "@/lib/graph/client";
 import { getSearchSiteUrls } from "@/lib/graph/config";
 
@@ -26,22 +26,106 @@ type GraphSearchResponse = {
   }[];
 };
 
+type GraphDriveItem = {
+  id: string;
+  name?: string;
+  webUrl?: string;
+  lastModifiedDateTime?: string;
+  folder?: unknown;
+};
+
+function parseSiteUrl(url: string): { hostname: string; relativePath: string } {
+  const parsed = new URL(url);
+  return { hostname: parsed.hostname, relativePath: parsed.pathname.replace(/\/+$/, "") };
+}
+
+async function resolveSiteId(
+  client: Client,
+  hostname: string,
+  relativePath: string
+): Promise<string> {
+  const path = relativePath ? `/sites/${hostname}:${relativePath}` : `/sites/${hostname}`;
+  const site = (await client.api(path).get()) as { id?: string };
+  if (!site.id) {
+    throw new Error(`Could not resolve SharePoint site: ${hostname}${relativePath}`);
+  }
+  return site.id;
+}
+
+async function getSiteDriveIds(client: Client, siteId: string): Promise<string[]> {
+  const response = (await client
+    .api(`/sites/${siteId}/drives`)
+    .select("id")
+    .get()) as { value?: { id: string }[] };
+  return (response.value ?? []).map((d) => d.id);
+}
+
+// Microsoft Search's tenant-wide /search/query has no reliable way to limit
+// results to a handful of sites: KQL's path: restriction is a string-prefix
+// match, so a site at the tenant root matches every other site too (their
+// URLs all start with the root site's URL). Resolving each configured site
+// to its drives and searching those directly is the only way to actually
+// exclude everything else.
+async function searchScopedToSites(
+  client: Client,
+  query: string,
+  siteUrls: string[]
+): Promise<SharePointHit[]> {
+  const siteIds = await Promise.all(
+    siteUrls.map((url) => {
+      const { hostname, relativePath } = parseSiteUrl(url);
+      return resolveSiteId(client, hostname, relativePath);
+    })
+  );
+  const driveIdLists = await Promise.all(
+    siteIds.map((siteId) => getSiteDriveIds(client, siteId))
+  );
+  const driveIds = [...new Set(driveIdLists.flat())];
+
+  const escapedQuery = query.replace(/'/g, "''");
+  const driveResults = await Promise.all(
+    driveIds.map((driveId) =>
+      client
+        .api(`/drives/${driveId}/root/search(q='${escapedQuery}')`)
+        .top(25)
+        .get()
+        .catch(() => ({ value: [] as GraphDriveItem[] })) as Promise<{
+        value?: GraphDriveItem[];
+      }>
+    )
+  );
+
+  const hits: SharePointHit[] = [];
+  const seen = new Set<string>();
+  driveResults.forEach((result, index) => {
+    for (const item of result.value ?? []) {
+      if (item.folder || seen.has(item.id)) continue;
+      seen.add(item.id);
+      hits.push({
+        driveId: driveIds[index],
+        itemId: item.id,
+        name: item.name ?? "Untitled",
+        webUrl: item.webUrl ?? "",
+        lastModifiedDateTime: item.lastModifiedDateTime,
+      });
+    }
+  });
+  return hits.slice(0, 25);
+}
+
 export async function searchDriveItems(query: string): Promise<SharePointHit[]> {
   const client = await getGraphClient();
 
   const siteUrls = getSearchSiteUrls();
-  // KQL: a bare term restriction like path:"..." narrows results to that
-  // site (and everything under it); OR-ing several scopes the search to
-  // any of them instead of the whole tenant.
-  const scopedQuery = siteUrls.length
-    ? `${query} (${siteUrls.map((url) => `path:"${url}"`).join(" OR ")})`
-    : query;
+  if (siteUrls.length) {
+    return searchScopedToSites(client, query, siteUrls);
+  }
 
   const response = (await client.api("/search/query").post({
     requests: [
       {
         entityTypes: ["driveItem"],
-        query: { queryString: scopedQuery },
+        query: { queryString: query },
         from: 0,
         size: 25,
       },
