@@ -1,5 +1,6 @@
 import { ResponseType } from "@microsoft/microsoft-graph-client";
 import { getGraphClient } from "@/lib/graph/client";
+import { getSearchSiteUrls } from "@/lib/graph/config";
 
 export type SharePointHit = {
   driveId: string;
@@ -28,11 +29,19 @@ type GraphSearchResponse = {
 export async function searchDriveItems(query: string): Promise<SharePointHit[]> {
   const client = await getGraphClient();
 
+  const siteUrls = getSearchSiteUrls();
+  // KQL: a bare term restriction like path:"..." narrows results to that
+  // site (and everything under it); OR-ing several scopes the search to
+  // any of them instead of the whole tenant.
+  const scopedQuery = siteUrls.length
+    ? `${query} (${siteUrls.map((url) => `path:"${url}"`).join(" OR ")})`
+    : query;
+
   const response = (await client.api("/search/query").post({
     requests: [
       {
         entityTypes: ["driveItem"],
-        query: { queryString: query },
+        query: { queryString: scopedQuery },
         from: 0,
         size: 25,
       },

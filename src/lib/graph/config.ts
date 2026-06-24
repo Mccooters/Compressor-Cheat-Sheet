@@ -19,3 +19,15 @@ export function isDevLoginEnabled() {
     process.env.AUTH_DEV_LOGIN_ENABLED === "true"
   );
 }
+
+// Comma-separated SharePoint site URLs (e.g. "https://contoso.sharepoint.com/sites/Engineering").
+// Restricts the "Search SharePoint" pickers to just these sites instead of
+// the whole tenant. Leave unset to search everywhere the signed-in user has
+// access, as before.
+export function getSearchSiteUrls(): string[] {
+  const raw = process.env.SHAREPOINT_SEARCH_SITE_URLS ?? "";
+  return raw
+    .split(",")
+    .map((url) => url.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+}
