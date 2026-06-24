@@ -4,6 +4,7 @@ import { getCurrentUserRole } from "@/lib/auth/currentUser";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { AccountMenu } from "@/components/layout/AccountMenu";
+import { MobileNavMenu } from "@/components/layout/MobileNavMenu";
 
 const links = [
   { href: "/equipment", label: "Equipment" },
@@ -22,6 +23,7 @@ const adminLink = [{ href: "/admin/equipment", label: "Admin" }];
 export async function Nav() {
   const session = await auth();
   const role = session?.user ? await getCurrentUserRole() : null;
+  const mobileLinks = role === "admin" ? [...links, ...adminLink] : links;
 
   async function handleSignOut() {
     "use server";
@@ -29,14 +31,16 @@ export async function Nav() {
   }
 
   return (
-    <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-800 dark:bg-slate-950">
+    <nav className="relative flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-slate-800 dark:bg-slate-950">
       <div className="flex items-center gap-6">
         <Link href="/" className="font-semibold text-slate-900 dark:text-white">
           Air Assist
         </Link>
-        <NavLinks links={links} />
+        <div className="hidden items-center gap-6 md:flex">
+          <NavLinks links={links} />
+        </div>
       </div>
-      <div className="flex items-center gap-3 text-sm">
+      <div className="hidden items-center gap-3 text-sm md:flex">
         {role === "admin" && <NavLinks links={adminLink} />}
         {session?.user ? (
           <AccountMenu
@@ -55,6 +59,11 @@ export async function Nav() {
           </>
         )}
       </div>
+      <MobileNavMenu
+        links={mobileLinks}
+        email={session?.user ? session.user.email ?? session.user.name ?? "Account" : null}
+        onSignOut={session?.user ? handleSignOut : undefined}
+      />
     </nav>
   );
 }
