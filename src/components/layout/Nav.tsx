@@ -11,6 +11,9 @@ const links = [
   { href: "/controllers", label: "Controllers" },
   { href: "/calculators", label: "Calculators" },
   { href: "/pressure-vessel-inspection", label: "Pressure Vessels" },
+  { href: "/breathing-air-inspections", label: "Breathing Air" },
+  { href: "/installations", label: "Installations" },
+  { href: "/swms", label: "SWMS" },
   { href: "/search", label: "Search" },
 ];
 

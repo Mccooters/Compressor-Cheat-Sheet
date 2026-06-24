@@ -247,6 +247,34 @@ export const pviResource = pgTable("pvi_resource", {
     .defaultNow(),
 });
 
+export const resourceAreaEnum = pgEnum("resource_area", [
+  "breathing_air",
+  "swms",
+  "installations",
+]);
+
+// Shared document-library table for simple reference pages (Breathing Air
+// Inspections, SWMS, Installations) — same shape as pvi_resource, just
+// covering several areas at once instead of one table per page. category
+// is free-text rather than an enum since each area defines its own labels
+// (e.g. "standard"/"manual" for installations, a single implicit category
+// for SWMS) without needing a combined enum.
+export const resource = pgTable("resource", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  area: resourceAreaEnum("area").notNull(),
+  title: text("title").notNull(),
+  category: text("category").notNull().default("other"),
+  source: documentSourceEnum("source").notNull(),
+  sharepointDriveId: text("sharepoint_drive_id"),
+  sharepointItemId: text("sharepoint_item_id"),
+  webUrl: text("web_url").notNull(),
+  fileName: text("file_name"),
+  addedBy: text("added_by"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const faultTree = pgTable("fault_tree", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: text("title").notNull(),
