@@ -40,10 +40,10 @@ export async function Nav() {
           <NavLinks links={links} />
         </div>
       </div>
-      <div className="hidden md:flex md:w-56 lg:w-72">
-        <NavSearch />
-      </div>
-      <div className="hidden items-center gap-3 text-sm md:flex">
+      <div className="hidden items-center gap-4 text-sm md:flex">
+        <div className="w-48 lg:w-64">
+          <NavSearch />
+        </div>
         {role === "admin" && <NavLinks links={adminLink} />}
         {session?.user ? (
           <AccountMenu
