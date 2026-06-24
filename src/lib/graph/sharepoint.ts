@@ -1,3 +1,4 @@
+import { ResponseType } from "@microsoft/microsoft-graph-client";
 import { getGraphClient } from "@/lib/graph/client";
 
 export type SharePointHit = {
@@ -80,4 +81,20 @@ export async function getDriveItemDownloadUrl(
     "@microsoft.graph.downloadUrl"?: string;
   };
   return item["@microsoft.graph.downloadUrl"] ?? null;
+}
+
+// Graph can convert Office formats (docx, xlsx, pptx, etc.) to PDF on the fly
+// via the format query param on /content — there's no separate metadata
+// endpoint for it, so this fetches the converted bytes directly rather than
+// resolving a download URL like getDriveItemDownloadUrl does.
+export async function getDriveItemAsPdf(
+  driveId: string,
+  itemId: string
+): Promise<ArrayBuffer> {
+  const client = await getGraphClient();
+  return client
+    .api(`/drives/${driveId}/items/${itemId}/content`)
+    .query({ format: "pdf" })
+    .responseType(ResponseType.ARRAYBUFFER)
+    .get();
 }

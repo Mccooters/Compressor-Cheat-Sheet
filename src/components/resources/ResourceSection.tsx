@@ -7,7 +7,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { fieldInputClass } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 
-type ResourceRow = { id: string; title: string; webUrl: string };
+type ResourceRow = {
+  id: string;
+  title: string;
+  webUrl: string;
+  source: string;
+};
 
 export function ResourceSection({
   area,
@@ -36,7 +41,11 @@ export function ResourceSection({
               className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
             >
               <a
-                href={doc.webUrl}
+                href={
+                  doc.source === "graph"
+                    ? `/api/resources/${doc.id}/pdf`
+                    : doc.webUrl
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-amber-600 underline dark:text-amber-400"
