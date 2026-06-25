@@ -1,7 +1,61 @@
-const CACHE_NAME = "aa-calculators-v1";
+const CACHE_NAME = "aa-calculators-v3";
+
+// Every calculator route, precached on install so the whole section works
+// offline after the very first visit — without this, a page only became
+// available offline after being fully loaded twice (once to register the
+// worker, once more for the fetch handler to actually cache it).
+const CALCULATOR_ROUTES = [
+  "/calculators",
+  "/calculators/airflow-conversion",
+  "/calculators/corrosion-rate",
+  "/calculators/hazard-level-quick",
+  "/calculators/hydrostatic-test-pressure",
+  "/calculators/mawp",
+  "/calculators/minimum-wall-thickness",
+  "/calculators/motor-electrical",
+  "/calculators/pressure-conversion",
+  "/calculators/pressure-equipment-hazard-level",
+  "/calculators/pressure-vessel-volume",
+  "/calculators/pv-value",
+  "/calculators/solenoid-resistance",
+  "/calculators/srv-set-pressure-verification",
+];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.add("/calculators")));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const assetUrls = new Set();
+
+      // Precache each page's HTML, and scrape its <script src> / <link
+      // href> tags for the /_next/static chunks it needs — caching only
+      // the HTML left pages that were never actually opened in a browser
+      // with their markup present but no JS, since nothing had ever
+      // requested (and thus cached) their page-specific chunk.
+      await Promise.all(
+        CALCULATOR_ROUTES.map(async (path) => {
+          try {
+            const response = await fetch(new Request(path, { headers: { Accept: "text/html" } }));
+            const html = await response.clone().text();
+            await cache.put(path, response);
+            for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+)"/g)) {
+              assetUrls.add(match[1]);
+            }
+          } catch {
+            // Best-effort — one route failing to precache shouldn't stop
+            // the rest from being cached.
+          }
+        })
+      );
+
+      await Promise.all(
+        Array.from(assetUrls).map((url) =>
+          fetch(url)
+            .then((response) => cache.put(url, response))
+            .catch(() => {})
+        )
+      );
+    })
+  );
   self.skipWaiting();
 });
 
@@ -50,8 +104,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Calculator pages: network-first so a new deploy is picked up
-  // immediately when online, falling back to the last cached copy offline.
+  // Calculator pages: only handle real navigations (typing the URL,
+  // reload, the installed icon). Next.js's client-side router fetches an
+  // RSC payload — a different format — for in-app link clicks; caching
+  // that under the same URL would later serve the wrong content to a
+  // fresh navigation, so leave those to the network/router entirely.
+  if (request.mode !== "navigate") return;
+
   event.respondWith(
     fetch(request)
       .then((response) => {
