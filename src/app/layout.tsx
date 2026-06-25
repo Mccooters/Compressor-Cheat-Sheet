@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "Air Assist",
   description:
     "Equipment reference and fault-finding tool for compressors, controllers, and dryers.",
+  appleWebApp: {
+    capable: true,
+    title: "AA Calculators",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
