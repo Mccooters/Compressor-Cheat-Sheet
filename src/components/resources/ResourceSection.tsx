@@ -71,7 +71,7 @@ export function ResourceSection({
             return (
             <li
               key={doc.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-zinc-700"
             >
               <a
                 href={
@@ -81,7 +81,7 @@ export function ResourceSection({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-amber-600 underline dark:text-amber-400"
+                className="flex items-center gap-2 text-orange-600 underline dark:text-orange-400"
               >
                 {tag && (
                   <span

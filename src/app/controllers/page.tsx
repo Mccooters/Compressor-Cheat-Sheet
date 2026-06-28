@@ -74,10 +74,10 @@ export default async function ControllersListPage({
                           <img
                             src={photoSrc}
                             alt=""
-                            className="h-20 w-20 shrink-0 rounded-md border border-slate-200 object-contain dark:border-slate-700"
+                            className="h-20 w-20 shrink-0 rounded-md border border-slate-200 object-contain dark:border-zinc-700"
                           />
                         ) : (
-                          <div className="h-20 w-20 shrink-0 rounded-md border border-dashed border-slate-200 dark:border-slate-700" />
+                          <div className="h-20 w-20 shrink-0 rounded-md border border-dashed border-slate-200 dark:border-zinc-700" />
                         )}
                         <span className="font-medium text-slate-900 dark:text-white">
                           {item.modelName}

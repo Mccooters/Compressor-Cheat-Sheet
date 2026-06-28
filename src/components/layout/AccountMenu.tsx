@@ -46,16 +46,16 @@ export function AccountMenu({
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+        <div className="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
             Theme
           </p>
           <ThemeToggle />
-          <hr className="my-3 border-slate-200 dark:border-slate-800" />
+          <hr className="my-3 border-slate-200 dark:border-zinc-800" />
           <form action={onSignOut}>
             <button
               type="submit"
-              className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
             >
               Sign out
             </button>

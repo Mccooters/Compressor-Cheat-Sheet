@@ -18,7 +18,7 @@ export function BranchManager({
   const targets = allNodes.filter((n) => n.id !== node.id);
 
   return (
-    <div className="ml-4 mt-2 space-y-2 border-l border-slate-200 pl-4 dark:border-slate-700">
+    <div className="ml-4 mt-2 space-y-2 border-l border-slate-200 pl-4 dark:border-zinc-700">
       {node.outgoingBranches.map((branch) => (
         <div key={branch.id} className="flex items-center justify-between text-sm">
           <span>

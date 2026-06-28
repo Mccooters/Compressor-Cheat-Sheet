@@ -42,7 +42,7 @@ export function NodeForm({
   return (
     <form
       action={action}
-      className="space-y-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-950/40"
+      className="space-y-3 rounded-lg bg-slate-50 p-3 dark:bg-zinc-950/40"
     >
       <div className="flex gap-3">
         <select
@@ -84,7 +84,7 @@ export function NodeForm({
             placeholder="Safety warning (optional)"
             rows={1}
             defaultValue={initialValues?.safetyWarning ?? ""}
-            className="mt-1.5 w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-red-800 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+            className="mt-1.5 w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/30 dark:border-red-800 dark:bg-zinc-950 dark:text-white dark:placeholder:text-slate-600"
           />
           <div className="flex gap-2">
             <select

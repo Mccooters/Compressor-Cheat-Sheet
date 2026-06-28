@@ -57,7 +57,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="flex items-center gap-0.5 rounded-md border border-slate-200 p-0.5 dark:border-slate-800">
+    <div className="flex items-center gap-0.5 rounded-md border border-slate-200 p-0.5 dark:border-zinc-800">
       {OPTIONS.map((opt) => (
         <button
           key={opt.value}
@@ -65,7 +65,7 @@ export function ThemeToggle() {
           onClick={() => select(opt.value)}
           className={`rounded px-2 py-0.5 text-xs ${
             choice === opt.value
-              ? "bg-amber-500 text-slate-950 dark:bg-amber-400"
+              ? "bg-orange-500 text-slate-950 dark:bg-orange-400"
               : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
           }`}
         >

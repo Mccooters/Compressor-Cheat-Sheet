@@ -59,7 +59,7 @@ export function WizardClient({
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
           {tree.title}
         </h1>
-        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
           Step {history.length}
         </span>
       </div>
@@ -72,7 +72,7 @@ export function WizardClient({
               <button
                 key={branch.id}
                 onClick={() => goTo(branch.toNodeId)}
-                className="rounded-md border border-slate-300 px-4 py-2 text-left text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-amber-500/60 dark:hover:bg-amber-500/10"
+                className="rounded-md border border-slate-300 px-4 py-2 text-left text-slate-700 transition hover:border-orange-400 hover:bg-orange-50 dark:border-zinc-700 dark:text-slate-300 dark:hover:border-orange-500/60 dark:hover:bg-orange-500/10"
               >
                 {branch.label}
               </button>
@@ -120,7 +120,7 @@ export function WizardClient({
                   href={currentNode.linkedDocument.webUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-amber-600 underline dark:text-amber-400"
+                  className="text-orange-600 underline dark:text-orange-400"
                 >
                   View manual: {currentNode.linkedDocument.title}
                 </a>
@@ -128,7 +128,7 @@ export function WizardClient({
               {currentNode.linkedEquipment && (
                 <Link
                   href={`/equipment/${currentNode.linkedEquipment.id}`}
-                  className="text-amber-600 underline dark:text-amber-400"
+                  className="text-orange-600 underline dark:text-orange-400"
                 >
                   View {currentNode.linkedEquipment.displayName}
                 </Link>

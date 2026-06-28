@@ -84,7 +84,7 @@ export default async function EditFaultTreePage({
                   <form action={setRootNode.bind(null, tree.id, node.id)}>
                     <button
                       type="submit"
-                      className="text-amber-600 underline dark:text-amber-400"
+                      className="text-orange-600 underline dark:text-orange-400"
                     >
                       Set as root
                     </button>

@@ -47,7 +47,7 @@ export function MobileNavMenu({
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
-        className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+        className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-800"
       >
         <svg
           className="h-6 w-6"
@@ -66,12 +66,12 @@ export function MobileNavMenu({
       </button>
 
       {open && (
-        <div className="absolute inset-x-0 top-full z-20 flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-4 shadow-lg dark:border-slate-800 dark:bg-slate-950">
+        <div className="absolute inset-x-0 top-full z-20 flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-4 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
           <NavSearch />
           <div className="flex flex-col gap-4">
             <NavLinks links={links} />
           </div>
-          <hr className="border-slate-200 dark:border-slate-800" />
+          <hr className="border-slate-200 dark:border-zinc-800" />
           {email ? (
             <>
               <p className="truncate text-sm text-slate-500 dark:text-slate-400">{email}</p>
@@ -79,7 +79,7 @@ export function MobileNavMenu({
                 <form action={onSignOut}>
                   <button
                     type="submit"
-                    className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+                    className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
                   >
                     Sign out
                   </button>
@@ -89,7 +89,7 @@ export function MobileNavMenu({
           ) : (
             <Link
               href="/login"
-              className="text-sm text-amber-600 underline hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              className="text-sm text-orange-600 underline hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
             >
               Sign in
             </Link>

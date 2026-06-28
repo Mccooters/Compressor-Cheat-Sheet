@@ -32,11 +32,11 @@ export default async function ControllerDetailPage({
             <img
               src={photoSrc}
               alt={item.displayName}
-              className="max-h-32 w-32 shrink-0 rounded-md border border-slate-200 object-contain dark:border-slate-700"
+              className="max-h-32 w-32 shrink-0 rounded-md border border-slate-200 object-contain dark:border-zinc-700"
             />
           )}
           <div>
-            <span className="font-mono text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+            <span className="font-mono text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
               {item.manufacturer}
             </span>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -75,7 +75,7 @@ export default async function ControllerDetailPage({
             {isAdmin && (
               <Link
                 href={`/admin/controllers/${item.id}/edit`}
-                className="text-amber-600 underline dark:text-amber-400"
+                className="text-orange-600 underline dark:text-orange-400"
               >
                 Add one
               </Link>
@@ -100,7 +100,7 @@ export default async function ControllerDetailPage({
             {isAdmin && (
               <Link
                 href={`/admin/controllers/${item.id}/edit`}
-                className="text-amber-600 underline dark:text-amber-400"
+                className="text-orange-600 underline dark:text-orange-400"
               >
                 Add one
               </Link>
@@ -129,7 +129,7 @@ export default async function ControllerDetailPage({
             {isAdmin && (
               <Link
                 href={`/admin/controllers/${item.id}/edit`}
-                className="text-amber-600 underline dark:text-amber-400"
+                className="text-orange-600 underline dark:text-orange-400"
               >
                 Add one
               </Link>

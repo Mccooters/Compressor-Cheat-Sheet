@@ -118,12 +118,12 @@ export function NavSearch() {
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search..."
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-600"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-base text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/30 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:placeholder:text-slate-600"
         />
       </form>
 
       {open && query.trim() && (
-        <div className="absolute inset-x-0 z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg sm:left-auto sm:right-0 sm:w-96 dark:border-slate-700 dark:bg-slate-900">
+        <div className="absolute inset-x-0 z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg sm:left-auto sm:right-0 sm:w-96 dark:border-zinc-700 dark:bg-zinc-900">
           {!results ? (
             <p className="px-1 py-2 text-sm text-slate-500 dark:text-slate-400">Searching…</p>
           ) : totalCount === 0 ? (
@@ -143,7 +143,7 @@ export function NavSearch() {
                           target={item.external ? "_blank" : undefined}
                           rel={item.external ? "noopener noreferrer" : undefined}
                           onClick={() => setOpen(false)}
-                          className="block rounded-md px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800"
+                          className="block rounded-md px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-zinc-800"
                         >
                           <span className="font-medium text-slate-900 dark:text-white">
                             {item.title}
@@ -162,7 +162,7 @@ export function NavSearch() {
               <button
                 type="button"
                 onClick={goToFullResults}
-                className="block w-full rounded-md px-2 py-1.5 text-left text-sm text-amber-600 hover:bg-slate-100 dark:text-amber-400 dark:hover:bg-slate-800"
+                className="block w-full rounded-md px-2 py-1.5 text-left text-sm text-orange-600 hover:bg-slate-100 dark:text-orange-400 dark:hover:bg-zinc-800"
               >
                 See all results →
               </button>

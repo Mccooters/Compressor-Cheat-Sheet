@@ -36,7 +36,7 @@ export async function Nav() {
   }
 
   return (
-    <nav className="relative flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-slate-800 dark:bg-slate-950">
+    <nav className="relative flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
       <NavMenu links={menuLinks} />
       <Link href="/" className="flex items-center gap-2">
         <Image
@@ -62,7 +62,7 @@ export async function Nav() {
             <ThemeToggle />
             <Link
               href="/login"
-              className="text-amber-600 underline hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              className="text-orange-600 underline hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
             >
               Sign in
             </Link>

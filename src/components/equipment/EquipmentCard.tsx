@@ -20,7 +20,7 @@ const typeColors: Record<string, string> = {
 };
 
 const DEFAULT_TYPE_COLOR =
-  "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200";
+  "bg-slate-100 text-slate-800 dark:bg-zinc-800 dark:text-slate-200";
 
 export function EquipmentCard({
   equipment,
@@ -45,10 +45,10 @@ export function EquipmentCard({
         <img
           src={photoSrc}
           alt=""
-          className="h-12 w-12 shrink-0 rounded-md border border-slate-200 object-contain dark:border-slate-700"
+          className="h-12 w-12 shrink-0 rounded-md border border-slate-200 object-contain dark:border-zinc-700"
         />
       ) : (
-        <div className="h-12 w-12 shrink-0 rounded-md border border-dashed border-slate-200 dark:border-slate-700" />
+        <div className="h-12 w-12 shrink-0 rounded-md border border-dashed border-slate-200 dark:border-zinc-700" />
       )}
       <div>
         <span

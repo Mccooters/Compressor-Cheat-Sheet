@@ -68,7 +68,7 @@ export default function Home() {
             href={card.href}
             className={linkCardClass("p-4")}
           >
-            <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+            <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400">
               <card.icon className="h-5 w-5" />
             </div>
             <h2 className="font-semibold text-slate-900 dark:text-white">

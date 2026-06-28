@@ -28,7 +28,7 @@ export function SortableTh({
     <th className="py-2">
       <Link
         href={`${basePath}?sort=${field}&dir=${nextDir}`}
-        className="inline-flex items-center gap-1 hover:text-amber-600 dark:hover:text-amber-400"
+        className="inline-flex items-center gap-1 hover:text-orange-600 dark:hover:text-orange-400"
       >
         {label}
         {isActive && <span className="text-xs">{effectiveDir === "asc" ? "▲" : "▼"}</span>}

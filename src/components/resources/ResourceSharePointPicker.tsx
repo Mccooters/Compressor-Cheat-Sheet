@@ -40,7 +40,7 @@ export function ResourceSharePointPicker({
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-dashed border-slate-300 p-3 dark:border-slate-700">
+    <div className="space-y-2 rounded-lg border border-dashed border-slate-300 p-3 dark:border-zinc-700">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         Search SharePoint
       </p>
@@ -76,7 +76,7 @@ export function ResourceSharePointPicker({
                 type="button"
                 onClick={() => handleAdd(hit)}
                 disabled={isPending}
-                className="ml-3 shrink-0 text-amber-600 underline dark:text-amber-400"
+                className="ml-3 shrink-0 text-orange-600 underline dark:text-orange-400"
               >
                 Add
               </button>

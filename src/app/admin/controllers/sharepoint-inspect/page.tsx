@@ -68,7 +68,7 @@ export default async function SharePointInspectPage() {
           {error}
         </pre>
       ) : (
-        <pre className="overflow-auto rounded-md bg-slate-100 p-4 text-xs dark:bg-slate-900">
+        <pre className="overflow-auto rounded-md bg-slate-100 p-4 text-xs dark:bg-zinc-900">
           {JSON.stringify(result, null, 2)}
         </pre>
       )}

@@ -28,7 +28,7 @@ export function ControllerPasswordsPanel({
           {passwords.map((p) => (
             <li
               key={p.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-zinc-700"
             >
               <span>
                 <span className="font-medium text-slate-900 dark:text-white">

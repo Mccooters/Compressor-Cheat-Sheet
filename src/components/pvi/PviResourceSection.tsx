@@ -30,13 +30,13 @@ export function PviResourceSection({
           {resources.map((doc) => (
             <li
               key={doc.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-zinc-700"
             >
               <a
                 href={doc.webUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-amber-600 underline dark:text-amber-400"
+                className="text-orange-600 underline dark:text-orange-400"
               >
                 {doc.title}
               </a>

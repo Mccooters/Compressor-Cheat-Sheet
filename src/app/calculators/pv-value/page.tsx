@@ -76,7 +76,7 @@ export default function PvValueCalculator() {
             and location/service factors) — use the{" "}
             <Link
               href="/calculators/pressure-equipment-hazard-level"
-              className="text-amber-600 underline dark:text-amber-400"
+              className="text-orange-600 underline dark:text-orange-400"
             >
               hazard level calculator
             </Link>{" "}
@@ -132,7 +132,7 @@ export default function PvValueCalculator() {
                 <input
                   type="radio"
                   name="equipmentCategory"
-                  className="mt-1 accent-amber-500"
+                  className="mt-1 accent-orange-500"
                   checked={equipmentCategory === opt.value}
                   onChange={() => setEquipmentCategory(opt.value)}
                 />
@@ -142,7 +142,7 @@ export default function PvValueCalculator() {
           </div>
 
           {inspection && inspection.lowRiskNote ? (
-            <p className="text-sm text-amber-600 dark:text-amber-400">
+            <p className="text-sm text-orange-600 dark:text-orange-400">
               Low risk under normal operation — this equipment would not
               normally need to be inspected during its lifetime by the
               inspector (Table 4.1 Note 14). The owner must still keep it in
@@ -183,7 +183,7 @@ export default function PvValueCalculator() {
           )}
 
           {inspection?.extraNote && (
-            <p className="text-sm text-amber-600 dark:text-amber-400">
+            <p className="text-sm text-orange-600 dark:text-orange-400">
               {inspection.extraNote}
             </p>
           )}

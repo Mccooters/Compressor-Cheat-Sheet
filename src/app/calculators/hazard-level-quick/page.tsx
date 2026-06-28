@@ -34,9 +34,9 @@ const HAZARD_LEVEL_DESCRIPTIONS: Record<string, string> = {
 };
 
 const TOGGLE_ACTIVE =
-  "bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950";
+  "bg-orange-500 text-slate-950 dark:bg-orange-400 dark:text-slate-950";
 const TOGGLE_INACTIVE =
-  "border border-slate-300 text-slate-600 hover:border-amber-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-amber-500/60";
+  "border border-slate-300 text-slate-600 hover:border-orange-400 dark:border-zinc-700 dark:text-slate-300 dark:hover:border-orange-500/60";
 
 function parseOptionalNumber(value: string): number | null {
   if (value.trim() === "") return null;
@@ -85,14 +85,14 @@ export default function QuickHazardLevelCalculator() {
             the full method (all conditions, inspection periods), use the{" "}
             <Link
               href="/calculators/pressure-equipment-hazard-level"
-              className="text-amber-600 underline dark:text-amber-400"
+              className="text-orange-600 underline dark:text-orange-400"
             >
               complete calculator
             </Link>{" "}
             on the{" "}
             <Link
               href="/pressure-vessel-inspection"
-              className="text-amber-600 underline dark:text-amber-400"
+              className="text-orange-600 underline dark:text-orange-400"
             >
               Pressure Vessel Inspection
             </Link>{" "}
@@ -143,7 +143,7 @@ export default function QuickHazardLevelCalculator() {
               <input
                 type="radio"
                 name="harmfulness"
-                className="accent-amber-500"
+                className="accent-orange-500"
                 checked={harmfulness === opt.value}
                 onChange={() => setHarmfulness(opt.value)}
               />
@@ -168,8 +168,8 @@ export default function QuickHazardLevelCalculator() {
             <div
               className={`rounded-md border p-3 text-sm ${
                 requiresRegistration
-                  ? "border-amber-300 text-amber-700 dark:border-amber-800 dark:text-amber-400"
-                  : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-400"
+                  ? "border-orange-300 text-orange-700 dark:border-orange-800 dark:text-orange-400"
+                  : "border-slate-200 text-slate-600 dark:border-zinc-700 dark:text-slate-400"
               }`}
             >
               {requiresRegistration

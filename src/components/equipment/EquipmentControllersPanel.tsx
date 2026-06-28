@@ -33,11 +33,11 @@ export async function EquipmentControllersPanel({
           {linkedControllers.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700"
+              className="flex items-center justify-between rounded-lg border border-slate-200 p-2 text-sm dark:border-zinc-700"
             >
               <Link
                 href={`/controllers/${c.id}`}
-                className="text-amber-600 underline dark:text-amber-400"
+                className="text-orange-600 underline dark:text-orange-400"
               >
                 {c.displayName}
               </Link>

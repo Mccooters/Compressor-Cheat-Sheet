@@ -77,9 +77,9 @@ function parseInput(value: string): number | undefined {
 }
 
 const TOGGLE_ACTIVE =
-  "bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950";
+  "bg-orange-500 text-slate-950 dark:bg-orange-400 dark:text-slate-950";
 const TOGGLE_INACTIVE =
-  "border border-slate-300 text-slate-600 hover:border-amber-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-amber-500/60";
+  "border border-slate-300 text-slate-600 hover:border-orange-400 dark:border-zinc-700 dark:text-slate-300 dark:hover:border-orange-500/60";
 
 export default function MotorElectricalCalculator() {
   const [phase, setPhase] = useState<"single" | "three">("single");
@@ -213,7 +213,7 @@ export default function MotorElectricalCalculator() {
         )}
 
         {filledCount > 2 && (
-          <p className="text-sm text-amber-600 dark:text-amber-400">
+          <p className="text-sm text-orange-600 dark:text-orange-400">
             Only the first two recognized values are used — clear extra
             fields to avoid confusion.
           </p>

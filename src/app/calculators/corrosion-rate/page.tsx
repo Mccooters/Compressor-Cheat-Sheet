@@ -62,7 +62,7 @@ export default function CorrosionRateCalculator() {
             corrosion rate. Get t_min from the{" "}
             <Link
               href="/calculators/minimum-wall-thickness"
-              className="text-amber-600 underline dark:text-amber-400"
+              className="text-orange-600 underline dark:text-orange-400"
             >
               minimum wall thickness calculator
             </Link>{" "}
@@ -128,7 +128,7 @@ export default function CorrosionRateCalculator() {
             </dl>
 
             {result.remainingLifeYears === null ? (
-              <p className="text-sm text-amber-600 dark:text-amber-400">
+              <p className="text-sm text-orange-600 dark:text-orange-400">
                 No measurable thickness loss between readings — corrosion
                 rate can&apos;t be calculated from this pair. Fall back to
                 the standard AS/NZS 3788 inspection interval rather than a

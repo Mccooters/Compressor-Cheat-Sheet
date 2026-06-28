@@ -66,7 +66,7 @@ export default async function AdminControllersListPage({
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-slate-500 dark:border-slate-800 dark:text-slate-400">
+          <tr className="border-b border-slate-200 text-left text-slate-500 dark:border-zinc-800 dark:text-slate-400">
             <th className="py-2" />
             <SortableTh
               basePath="/admin/controllers"
@@ -91,17 +91,17 @@ export default async function AdminControllersListPage({
           {items.map((item) => {
             const photoSrc = photoSrcs.get(item.id);
             return (
-            <tr key={item.id} className="border-b border-slate-100 dark:border-slate-900">
+            <tr key={item.id} className="border-b border-slate-100 dark:border-zinc-900">
               <td className="py-2">
                 {photoSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element -- short-lived signed SharePoint URL
                   <img
                     src={photoSrc}
                     alt=""
-                    className="h-8 w-8 rounded-md border border-slate-200 object-contain dark:border-slate-700"
+                    className="h-8 w-8 rounded-md border border-slate-200 object-contain dark:border-zinc-700"
                   />
                 ) : (
-                  <div className="h-8 w-8 rounded-md border border-dashed border-slate-200 dark:border-slate-700" />
+                  <div className="h-8 w-8 rounded-md border border-dashed border-slate-200 dark:border-zinc-700" />
                 )}
               </td>
               <td className="py-2 text-slate-900 dark:text-white">{item.manufacturer}</td>
@@ -110,7 +110,7 @@ export default async function AdminControllersListPage({
                 <div className="flex items-center justify-end gap-3">
                   <Link
                     href={`/admin/controllers/${item.id}/edit`}
-                    className="text-amber-600 underline dark:text-amber-400"
+                    className="text-orange-600 underline dark:text-orange-400"
                   >
                     Edit
                   </Link>

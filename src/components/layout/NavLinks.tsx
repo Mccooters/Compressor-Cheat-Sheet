@@ -17,7 +17,7 @@ export function NavLinks({ links }: { links: { href: string; label: string }[] }
             : pathname.startsWith(`/${link.href.split("/").filter(Boolean)[0]}`));
         const className = `text-sm font-medium transition ${
           isActive
-            ? "text-amber-600 dark:text-amber-400"
+            ? "text-orange-600 dark:text-orange-400"
             : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
         }`;
 

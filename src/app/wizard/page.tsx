@@ -105,7 +105,7 @@ export default async function WizardIndexPage({
             {equipment.displayName}
           </span>
           .{" "}
-          <Link href="/wizard" className="text-amber-600 underline dark:text-amber-400">
+          <Link href="/wizard" className="text-orange-600 underline dark:text-orange-400">
             Clear filter
           </Link>
         </p>
@@ -122,7 +122,7 @@ export default async function WizardIndexPage({
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <PageHeader title={info?.label ?? "Fault finder"} description={info?.description} />
-        <Link href="/wizard" className="text-sm text-amber-600 underline dark:text-amber-400">
+        <Link href="/wizard" className="text-sm text-orange-600 underline dark:text-orange-400">
           ← Back to categories
         </Link>
         <FaultTreeList trees={trees} />

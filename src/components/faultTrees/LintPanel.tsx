@@ -29,7 +29,7 @@ export function LintPanel({
   }
 
   return (
-    <ul className="space-y-1 text-sm text-amber-700 dark:text-amber-400">
+    <ul className="space-y-1 text-sm text-orange-700 dark:text-orange-400">
       {warnings.map((warning, i) => (
         <li key={i}>{describeWarning(warning, promptById)}</li>
       ))}

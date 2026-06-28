@@ -86,7 +86,7 @@ export function EquipmentForm({
         />
       </Field>
 
-      <fieldset className="space-y-3 rounded-lg border border-slate-300 p-4 dark:border-slate-700">
+      <fieldset className="space-y-3 rounded-lg border border-slate-300 p-4 dark:border-zinc-700">
         <legend className="px-1 text-sm font-semibold uppercase tracking-wide text-slate-500 capitalize dark:text-slate-400">
           {formatEquipmentTypeLabel(type)} specs
         </legend>

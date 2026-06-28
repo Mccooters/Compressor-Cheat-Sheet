@@ -11,7 +11,7 @@ const CATEGORIES = [
         toolkit, plus cheat sheets?{" "}
         <Link
           href="/pressure-vessel-inspection"
-          className="text-amber-600 underline dark:text-amber-400"
+          className="text-orange-600 underline dark:text-orange-400"
         >
           Visit Pressure Vessel Inspection
         </Link>
@@ -72,7 +72,7 @@ export default function CalculatorsIndexPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-10">
       <div>
-        <p className="font-mono text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+        <p className="font-mono text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
           Field tools
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -86,7 +86,7 @@ export default function CalculatorsIndexPage() {
       {CATEGORIES.map((category) => (
         <section key={category.name} className="space-y-4">
           <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+            <p className="font-mono text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
               {category.standard}
             </p>
             <h2 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
