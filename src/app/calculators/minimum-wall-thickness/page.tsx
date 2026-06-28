@@ -2,11 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { NumberField } from "@/components/calculators/NumberField";
+import { SelectField } from "@/components/calculators/SelectField";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Stat } from "@/components/ui/Stat";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { calculateMinWallThickness } from "@/lib/calculators/wallThickness";
+import {
+  JOINT_EFFICIENCY_OPTIONS,
+  DEFAULT_JOINT_EFFICIENCY_KEY,
+  jointEfficiencyValue,
+  ALLOWABLE_STRESS_OPTIONS,
+  DEFAULT_ALLOWABLE_STRESS_KEY,
+  allowableStressValue,
+} from "@/lib/calculators/as1210";
 
 function parseOptionalNumber(value: string): number | null {
   if (value.trim() === "") return null;
@@ -17,15 +26,15 @@ function parseOptionalNumber(value: string): number | null {
 export default function MinimumWallThicknessCalculator() {
   const [pressureKPa, setPressureKPa] = useState("");
   const [diameter, setDiameter] = useState("");
-  const [stress, setStress] = useState("");
-  const [jointEfficiency, setJointEfficiency] = useState("1");
+  const [stressKey, setStressKey] = useState(DEFAULT_ALLOWABLE_STRESS_KEY);
+  const [jointEfficiencyKey, setJointEfficiencyKey] = useState(DEFAULT_JOINT_EFFICIENCY_KEY);
   const [tempCoefficient, setTempCoefficient] = useState("0.4");
 
   const result = useMemo(() => {
     const pKPa = parseOptionalNumber(pressureKPa);
     const d = parseOptionalNumber(diameter);
-    const s = parseOptionalNumber(stress);
-    const e = parseOptionalNumber(jointEfficiency);
+    const s = allowableStressValue(stressKey);
+    const e = jointEfficiencyValue(jointEfficiencyKey);
     const y = parseOptionalNumber(tempCoefficient);
     if (
       pKPa === null ||
@@ -50,7 +59,7 @@ export default function MinimumWallThicknessCalculator() {
     });
 
     return { tMin };
-  }, [pressureKPa, diameter, stress, jointEfficiency, tempCoefficient]);
+  }, [pressureKPa, diameter, stressKey, jointEfficiencyKey, tempCoefficient]);
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -75,18 +84,25 @@ export default function MinimumWallThicknessCalculator() {
           onChange={setDiameter}
           placeholder="e.g. 300"
         />
-        <NumberField
+        <SelectField
           label="Allowable stress (S)"
-          unit="MPa"
-          value={stress}
-          onChange={setStress}
-          placeholder="e.g. 137"
+          helper="AS 1210 Table B1(B), 50°C, t ≤ 16 mm"
+          value={stressKey}
+          onChange={setStressKey}
+          options={ALLOWABLE_STRESS_OPTIONS.map((o) => ({
+            key: o.key,
+            label: `${o.value} MPa — ${o.label}`,
+          }))}
         />
-        <NumberField
+        <SelectField
           label="Joint efficiency (E)"
-          value={jointEfficiency}
-          onChange={setJointEfficiency}
-          placeholder="0–1, e.g. 1.0 seamless"
+          helper="AS 1210 Table 3.5.1.7"
+          value={jointEfficiencyKey}
+          onChange={setJointEfficiencyKey}
+          options={JOINT_EFFICIENCY_OPTIONS.map((o) => ({
+            key: o.key,
+            label: `${o.value.toFixed(2)} — ${o.label}`,
+          }))}
         />
         <NumberField
           label="Temperature coefficient (y)"
@@ -110,9 +126,11 @@ export default function MinimumWallThicknessCalculator() {
       </Card>
 
       <p className="text-xs text-slate-500 dark:text-slate-500">
-        Guidance only — confirm S, E, and y against the vessel&apos;s
-        manufacturer&apos;s data report or AS 1210 before relying on this
-        result for a fitness-for-service decision.
+        Guidance only — S options assume Class 1/2A/2B/3 carbon/C-Mn plate at
+        50°C; for thicker plate, hotter service, or other materials and
+        classes confirm against the vessel&apos;s manufacturer&apos;s data
+        report or AS 1210 directly before relying on this result for a
+        fitness-for-service decision.
       </p>
     </div>
   );
