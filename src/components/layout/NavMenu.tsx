@@ -1,21 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { NavSearch } from "@/components/layout/NavSearch";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
-export function NavMenu({
-  links,
-  email,
-  onSignOut,
-}: {
-  links: { href: string; label: string }[];
-  email: string | null;
-  onSignOut?: () => Promise<void>;
-}) {
+export function NavMenu({ links }: { links: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const ref = useRef<HTMLDivElement>(null);
@@ -68,30 +58,6 @@ export function NavMenu({
           <div className="flex flex-col gap-4">
             <NavLinks links={links} />
           </div>
-          <hr className="border-slate-200 dark:border-slate-800" />
-          {email ? (
-            <>
-              <p className="truncate text-sm text-slate-500 dark:text-slate-400">{email}</p>
-              {onSignOut && (
-                <form action={onSignOut}>
-                  <button
-                    type="submit"
-                    className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              )}
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="text-sm text-amber-600 underline hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
-            >
-              Sign in
-            </Link>
-          )}
-          <ThemeToggle />
         </div>
       )}
     </div>
