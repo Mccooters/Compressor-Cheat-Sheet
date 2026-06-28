@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { getCurrentUserRole } from "@/lib/auth/currentUser";
@@ -37,8 +38,16 @@ export async function Nav() {
   return (
     <nav className="relative flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-slate-800 dark:bg-slate-950">
       <NavMenu links={menuLinks} />
-      <Link href="/" className="font-semibold text-slate-900 dark:text-white">
-        Air Assist
+      <Link href="/" className="flex items-center gap-2">
+        <Image
+          src="/logo.png"
+          alt="Air Assist"
+          width={32}
+          height={32}
+          className="rounded-lg"
+          priority
+        />
+        <span className="font-semibold text-slate-900 dark:text-white">Air Assist</span>
       </Link>
       <div className="ml-auto flex items-center gap-4 text-sm">
         <NavLinks links={externalLinks} />
