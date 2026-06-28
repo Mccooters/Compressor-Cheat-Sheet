@@ -45,6 +45,22 @@ export async function Nav() {
           <NavSearch />
         </div>
         {role === "admin" && <NavLinks links={adminLink} />}
+        <a
+          href="https://flow.airassist.com.au"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+        >
+          Flow
+        </a>
+        <a
+          href="https://draw.airassist.com.au"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+        >
+          Draw
+        </a>
         {session?.user ? (
           <AccountMenu
             email={session.user.email ?? session.user.name ?? "Account"}
