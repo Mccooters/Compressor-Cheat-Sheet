@@ -40,6 +40,13 @@ export default function CorrosionRateCalculator() {
       return null;
     }
 
+    if (new Date(currentDate).getTime() <= new Date(previousDate).getTime()) {
+      return {
+        error:
+          "Current inspection date must be after the previous inspection date.",
+      };
+    }
+
     return calculateCorrosionRate({
       previousThicknessMm: tPrev,
       previousInspectionDate: previousDate,

@@ -28,7 +28,13 @@ function formatDimensions(d: unknown): string {
   return "—";
 }
 
-function CatalogPerformanceSection({ specs }: { specs: Record<string, unknown> }) {
+function CatalogPerformanceSection({
+  specs,
+  isAdmin,
+}: {
+  specs: Record<string, unknown>;
+  isAdmin: boolean;
+}) {
   const hasData =
     specs.outlet ||
     specs.weightKg ||
@@ -40,7 +46,15 @@ function CatalogPerformanceSection({ specs }: { specs: Record<string, unknown> }
     specs.maxPressureBar ||
     specs.pressureOptions;
 
-  if (!hasData) return null;
+  if (!hasData) {
+    if (!isAdmin) return null;
+    return (
+      <p className="text-sm text-slate-500 dark:text-slate-500">
+        No performance data — edit to add motor power, noise level, outlet size,
+        etc.
+      </p>
+    );
+  }
 
   const pressureOptions = Array.isArray(specs.pressureOptions)
     ? (specs.pressureOptions as PressureOption[])
@@ -209,7 +223,7 @@ export default async function EquipmentDetailPage({
         )}
       </section>
 
-      <CatalogPerformanceSection specs={specs} />
+      <CatalogPerformanceSection specs={specs} isAdmin={isAdmin} />
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
