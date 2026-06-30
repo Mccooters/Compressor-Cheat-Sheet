@@ -47,11 +47,13 @@ export async function syncMissingEquipmentFolders() {
 
     let synced = 0;
     let errors = 0;
+    let firstError: string | undefined;
 
     for (const item of unlinked) {
       const key = `${item.type}:${item.manufacturer}:${item.modelNumber}`;
       const result = batchResults.get(key);
       if (!result || result instanceof Error) {
+        if (!firstError && result instanceof Error) firstError = result.message;
         errors++;
         continue;
       }
@@ -71,7 +73,8 @@ export async function syncMissingEquipmentFolders() {
       }
     }
 
-    redirect(`/admin/equipment/sync-folders?synced=${synced}&errors=${errors}`);
+    const errParam = firstError ? `&firstError=${encodeURIComponent(firstError)}` : "";
+    redirect(`/admin/equipment/sync-folders?synced=${synced}&errors=${errors}${errParam}`);
   } catch (err) {
     // redirect() throws internally — let it propagate
     if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;

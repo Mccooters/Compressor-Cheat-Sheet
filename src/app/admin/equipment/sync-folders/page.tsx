@@ -12,9 +12,9 @@ import { SyncFoldersButton } from "@/components/admin/SyncFoldersButton";
 export default async function SyncFoldersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ synced?: string; errors?: string; error?: string }>;
+  searchParams: Promise<{ synced?: string; errors?: string; error?: string; firstError?: string }>;
 }) {
-  const { synced, errors, error } = await searchParams;
+  const { synced, errors, error, firstError } = await searchParams;
 
   const [linkedRows, unlinkedRows] = await Promise.all([
     db
@@ -98,9 +98,12 @@ export default async function SyncFoldersPage({
 
       {/* Result banner */}
       {synced !== undefined && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+        <div className={`rounded-lg border px-4 py-3 text-sm ${Number(errors) > 0 && Number(synced) === 0 ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200" : "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"}`}>
           Sync complete — {synced} folder{Number(synced) !== 1 ? "s" : ""} created
           {Number(errors) > 0 && `, ${errors} error${Number(errors) !== 1 ? "s" : ""}`}.
+          {firstError && (
+            <span className="ml-1 font-mono">First error: {decodeURIComponent(firstError)}</span>
+          )}
         </div>
       )}
       {error && (

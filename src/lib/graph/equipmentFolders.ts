@@ -202,7 +202,9 @@ export async function ensureEquipmentFolderBatch(
       const ref = await ensureFolderPath(client, driveId, [typeFolder, item.manufacturer, item.modelNumber], cache);
       return { key, value: ref };
     } catch (e: unknown) {
-      return { key, value: e instanceof Error ? e : new Error(String(e)) };
+      const err = e instanceof Error ? e : new Error(String(e));
+      console.error(`[equipmentFolders] failed for ${key}:`, err.message, (e as Record<string, unknown>)?.statusCode, (e as Record<string, unknown>)?.body);
+      return { key, value: err };
     }
   }
 
