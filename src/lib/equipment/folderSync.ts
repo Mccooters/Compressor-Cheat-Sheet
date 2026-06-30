@@ -22,55 +22,62 @@ export async function syncMissingEquipmentFolders() {
     redirect("/admin/equipment/sync-folders?error=graph_not_configured");
   }
 
-  const unlinked = await db
-    .select({
-      id: equipment.id,
-      type: equipment.type,
-      manufacturer: equipment.manufacturer,
-      modelNumber: equipment.modelNumber,
-    })
-    .from(equipment)
-    .where(and(eq(equipment.status, "active"), isNull(equipment.sharepointFolderUrl)));
+  try {
+    const unlinked = await db
+      .select({
+        id: equipment.id,
+        type: equipment.type,
+        manufacturer: equipment.manufacturer,
+        modelNumber: equipment.modelNumber,
+      })
+      .from(equipment)
+      .where(and(eq(equipment.status, "active"), isNull(equipment.sharepointFolderUrl)));
 
-  if (unlinked.length === 0) {
-    redirect("/admin/equipment/sync-folders?synced=0&errors=0");
-  }
-
-  const batchResults = await ensureEquipmentFolderBatch(
-    unlinked.map((r) => ({
-      type: r.type as EquipmentType,
-      manufacturer: r.manufacturer,
-      modelNumber: r.modelNumber,
-    }))
-  );
-
-  let synced = 0;
-  let errors = 0;
-
-  for (const item of unlinked) {
-    const key = `${item.type}:${item.manufacturer}:${item.modelNumber}`;
-    const result = batchResults.get(key);
-    if (!result || result instanceof Error) {
-      errors++;
-      continue;
+    if (unlinked.length === 0) {
+      redirect("/admin/equipment/sync-folders?synced=0&errors=0");
     }
-    const folder = result as FolderRef;
-    try {
-      await db
-        .update(equipment)
-        .set({
-          sharepointFolderId: folder.id,
-          sharepointFolderUrl: folder.webUrl,
-          updatedAt: new Date(),
-        })
-        .where(eq(equipment.id, item.id));
-      synced++;
-    } catch {
-      errors++;
-    }
-  }
 
-  redirect(`/admin/equipment/sync-folders?synced=${synced}&errors=${errors}`);
+    const batchResults = await ensureEquipmentFolderBatch(
+      unlinked.map((r) => ({
+        type: r.type as EquipmentType,
+        manufacturer: r.manufacturer,
+        modelNumber: r.modelNumber,
+      }))
+    );
+
+    let synced = 0;
+    let errors = 0;
+
+    for (const item of unlinked) {
+      const key = `${item.type}:${item.manufacturer}:${item.modelNumber}`;
+      const result = batchResults.get(key);
+      if (!result || result instanceof Error) {
+        errors++;
+        continue;
+      }
+      const folder = result as FolderRef;
+      try {
+        await db
+          .update(equipment)
+          .set({
+            sharepointFolderId: folder.id,
+            sharepointFolderUrl: folder.webUrl,
+            updatedAt: new Date(),
+          })
+          .where(eq(equipment.id, item.id));
+        synced++;
+      } catch {
+        errors++;
+      }
+    }
+
+    redirect(`/admin/equipment/sync-folders?synced=${synced}&errors=${errors}`);
+  } catch (err) {
+    // redirect() throws internally — let it propagate
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    const msg = encodeURIComponent(err instanceof Error ? err.message : String(err));
+    redirect(`/admin/equipment/sync-folders?error=${msg}`);
+  }
 }
 
 // Syncs a single equipment record's SharePoint folder.

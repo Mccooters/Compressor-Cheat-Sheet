@@ -5,9 +5,9 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { equipment } from "@/db/schema";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { buttonClass } from "@/components/ui/Button";
 import { isGraphConfigured, getEquipmentFolderConfig } from "@/lib/graph/config";
 import { syncMissingEquipmentFolders } from "@/lib/equipment/folderSync";
+import { SyncFoldersButton } from "@/components/admin/SyncFoldersButton";
 
 export default async function SyncFoldersPage({
   searchParams,
@@ -103,10 +103,11 @@ export default async function SyncFoldersPage({
           {Number(errors) > 0 && `, ${errors} error${Number(errors) !== 1 ? "s" : ""}`}.
         </div>
       )}
-      {error === "graph_not_configured" && (
+      {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-          Microsoft Graph is not configured — set AUTH_MICROSOFT_ENTRA_ID_* and
-          SHAREPOINT_EQUIPMENT_SITE_URL / SHAREPOINT_EQUIPMENT_LIBRARY.
+          {error === "graph_not_configured"
+            ? "Microsoft Graph is not configured — set AUTH_MICROSOFT_ENTRA_ID_* and SHAREPOINT_EQUIPMENT_SITE_URL / SHAREPOINT_EQUIPMENT_LIBRARY."
+            : `Sync error: ${decodeURIComponent(error)}`}
         </div>
       )}
 
@@ -114,17 +115,11 @@ export default async function SyncFoldersPage({
       {unlinkedRows.length > 0 && (
         <div className="space-y-2">
           <form action={syncMissingEquipmentFolders}>
-            <button
-              type="submit"
-              className={buttonClass("primary")}
-              disabled={!graphOk || !folderConfig}
-            >
-              Sync {unlinkedRows.length} missing folder{unlinkedRows.length !== 1 ? "s" : ""}
-            </button>
+            <SyncFoldersButton count={unlinkedRows.length} />
           </form>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            May take up to 30–60 seconds for large batches. The page will reload
-            when complete.
+            May take 30–60 seconds. The button text changes while running and the
+            page reloads when complete.
           </p>
         </div>
       )}
