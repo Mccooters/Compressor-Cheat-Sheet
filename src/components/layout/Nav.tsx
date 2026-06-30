@@ -33,44 +33,61 @@ export async function Nav() {
     await signOut({ redirectTo: "/" });
   }
 
+  const appLinks = (
+    <>
+      <a href="https://flow.airassist.com.au" target="_blank" rel="noopener noreferrer" className={appBadgeClass}>
+        Flow
+      </a>
+      <a href="https://draw.airassist.com.au" target="_blank" rel="noopener noreferrer" className={appBadgeClass}>
+        Draw
+      </a>
+      <a href="https://sketch.airassist.com.au" target="_blank" rel="noopener noreferrer" className={appBadgeClass}>
+        Sketch
+      </a>
+    </>
+  );
+
   return (
-    <nav className="relative flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
-      <NavMenu links={menuLinks} />
-      <Link href="/" className="flex items-center gap-2">
-        <Image
-          src="/logo.png"
-          alt="Air Assist"
-          width={32}
-          height={32}
-          className="rounded-lg"
-          priority
-        />
-        <span className="font-semibold text-slate-900 dark:text-white">Air Assist</span>
-      </Link>
-      <div className="ml-auto flex items-center gap-3 text-sm">
-        <a href="https://flow.airassist.com.au" target="_blank" rel="noopener noreferrer" className={`hidden sm:inline-flex ${appBadgeClass}`}>
-          Flow
-        </a>
-        <a href="https://draw.airassist.com.au" target="_blank" rel="noopener noreferrer" className={`hidden sm:inline-flex ${appBadgeClass}`}>
-          Draw
-        </a>
-        {role === "admin" && <span className="hidden sm:contents"><NavLinks links={adminLink} /></span>}
-        {session?.user ? (
-          <AccountMenu
-            email={session.user.email ?? session.user.name ?? "Account"}
-            onSignOut={handleSignOut}
+    <nav className="relative border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex items-center gap-3">
+        <NavMenu links={menuLinks} />
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="Air Assist"
+            width={32}
+            height={32}
+            className="rounded-lg"
+            priority
           />
-        ) : (
-          <>
-            <ThemeToggle />
-            <Link
-              href="/login"
-              className="text-orange-600 underline hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
-            >
-              Sign in
-            </Link>
-          </>
-        )}
+          <span className="font-semibold text-slate-900 dark:text-white">Air Assist</span>
+        </Link>
+        <div className="ml-auto flex items-center gap-3 text-sm">
+          <div className="hidden items-center gap-3 sm:flex">
+            {appLinks}
+            {role === "admin" && <NavLinks links={adminLink} />}
+          </div>
+          {session?.user ? (
+            <AccountMenu
+              email={session.user.email ?? session.user.name ?? "Account"}
+              onSignOut={handleSignOut}
+            />
+          ) : (
+            <>
+              <ThemeToggle />
+              <Link
+                href="/login"
+                className="text-orange-600 underline hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+              >
+                Sign in
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="mt-2 flex items-center gap-2 sm:hidden">
+        {appLinks}
+        {role === "admin" && <NavLinks links={adminLink} />}
       </div>
     </nav>
   );
