@@ -39,9 +39,11 @@ export async function GET(
       },
     });
   } catch (err) {
-    // Conversion failing (unsupported format, expired session, etc.)
-    // shouldn't break the link entirely — fall back to the original file.
+    // Conversion failing (unsupported format, expired session, etc.).
     console.error("Failed to convert resource to PDF:", err);
-    return NextResponse.redirect(doc.webUrl);
+    return NextResponse.json(
+      { error: "Failed to convert resource to PDF" },
+      { status: 500 }
+    );
   }
 }

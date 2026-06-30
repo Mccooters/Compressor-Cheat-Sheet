@@ -46,7 +46,10 @@ export function ControllerForm({
         />
       </Field>
 
-      <Field label="Notes">
+      <Field
+        label="Notes"
+        helper="Use this field for reset instructions, wiring notes, or any other controller-specific information."
+      >
         <textarea
           name="notes"
           rows={3}
