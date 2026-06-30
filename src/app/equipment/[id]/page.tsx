@@ -13,6 +13,116 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { buttonClass } from "@/components/ui/Button";
 import { linkCardClass } from "@/components/ui/Card";
 
+type PressureOption = Record<string, unknown>;
+
+function formatDimensions(d: unknown): string {
+  if (typeof d === "string") return d;
+  if (d && typeof d === "object") {
+    const obj = d as Record<string, number>;
+    const parts = [];
+    if (obj.A_disassembly) parts.push(`A (disassembly): ${obj.A_disassembly}`);
+    if (obj.B) parts.push(`B: ${obj.B}`);
+    if (obj.C) parts.push(`C: ${obj.C}`);
+    return parts.join(" · ") || "—";
+  }
+  return "—";
+}
+
+function CatalogPerformanceSection({ specs }: { specs: Record<string, unknown> }) {
+  const hasData =
+    specs.outlet ||
+    specs.weightKg ||
+    specs.dimensionsMm ||
+    specs.motorPowerKw ||
+    specs.noiseLevelDba ||
+    specs.refrigerant ||
+    specs.capacityLmin ||
+    specs.maxPressureBar ||
+    specs.pressureOptions;
+
+  if (!hasData) return null;
+
+  const pressureOptions = Array.isArray(specs.pressureOptions)
+    ? (specs.pressureOptions as PressureOption[])
+    : [];
+  const hasMaxPressureCol = pressureOptions.some((p) => p.maxPressure_mpa !== undefined);
+
+  const thClass =
+    "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400";
+  const tdClass = "px-3 py-2 text-sm text-slate-900 dark:text-white";
+
+  return (
+    <section>
+      <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
+        Performance data
+      </h2>
+
+      <dl className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {specs.motorPowerKw !== undefined && (
+          <Stat label="Motor power" value={`${String(specs.motorPowerKw)} kW`} />
+        )}
+        {specs.noiseLevelDba !== undefined && (
+          <Stat label="Noise level" value={`${String(specs.noiseLevelDba)} dBA`} />
+        )}
+        {specs.outlet !== undefined && (
+          <Stat label="Port size" value={String(specs.outlet)} />
+        )}
+        {specs.recommendedPipe !== undefined && (
+          <Stat label="Recommended pipe" value={String(specs.recommendedPipe)} />
+        )}
+        {specs.weightKg !== undefined && (
+          <Stat label="Weight" value={`${String(specs.weightKg)} kg`} />
+        )}
+        {specs.dimensionsMm !== undefined && (
+          <Stat label="Dimensions (mm)" value={formatDimensions(specs.dimensionsMm)} />
+        )}
+        {specs.refrigerant !== undefined && (
+          <Stat label="Refrigerant" value={String(specs.refrigerant)} />
+        )}
+        {specs.powerSupply !== undefined && (
+          <Stat label="Power supply" value={String(specs.powerSupply)} />
+        )}
+        {specs.maxPressureBar !== undefined && (
+          <Stat label="Max pressure" value={`${String(specs.maxPressureBar)} bar`} />
+        )}
+        {specs.capacityLmin !== undefined && (
+          <Stat label="Max flow" value={`${String(specs.capacityLmin)} L/min`} />
+        )}
+        {specs.capacityM3h !== undefined && (
+          <Stat label="Max flow" value={`${String(specs.capacityM3h)} m³/h`} />
+        )}
+      </dl>
+
+      {pressureOptions.length > 0 && (
+        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-700">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-zinc-700">
+            <thead className="bg-slate-50 dark:bg-zinc-900">
+              <tr>
+                <th className={thClass}>Pressure (MPa)</th>
+                {hasMaxPressureCol && <th className={thClass}>Max (MPa)</th>}
+                <th className={thClass}>Flow (L/s)</th>
+                <th className={thClass}>Flow (CFM)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+              {pressureOptions.map((opt, i) => (
+                <tr key={i}>
+                  <td className={tdClass}>{String(opt.workingPressure_mpa ?? "—")}</td>
+                  {hasMaxPressureCol && (
+                    <td className={tdClass}>{opt.maxPressure_mpa !== undefined ? String(opt.maxPressure_mpa) : "—"}</td>
+                  )}
+                  <td className={tdClass}>{String(opt.capacity_ls ?? "—")}</td>
+                  <td className={tdClass}>{String(opt.capacity_cfm ?? "—")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default async function EquipmentDetailPage({
   params,
 }: {
@@ -98,6 +208,8 @@ export default async function EquipmentDetailPage({
           <EmptyState>No specs recorded yet.</EmptyState>
         )}
       </section>
+
+      <CatalogPerformanceSection specs={specs} />
 
       <section>
         <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">
