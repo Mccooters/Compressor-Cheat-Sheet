@@ -16,7 +16,7 @@ const TYPE_FOLDER: Record<EquipmentType, string> = {
   nitrogen_generator: "Nitrogen Generators",
 };
 
-type FolderRef = { id: string; webUrl: string };
+export type FolderRef = { id: string; webUrl: string };
 
 type GraphDriveItem = { id: string; webUrl?: string };
 type GraphDriveList = { value?: { id: string; name?: string }[] };
@@ -35,7 +35,7 @@ function parseSiteUrl(url: string): { hostname: string; relativePath: string } {
   };
 }
 
-async function resolveSiteId(client: Client, siteUrl: string): Promise<string> {
+export async function resolveSiteId(client: Client, siteUrl: string): Promise<string> {
   const { hostname, relativePath } = parseSiteUrl(siteUrl);
   const path = relativePath
     ? `/sites/${hostname}:${relativePath}`
@@ -45,7 +45,7 @@ async function resolveSiteId(client: Client, siteUrl: string): Promise<string> {
   return site.id;
 }
 
-async function findDriveByName(
+export async function findDriveByName(
   client: Client,
   siteId: string,
   libraryName: string
@@ -60,38 +60,53 @@ async function findDriveByName(
   );
   if (!drive) {
     throw new Error(
-      `SharePoint library "${libraryName}" not found in site. Available: ${(response.value ?? []).map((d) => d.name).join(", ")}`
+      `SharePoint library "${libraryName}" not found. Available: ${(response.value ?? []).map((d) => d.name).join(", ")}`
     );
   }
   return drive.id;
 }
 
 // Ensures a folder exists at the given path inside the drive root.
-// Tries GET first; if 404, creates each path segment in sequence.
+// cache maps already-confirmed paths to their FolderRef so parent segments
+// (type folder, manufacturer folder) are not re-fetched for every equipment
+// record in a batch run.
 async function ensureFolderPath(
   client: Client,
   driveId: string,
-  segments: string[]
+  segments: string[],
+  cache: Map<string, FolderRef>
 ): Promise<FolderRef> {
   const fullPath = segments.join("/");
 
-  // Optimistic GET of the full path
+  const hit = cache.get(fullPath);
+  if (hit) return hit;
+
+  // Optimistic GET of the full path (works when folder already exists)
   try {
     const item = (await client
       .api(`/drives/${driveId}/root:/${fullPath}`)
       .select("id,webUrl")
       .get()) as GraphDriveItem;
-    return { id: item.id, webUrl: item.webUrl ?? "" };
+    const ref = { id: item.id, webUrl: item.webUrl ?? "" };
+    cache.set(fullPath, ref);
+    return ref;
   } catch (e: unknown) {
     if ((e as GraphErrorLike).statusCode !== 404) throw e;
   }
 
-  // Walk segments, creating any that are missing
+  // Walk each segment, creating any that are missing
   let currentPath = "";
   let lastItem: FolderRef = { id: "", webUrl: "" };
 
   for (const segment of segments) {
     const segmentPath = currentPath ? `${currentPath}/${segment}` : segment;
+
+    const cached = cache.get(segmentPath);
+    if (cached) {
+      lastItem = cached;
+      currentPath = segmentPath;
+      continue;
+    }
 
     try {
       const item = (await client
@@ -99,10 +114,10 @@ async function ensureFolderPath(
         .select("id,webUrl")
         .get()) as GraphDriveItem;
       lastItem = { id: item.id, webUrl: item.webUrl ?? "" };
+      cache.set(segmentPath, lastItem);
     } catch (e: unknown) {
       if ((e as GraphErrorLike).statusCode !== 404) throw e;
 
-      // Create this segment under the current parent
       const parentApi = currentPath
         ? `/drives/${driveId}/root:/${currentPath}:/children`
         : `/drives/${driveId}/root/children`;
@@ -116,14 +131,16 @@ async function ensureFolderPath(
       try {
         const created = (await client.api(parentApi).post(body)) as GraphDriveItem;
         lastItem = { id: created.id, webUrl: created.webUrl ?? "" };
+        cache.set(segmentPath, lastItem);
       } catch (createErr: unknown) {
-        // 409 = race: another request created it between our GET and POST
+        // 409 = race: folder created between our GET and POST
         if ((createErr as GraphErrorLike).statusCode === 409) {
           const item = (await client
             .api(`/drives/${driveId}/root:/${segmentPath}`)
             .select("id,webUrl")
             .get()) as GraphDriveItem;
           lastItem = { id: item.id, webUrl: item.webUrl ?? "" };
+          cache.set(segmentPath, lastItem);
         } else {
           throw createErr;
         }
@@ -142,10 +159,8 @@ export type EquipmentFolderInput = {
   modelNumber: string;
 };
 
-// Returns { id, webUrl } of the Equipment Manuals/{TypeFolder}/{Manufacturer}/{ModelNumber}
-// folder, creating any missing segments along the way.
-// Returns null if SHAREPOINT_EQUIPMENT_SITE_URL / SHAREPOINT_EQUIPMENT_LIBRARY are not set,
-// or if the caller is not signed in with Microsoft (Graph will throw).
+// Single-record version — used by createEquipment(). Resolves site + drive
+// internally so callers don't need to manage Graph state.
 export async function ensureEquipmentFolder(
   eq: EquipmentFolderInput
 ): Promise<FolderRef | null> {
@@ -159,9 +174,46 @@ export async function ensureEquipmentFolder(
   const siteId = await resolveSiteId(client, config.siteUrl);
   const driveId = await findDriveByName(client, siteId, config.libraryName);
 
-  return ensureFolderPath(client, driveId, [
-    typeFolder,
-    eq.manufacturer,
-    eq.modelNumber,
-  ]);
+  return ensureFolderPath(client, driveId, [typeFolder, eq.manufacturer, eq.modelNumber], new Map());
+}
+
+// Batch version — resolves site + drive ONCE, then shares a path cache across
+// all records so parent folders (type, manufacturer) are only fetched/created
+// on the first encounter. Returns a map from "type:manufacturer:model" → result.
+export async function ensureEquipmentFolderBatch(
+  items: EquipmentFolderInput[]
+): Promise<Map<string, FolderRef | Error>> {
+  const config = getEquipmentFolderConfig();
+  if (!config) throw new Error("SHAREPOINT_EQUIPMENT_SITE_URL / SHAREPOINT_EQUIPMENT_LIBRARY not set");
+
+  const client = await getGraphClient();
+  const siteId = await resolveSiteId(client, config.siteUrl);
+  const driveId = await findDriveByName(client, siteId, config.libraryName);
+
+  // Shared cache: path string → FolderRef. Parent segments (Compressors,
+  // Chicago Pneumatic) are resolved once and reused for all child records.
+  const cache = new Map<string, FolderRef>();
+  const results = new Map<string, FolderRef | Error>();
+
+  for (const item of items) {
+    const key = `${item.type}:${item.manufacturer}:${item.modelNumber}`;
+    const typeFolder = TYPE_FOLDER[item.type];
+    if (!typeFolder) {
+      results.set(key, new Error(`No folder mapping for type "${item.type}"`));
+      continue;
+    }
+    try {
+      const ref = await ensureFolderPath(
+        client,
+        driveId,
+        [typeFolder, item.manufacturer, item.modelNumber],
+        cache
+      );
+      results.set(key, ref);
+    } catch (e: unknown) {
+      results.set(key, e instanceof Error ? e : new Error(String(e)));
+    }
+  }
+
+  return results;
 }

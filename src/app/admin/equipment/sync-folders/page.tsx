@@ -1,3 +1,6 @@
+// Allow up to 60 s for the batch folder-creation server action.
+export const maxDuration = 60;
+
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { equipment } from "@/db/schema";
@@ -109,15 +112,21 @@ export default async function SyncFoldersPage({
 
       {/* Sync action */}
       {unlinkedRows.length > 0 && (
-        <form action={syncMissingEquipmentFolders}>
-          <button
-            type="submit"
-            className={buttonClass("primary")}
-            disabled={!graphOk || !folderConfig}
-          >
-            Sync {unlinkedRows.length} missing folder{unlinkedRows.length !== 1 ? "s" : ""}
-          </button>
-        </form>
+        <div className="space-y-2">
+          <form action={syncMissingEquipmentFolders}>
+            <button
+              type="submit"
+              className={buttonClass("primary")}
+              disabled={!graphOk || !folderConfig}
+            >
+              Sync {unlinkedRows.length} missing folder{unlinkedRows.length !== 1 ? "s" : ""}
+            </button>
+          </form>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            May take up to 30–60 seconds for large batches. The page will reload
+            when complete.
+          </p>
+        </div>
       )}
       {unlinkedRows.length === 0 && synced === undefined && (
         <p className="text-sm text-slate-500 dark:text-slate-400">

@@ -5,12 +5,16 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { equipment } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/currentUser";
-import { ensureEquipmentFolder } from "@/lib/graph/equipmentFolders";
+import {
+  ensureEquipmentFolder,
+  ensureEquipmentFolderBatch,
+  type FolderRef,
+} from "@/lib/graph/equipmentFolders";
 import { isGraphConfigured } from "@/lib/graph/config";
 import type { EquipmentType } from "@/lib/equipment/specSchemas";
 
-// Syncs SharePoint folders for all equipment that don't have one yet.
-// Requires an active Microsoft session (delegated Graph permissions).
+// Syncs SharePoint folders for all active equipment without one.
+// Resolves site + drive once, caches parent folder lookups across records.
 export async function syncMissingEquipmentFolders() {
   await requireAdmin();
 
@@ -28,35 +32,45 @@ export async function syncMissingEquipmentFolders() {
     .from(equipment)
     .where(and(eq(equipment.status, "active"), isNull(equipment.sharepointFolderUrl)));
 
+  if (unlinked.length === 0) {
+    redirect("/admin/equipment/sync-folders?synced=0&errors=0");
+  }
+
+  const batchResults = await ensureEquipmentFolderBatch(
+    unlinked.map((r) => ({
+      type: r.type as EquipmentType,
+      manufacturer: r.manufacturer,
+      modelNumber: r.modelNumber,
+    }))
+  );
+
   let synced = 0;
   let errors = 0;
 
   for (const item of unlinked) {
+    const key = `${item.type}:${item.manufacturer}:${item.modelNumber}`;
+    const result = batchResults.get(key);
+    if (!result || result instanceof Error) {
+      errors++;
+      continue;
+    }
+    const folder = result as FolderRef;
     try {
-      const folder = await ensureEquipmentFolder({
-        type: item.type as EquipmentType,
-        manufacturer: item.manufacturer,
-        modelNumber: item.modelNumber,
-      });
-      if (folder) {
-        await db
-          .update(equipment)
-          .set({
-            sharepointFolderId: folder.id,
-            sharepointFolderUrl: folder.webUrl,
-            updatedAt: new Date(),
-          })
-          .where(eq(equipment.id, item.id));
-        synced++;
-      }
+      await db
+        .update(equipment)
+        .set({
+          sharepointFolderId: folder.id,
+          sharepointFolderUrl: folder.webUrl,
+          updatedAt: new Date(),
+        })
+        .where(eq(equipment.id, item.id));
+      synced++;
     } catch {
       errors++;
     }
   }
 
-  redirect(
-    `/admin/equipment/sync-folders?synced=${synced}&errors=${errors}`
-  );
+  redirect(`/admin/equipment/sync-folders?synced=${synced}&errors=${errors}`);
 }
 
 // Syncs a single equipment record's SharePoint folder.
