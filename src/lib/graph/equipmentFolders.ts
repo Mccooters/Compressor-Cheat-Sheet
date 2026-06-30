@@ -177,9 +177,10 @@ export async function ensureEquipmentFolder(
   return ensureFolderPath(client, driveId, [typeFolder, eq.manufacturer, eq.modelNumber], new Map());
 }
 
-// Batch version — resolves site + drive ONCE, then shares a path cache across
-// all records so parent folders (type, manufacturer) are only fetched/created
-// on the first encounter. Returns a map from "type:manufacturer:model" → result.
+// Batch version — resolves site + drive ONCE, then creates all folders in
+// parallel (concurrency = 10) so the whole set completes in ~5-10 s instead
+// of timing out when done sequentially. Each worker shares a path cache;
+// the 409 recovery in ensureFolderPath handles concurrent parent-folder races.
 export async function ensureEquipmentFolderBatch(
   items: EquipmentFolderInput[]
 ): Promise<Map<string, FolderRef | Error>> {
@@ -190,28 +191,30 @@ export async function ensureEquipmentFolderBatch(
   const siteId = await resolveSiteId(client, config.siteUrl);
   const driveId = await findDriveByName(client, siteId, config.libraryName);
 
-  // Shared cache: path string → FolderRef. Parent segments (Compressors,
-  // Chicago Pneumatic) are resolved once and reused for all child records.
   const cache = new Map<string, FolderRef>();
-  const results = new Map<string, FolderRef | Error>();
+  const CONCURRENCY = 10;
 
-  for (const item of items) {
+  async function processOne(item: EquipmentFolderInput): Promise<{ key: string; value: FolderRef | Error }> {
     const key = `${item.type}:${item.manufacturer}:${item.modelNumber}`;
     const typeFolder = TYPE_FOLDER[item.type];
-    if (!typeFolder) {
-      results.set(key, new Error(`No folder mapping for type "${item.type}"`));
-      continue;
-    }
+    if (!typeFolder) return { key, value: new Error(`No folder mapping for type "${item.type}"`) };
     try {
-      const ref = await ensureFolderPath(
-        client,
-        driveId,
-        [typeFolder, item.manufacturer, item.modelNumber],
-        cache
-      );
-      results.set(key, ref);
+      const ref = await ensureFolderPath(client, driveId, [typeFolder, item.manufacturer, item.modelNumber], cache);
+      return { key, value: ref };
     } catch (e: unknown) {
-      results.set(key, e instanceof Error ? e : new Error(String(e)));
+      return { key, value: e instanceof Error ? e : new Error(String(e)) };
+    }
+  }
+
+  const results = new Map<string, FolderRef | Error>();
+
+  for (let i = 0; i < items.length; i += CONCURRENCY) {
+    const batch = items.slice(i, i + CONCURRENCY);
+    const settled = await Promise.allSettled(batch.map(processOne));
+    for (const s of settled) {
+      if (s.status === "fulfilled") {
+        results.set(s.value.key, s.value.value);
+      }
     }
   }
 
