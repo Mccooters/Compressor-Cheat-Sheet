@@ -48,13 +48,13 @@ export async function Nav() {
         <span className="font-semibold text-slate-900 dark:text-white">Air Assist</span>
       </Link>
       <div className="ml-auto flex items-center gap-3 text-sm">
-        <a href="https://flow.airassist.com.au" target="_blank" rel="noopener noreferrer" className={appBadgeClass}>
+        <a href="https://flow.airassist.com.au" target="_blank" rel="noopener noreferrer" className={`hidden sm:inline-flex ${appBadgeClass}`}>
           Flow
         </a>
-        <a href="https://draw.airassist.com.au" target="_blank" rel="noopener noreferrer" className={appBadgeClass}>
+        <a href="https://draw.airassist.com.au" target="_blank" rel="noopener noreferrer" className={`hidden sm:inline-flex ${appBadgeClass}`}>
           Draw
         </a>
-        {role === "admin" && <NavLinks links={adminLink} />}
+        {role === "admin" && <span className="hidden sm:contents"><NavLinks links={adminLink} /></span>}
         {session?.user ? (
           <AccountMenu
             email={session.user.email ?? session.user.name ?? "Account"}
