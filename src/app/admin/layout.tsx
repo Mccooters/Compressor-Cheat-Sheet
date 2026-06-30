@@ -4,6 +4,7 @@ import { getCurrentUserRole } from "@/lib/auth/currentUser";
 
 const adminLinks = [
   { href: "/admin/equipment", label: "Equipment" },
+  { href: "/admin/equipment/sync-folders", label: "SP Folders" },
   { href: "/admin/fault-trees", label: "Fault trees" },
   { href: "/admin/controllers", label: "Controllers" },
   { href: "/admin/controllers/sharepoint-inspect", label: "SP Inspect" },

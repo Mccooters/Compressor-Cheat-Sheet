@@ -112,6 +112,8 @@ export const equipment = pgTable("equipment", {
   description: text("description"),
   status: equipmentStatusEnum("status").notNull().default("active"),
   specs: jsonb("specs").notNull().default({}),
+  sharepointFolderId: text("sharepoint_folder_id"),
+  sharepointFolderUrl: text("sharepoint_folder_url"),
   createdBy: text("created_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

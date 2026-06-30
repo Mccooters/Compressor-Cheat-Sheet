@@ -1,0 +1,1290 @@
+{
+  "id": "22f55897-24f6-4ada-a56b-43de39e46d7c",
+  "prevId": "309b6c36-d6c9-4d1a-bbf3-603f2a872d16",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.app_user": {
+      "name": "app_user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "user_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'viewer'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "app_user_email_idx": {
+          "name": "app_user_email_idx",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.controller": {
+      "name": "controller",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model_name": {
+          "name": "model_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "record_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "sharepoint_list_id": {
+          "name": "sharepoint_list_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sharepoint_item_id": {
+          "name": "sharepoint_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_synced_at": {
+          "name": "last_synced_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "controller_manufacturer_model_idx": {
+          "name": "controller_manufacturer_model_idx",
+          "columns": [
+            {
+              "expression": "manufacturer",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "model_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.controller_fault_code": {
+      "name": "controller_fault_code",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "controller_id": {
+          "name": "controller_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "source": {
+          "name": "source",
+          "type": "record_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "sharepoint_item_id": {
+          "name": "sharepoint_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "controller_fault_code_controller_id_controller_id_fk": {
+          "name": "controller_fault_code_controller_id_controller_id_fk",
+          "tableFrom": "controller_fault_code",
+          "tableTo": "controller",
+          "columnsFrom": [
+            "controller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.controller_password": {
+      "name": "controller_password",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "controller_id": {
+          "name": "controller_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "source": {
+          "name": "source",
+          "type": "record_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "sharepoint_item_id": {
+          "name": "sharepoint_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "controller_password_controller_id_controller_id_fk": {
+          "name": "controller_password_controller_id_controller_id_fk",
+          "tableFrom": "controller_password",
+          "tableTo": "controller",
+          "columnsFrom": [
+            "controller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.document_link": {
+      "name": "document_link",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "equipment_id": {
+          "name": "equipment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "controller_id": {
+          "name": "controller_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doc_type": {
+          "name": "doc_type",
+          "type": "document_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'manual'"
+        },
+        "source": {
+          "name": "source",
+          "type": "document_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sharepoint_drive_id": {
+          "name": "sharepoint_drive_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sharepoint_item_id": {
+          "name": "sharepoint_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "web_url": {
+          "name": "web_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_modified_at": {
+          "name": "last_modified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cached_at": {
+          "name": "cached_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "document_link_equipment_id_equipment_id_fk": {
+          "name": "document_link_equipment_id_equipment_id_fk",
+          "tableFrom": "document_link",
+          "tableTo": "equipment",
+          "columnsFrom": [
+            "equipment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "document_link_controller_id_controller_id_fk": {
+          "name": "document_link_controller_id_controller_id_fk",
+          "tableFrom": "document_link",
+          "tableTo": "controller",
+          "columnsFrom": [
+            "controller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.equipment": {
+      "name": "equipment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "type": {
+          "name": "type",
+          "type": "equipment_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model_number": {
+          "name": "model_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "equipment_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "specs": {
+          "name": "specs",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "sharepoint_folder_id": {
+          "name": "sharepoint_folder_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sharepoint_folder_url": {
+          "name": "sharepoint_folder_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.equipment_controller": {
+      "name": "equipment_controller",
+      "schema": "",
+      "columns": {
+        "equipment_id": {
+          "name": "equipment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "controller_id": {
+          "name": "controller_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "equipment_controller_equipment_id_equipment_id_fk": {
+          "name": "equipment_controller_equipment_id_equipment_id_fk",
+          "tableFrom": "equipment_controller",
+          "tableTo": "equipment",
+          "columnsFrom": [
+            "equipment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "equipment_controller_controller_id_controller_id_fk": {
+          "name": "equipment_controller_controller_id_controller_id_fk",
+          "tableFrom": "equipment_controller",
+          "tableTo": "controller",
+          "columnsFrom": [
+            "controller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "equipment_controller_equipment_id_controller_id_pk": {
+          "name": "equipment_controller_equipment_id_controller_id_pk",
+          "columns": [
+            "equipment_id",
+            "controller_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fault_tree": {
+      "name": "fault_tree",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "equipment_scope": {
+          "name": "equipment_scope",
+          "type": "fault_tree_scope",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'generic'"
+        },
+        "scoped_equipment_type": {
+          "name": "scoped_equipment_type",
+          "type": "equipment_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "fault_tree_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'mechanical'"
+        },
+        "root_node_id": {
+          "name": "root_node_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "fault_tree_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fault_tree_branch": {
+      "name": "fault_tree_branch",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "from_node_id": {
+          "name": "from_node_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "to_node_id": {
+          "name": "to_node_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "fault_tree_branch_from_sort_idx": {
+          "name": "fault_tree_branch_from_sort_idx",
+          "columns": [
+            {
+              "expression": "from_node_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "sort_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "fault_tree_branch_from_node_id_fault_tree_node_id_fk": {
+          "name": "fault_tree_branch_from_node_id_fault_tree_node_id_fk",
+          "tableFrom": "fault_tree_branch",
+          "tableTo": "fault_tree_node",
+          "columnsFrom": [
+            "from_node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fault_tree_branch_to_node_id_fault_tree_node_id_fk": {
+          "name": "fault_tree_branch_to_node_id_fault_tree_node_id_fk",
+          "tableFrom": "fault_tree_branch",
+          "tableTo": "fault_tree_node",
+          "columnsFrom": [
+            "to_node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fault_tree_equipment": {
+      "name": "fault_tree_equipment",
+      "schema": "",
+      "columns": {
+        "fault_tree_id": {
+          "name": "fault_tree_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipment_id": {
+          "name": "equipment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fault_tree_equipment_fault_tree_id_fault_tree_id_fk": {
+          "name": "fault_tree_equipment_fault_tree_id_fault_tree_id_fk",
+          "tableFrom": "fault_tree_equipment",
+          "tableTo": "fault_tree",
+          "columnsFrom": [
+            "fault_tree_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fault_tree_equipment_equipment_id_equipment_id_fk": {
+          "name": "fault_tree_equipment_equipment_id_equipment_id_fk",
+          "tableFrom": "fault_tree_equipment",
+          "tableTo": "equipment",
+          "columnsFrom": [
+            "equipment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "fault_tree_equipment_fault_tree_id_equipment_id_pk": {
+          "name": "fault_tree_equipment_fault_tree_id_equipment_id_pk",
+          "columns": [
+            "fault_tree_id",
+            "equipment_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fault_tree_node": {
+      "name": "fault_tree_node",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "fault_tree_id": {
+          "name": "fault_tree_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "node_type": {
+          "name": "node_type",
+          "type": "fault_tree_node_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prompt": {
+          "name": "prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "probable_cause": {
+          "name": "probable_cause",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommended_fix": {
+          "name": "recommended_fix",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "safety_warning": {
+          "name": "safety_warning",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linked_equipment_id": {
+          "name": "linked_equipment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "linked_document_id": {
+          "name": "linked_document_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fault_tree_node_fault_tree_id_fault_tree_id_fk": {
+          "name": "fault_tree_node_fault_tree_id_fault_tree_id_fk",
+          "tableFrom": "fault_tree_node",
+          "tableTo": "fault_tree",
+          "columnsFrom": [
+            "fault_tree_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fault_tree_node_linked_equipment_id_equipment_id_fk": {
+          "name": "fault_tree_node_linked_equipment_id_equipment_id_fk",
+          "tableFrom": "fault_tree_node",
+          "tableTo": "equipment",
+          "columnsFrom": [
+            "linked_equipment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "fault_tree_node_linked_document_id_document_link_id_fk": {
+          "name": "fault_tree_node_linked_document_id_document_link_id_fk",
+          "tableFrom": "fault_tree_node",
+          "tableTo": "document_link",
+          "columnsFrom": [
+            "linked_document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pvi_resource": {
+      "name": "pvi_resource",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "pvi_resource_category",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'other'"
+        },
+        "source": {
+          "name": "source",
+          "type": "document_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sharepoint_drive_id": {
+          "name": "sharepoint_drive_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sharepoint_item_id": {
+          "name": "sharepoint_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "web_url": {
+          "name": "web_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.resource": {
+      "name": "resource",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "area": {
+          "name": "area",
+          "type": "resource_area",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'other'"
+        },
+        "source": {
+          "name": "source",
+          "type": "document_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sharepoint_drive_id": {
+          "name": "sharepoint_drive_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sharepoint_item_id": {
+          "name": "sharepoint_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "web_url": {
+          "name": "web_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "added_by": {
+          "name": "added_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.document_source": {
+      "name": "document_source",
+      "schema": "public",
+      "values": [
+        "graph",
+        "manual_link"
+      ]
+    },
+    "public.document_type": {
+      "name": "document_type",
+      "schema": "public",
+      "values": [
+        "manual",
+        "datasheet",
+        "wiring_diagram",
+        "parts_list",
+        "photo",
+        "other"
+      ]
+    },
+    "public.equipment_status": {
+      "name": "equipment_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "archived"
+      ]
+    },
+    "public.equipment_type": {
+      "name": "equipment_type",
+      "schema": "public",
+      "values": [
+        "compressor",
+        "controller",
+        "dryer",
+        "line_filter",
+        "breathing_air",
+        "oily_water_separator",
+        "vacuum_pump",
+        "generator",
+        "nitrogen_generator"
+      ]
+    },
+    "public.fault_tree_category": {
+      "name": "fault_tree_category",
+      "schema": "public",
+      "values": [
+        "electrical",
+        "mechanical",
+        "lubrication",
+        "controls",
+        "safety",
+        "moisture"
+      ]
+    },
+    "public.fault_tree_node_type": {
+      "name": "fault_tree_node_type",
+      "schema": "public",
+      "values": [
+        "question",
+        "diagnosis"
+      ]
+    },
+    "public.fault_tree_scope": {
+      "name": "fault_tree_scope",
+      "schema": "public",
+      "values": [
+        "generic",
+        "type_scoped",
+        "model_scoped"
+      ]
+    },
+    "public.fault_tree_status": {
+      "name": "fault_tree_status",
+      "schema": "public",
+      "values": [
+        "draft",
+        "published"
+      ]
+    },
+    "public.pvi_resource_category": {
+      "name": "pvi_resource_category",
+      "schema": "public",
+      "values": [
+        "cheat_sheet",
+        "other"
+      ]
+    },
+    "public.record_source": {
+      "name": "record_source",
+      "schema": "public",
+      "values": [
+        "manual",
+        "sharepoint_sync"
+      ]
+    },
+    "public.resource_area": {
+      "name": "resource_area",
+      "schema": "public",
+      "values": [
+        "breathing_air",
+        "swms",
+        "installations"
+      ]
+    },
+    "public.user_role": {
+      "name": "user_role",
+      "schema": "public",
+      "values": [
+        "admin",
+        "viewer"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

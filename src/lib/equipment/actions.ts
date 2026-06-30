@@ -8,6 +8,8 @@ import { db } from "@/db";
 import { equipment } from "@/db/schema";
 import { getCurrentUserEmail, requireAdmin } from "@/lib/auth/currentUser";
 import { EQUIPMENT_TYPES, parseSpecs } from "@/lib/equipment/specSchemas";
+import { ensureEquipmentFolder } from "@/lib/graph/equipmentFolders";
+import { isGraphConfigured } from "@/lib/graph/config";
 
 const equipmentFieldsSchema = z.object({
   type: z.enum(EQUIPMENT_TYPES),
@@ -48,6 +50,27 @@ export async function createEquipment(formData: FormData) {
     .insert(equipment)
     .values({ ...values, createdBy: userEmail ?? undefined })
     .returning({ id: equipment.id });
+
+  // Auto-create SharePoint folder if Graph is configured and user is signed in
+  // with Microsoft. Runs after insert; failure is non-fatal (folder can be
+  // created later via the admin sync-folders page).
+  if (isGraphConfigured()) {
+    try {
+      const folder = await ensureEquipmentFolder(values);
+      if (folder) {
+        await db
+          .update(equipment)
+          .set({
+            sharepointFolderId: folder.id,
+            sharepointFolderUrl: folder.webUrl,
+            updatedAt: new Date(),
+          })
+          .where(eq(equipment.id, created.id));
+      }
+    } catch {
+      // Non-fatal — folder can be synced later via /admin/equipment/sync-folders
+    }
+  }
 
   revalidatePath("/equipment");
   redirect(`/equipment/${created.id}`);

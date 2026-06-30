@@ -189,14 +189,26 @@ export default async function EquipmentDetailPage({
             </p>
           </div>
         </div>
-        {isAdmin && (
-          <Link
-            href={`/admin/equipment/${item.id}/edit`}
-            className={buttonClass("secondary")}
-          >
-            Edit
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {item.sharepointFolderUrl && (
+            <a
+              href={item.sharepointFolderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonClass("secondary")}
+            >
+              Open in SharePoint
+            </a>
+          )}
+          {isAdmin && (
+            <Link
+              href={`/admin/equipment/${item.id}/edit`}
+              className={buttonClass("secondary")}
+            >
+              Edit
+            </Link>
+          )}
+        </div>
       </div>
 
       {item.description && (
