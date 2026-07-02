@@ -49,6 +49,28 @@ const STAINLESS_SPACING_M: Record<string, number> = {
 // — flat max 2.5 m between clips, the same for every diameter 20-158 mm.
 const AIRNET_SPACING_M = 2.5;
 
+// Pipe pressure test multipliers per AS 4041 (pressure piping).
+// Pneumatic leak test: 1.1 × DP — lower multiplier because compressed gas
+// stores far more energy than water. Hydraulic strength test: 1.5 × DP.
+const PIPE_TEST_TYPES = [
+  {
+    key: "pneumatic",
+    label: "Pneumatic (air/gas) — leak test  ×1.1",
+    multiplier: 1.1,
+    hold: "30 min minimum",
+    safetyNote:
+      "Approach the pressurised system slowly. Never stand directly in line with joints or fittings during pressurisation. Use leak-detection fluid — do not probe with hands.",
+  },
+  {
+    key: "hydraulic",
+    label: "Hydraulic (water) — strength test  ×1.5",
+    multiplier: 1.5,
+    hold: "30 min minimum",
+    safetyNote:
+      "Preferred where practicable. Water is incompressible so a failure releases far less stored energy than a pneumatic test.",
+  },
+] as const;
+
 function parseOptionalNumber(value: string): number | null {
   if (value.trim() === "") return null;
   const n = parseFloat(value);
@@ -94,6 +116,24 @@ export function InstallationCalculators() {
     if (length === null || length <= 0 || maxSpacingM === null) return null;
     return Math.ceil(length / maxSpacingM) + 1;
   }, [hangerRunLength, maxSpacingM]);
+
+  // Pipe pressure test
+  const [testTypeKey, setTestTypeKey] = useState<"pneumatic" | "hydraulic">("pneumatic");
+  const [designPressure, setDesignPressure] = useState("");
+  const [componentRating, setComponentRating] = useState("");
+
+  const testType = PIPE_TEST_TYPES.find((t) => t.key === testTypeKey)!;
+
+  const pipeTestResult = useMemo(() => {
+    const dp = parseOptionalNumber(designPressure);
+    if (dp === null || dp <= 0) return null;
+    const testPressureKpa = dp * testType.multiplier;
+    const testPressureBar = testPressureKpa / 100;
+    const testPressurePsi = testPressureKpa * 0.14504;
+    const rating = parseOptionalNumber(componentRating);
+    const exceedsRating = rating !== null && testPressureKpa > rating;
+    return { testPressureKpa, testPressureBar, testPressurePsi, exceedsRating, rating };
+  }, [designPressure, testType, componentRating]);
 
   return (
     <div className="grid gap-6 sm:grid-cols-2">
@@ -202,6 +242,84 @@ export function InstallationCalculators() {
             <Stat label="Minimum supports" value={`${supportCount}`} />
           )}
         </dl>
+      </Card>
+
+      {/* Pipe pressure test — spans full width */}
+      <Card className="space-y-4 sm:col-span-2">
+        <div>
+          <h2 className="font-semibold text-slate-900 dark:text-white">
+            Pipe pressure test
+          </h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+            AS 4041 — pneumatic leak test at 1.1 × design pressure; hydraulic
+            strength test at 1.5 × design pressure.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Test type">
+            <select
+              className={fieldInputClass}
+              value={testTypeKey}
+              onChange={(e) => setTestTypeKey(e.target.value as "pneumatic" | "hydraulic")}
+            >
+              {PIPE_TEST_TYPES.map((t) => (
+                <option key={t.key} value={t.key}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <NumberField
+            label="System design pressure"
+            unit="kPa"
+            value={designPressure}
+            onChange={setDesignPressure}
+            placeholder="e.g. 1000"
+          />
+
+          <NumberField
+            label="Weakest component rating (optional)"
+            unit="kPa"
+            helper="triggers warning if test pressure exceeds this"
+            value={componentRating}
+            onChange={setComponentRating}
+            placeholder="e.g. 1400"
+          />
+        </div>
+
+        {pipeTestResult ? (
+          <div className="space-y-3">
+            {pipeTestResult.exceedsRating && (
+              <div className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-300">
+                Warning — test pressure ({pipeTestResult.testPressureKpa.toFixed(0)} kPa) exceeds
+                the entered component rating ({pipeTestResult.rating} kPa). Isolate or remove
+                under-rated components before testing.
+              </div>
+            )}
+            <dl className="grid gap-2 sm:grid-cols-4">
+              <Stat
+                label="Test pressure"
+                value={`${pipeTestResult.testPressureKpa.toFixed(0)} kPa`}
+              />
+              <Stat
+                label="Test pressure"
+                value={`${pipeTestResult.testPressureBar.toFixed(2)} bar`}
+              />
+              <Stat
+                label="Test pressure"
+                value={`${pipeTestResult.testPressurePsi.toFixed(1)} psi`}
+              />
+              <Stat label="Minimum hold time" value={testType.hold} />
+            </dl>
+            <p className="text-xs text-orange-700 dark:text-orange-400">
+              {testType.safetyNote}
+            </p>
+          </div>
+        ) : (
+          <EmptyState>Enter system design pressure to calculate.</EmptyState>
+        )}
       </Card>
     </div>
   );
