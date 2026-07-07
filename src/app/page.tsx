@@ -8,27 +8,46 @@ const cards = [
       "Look up compressors, controllers, and dryers — specs, datasheets, and linked SharePoint manuals.",
   },
   {
-    href: "/wizard",
-    title: "Fault Finder",
-    description:
-      "Walk through a guided question tree to diagnose a problem and find the recommended fix.",
-  },
-  {
-    href: "/search",
-    title: "Search",
-    description: "Search across equipment and fault trees at once.",
-  },
-  {
     href: "/controllers",
     title: "Controllers",
     description:
       "Look up service, factory, and user access codes by controller manufacturer and model.",
   },
   {
+    href: "/pressure-vessel-inspection",
+    title: "Pressure Vessels",
+    description:
+      "Inspection checklists, hazard level calculator, and AS/NZS 3788 reference material.",
+  },
+  {
+    href: "/installations",
+    title: "Installations",
+    description:
+      "Standards, manuals, and field calculators for compressed air installation work.",
+  },
+  {
+    href: "/breathing-air-inspections",
+    title: "Breathing Air",
+    description:
+      "Cheat sheets and reference documents for inspecting breathing air compressor systems.",
+  },
+  {
     href: "/calculators",
     title: "Calculators",
     description:
       "Pressure vessel volume, motor electrical, airflow unit conversion, and more field calculators.",
+  },
+  {
+    href: "/wizard",
+    title: "Fault Finder",
+    description:
+      "Walk through a guided question tree to diagnose a problem and find the recommended fix.",
+  },
+  {
+    href: "/swms",
+    title: "SWMS",
+    description:
+      "Safe work method statements for compressed air installation and maintenance tasks.",
   },
 ];
 
