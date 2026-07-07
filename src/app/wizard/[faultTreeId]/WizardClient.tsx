@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 
 type Branch = { id: string; label: string; toNodeId: string };
 type LinkedEquipment = { id: string; displayName: string } | null;
@@ -50,40 +47,43 @@ export function WizardClient({
   }
 
   if (!currentNode) {
-    return <EmptyState>This fault tree has no starting question configured yet.</EmptyState>;
+    return (
+      <p className="text-neutral-500">
+        This fault tree has no starting question configured yet.
+      </p>
+    );
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {tree.title}
-        </h1>
-        <span className="font-mono text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
-          Step {history.length}
-        </span>
+        <div className="space-y-1">
+          <Link href="/wizard" className="text-sm text-neutral-500 underline">
+            ← Back to fault trees
+          </Link>
+          <h1 className="text-xl font-semibold">{tree.title}</h1>
+        </div>
+        <span className="text-sm text-neutral-500">Step {history.length}</span>
       </div>
 
       {currentNode.nodeType === "question" ? (
-        <Card className="space-y-4">
-          <p className="text-lg text-slate-900 dark:text-white">{currentNode.prompt}</p>
+        <div className="space-y-4 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
+          <p className="text-lg">{currentNode.prompt}</p>
           <div className="flex flex-col gap-2">
             {currentNode.outgoingBranches.map((branch) => (
               <button
                 key={branch.id}
                 onClick={() => goTo(branch.toNodeId)}
-                className="rounded-md border border-slate-300 px-4 py-2 text-left text-slate-700 transition hover:border-orange-400 hover:bg-orange-50 dark:border-zinc-700 dark:text-slate-300 dark:hover:border-orange-500/60 dark:hover:bg-orange-500/10"
+                className="rounded-md border border-neutral-300 px-4 py-2 text-left hover:border-blue-500 hover:bg-blue-50 dark:border-neutral-700 dark:hover:bg-blue-950"
               >
                 {branch.label}
               </button>
             ))}
           </div>
-        </Card>
+        </div>
       ) : (
-        <div className="space-y-4 rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/40">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {currentNode.prompt}
-          </h2>
+        <div className="space-y-4 rounded-lg border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950">
+          <h2 className="text-lg font-semibold">{currentNode.prompt}</h2>
 
           {currentNode.safetyWarning && (
             <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
@@ -93,23 +93,19 @@ export function WizardClient({
 
           {currentNode.probableCause && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <h3 className="text-sm font-medium text-neutral-500">
                 Probable cause
               </h3>
-              <p className="text-slate-700 dark:text-slate-300">
-                {currentNode.probableCause}
-              </p>
+              <p>{currentNode.probableCause}</p>
             </div>
           )}
 
           {currentNode.recommendedFix && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <h3 className="text-sm font-medium text-neutral-500">
                 Recommended fix
               </h3>
-              <p className="text-slate-700 dark:text-slate-300">
-                {currentNode.recommendedFix}
-              </p>
+              <p>{currentNode.recommendedFix}</p>
             </div>
           )}
 
@@ -120,7 +116,7 @@ export function WizardClient({
                   href={currentNode.linkedDocument.webUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-orange-600 underline dark:text-orange-400"
+                  className="underline"
                 >
                   View manual: {currentNode.linkedDocument.title}
                 </a>
@@ -128,7 +124,7 @@ export function WizardClient({
               {currentNode.linkedEquipment && (
                 <Link
                   href={`/equipment/${currentNode.linkedEquipment.id}`}
-                  className="text-orange-600 underline dark:text-orange-400"
+                  className="underline"
                 >
                   View {currentNode.linkedEquipment.displayName}
                 </Link>
@@ -140,13 +136,19 @@ export function WizardClient({
 
       <div className="flex gap-3">
         {history.length > 1 && (
-          <Button variant="secondary" onClick={goBack}>
+          <button
+            onClick={goBack}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+          >
             Back
-          </Button>
+          </button>
         )}
-        <Button variant="secondary" onClick={startOver}>
+        <button
+          onClick={startOver}
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+        >
           Start over
-        </Button>
+        </button>
       </div>
     </div>
   );
