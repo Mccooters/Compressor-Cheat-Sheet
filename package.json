@@ -14,6 +14,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:seed-fault-trees": "tsx src/db/seed-rotary-screw-fault-trees.ts",
     "db:import-controllers": "tsx src/db/import-controller-codes.ts",
+    "db:import-pneumatech-dryers": "tsx src/db/import-pneumatech-ad-dryers.ts",
     "db:reclassify-fault-codes": "tsx src/db/reclassify-fault-codes.ts",
     "db:categorize-fault-trees": "tsx src/db/categorize-fault-trees.ts"
   },
