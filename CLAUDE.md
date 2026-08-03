@@ -21,9 +21,10 @@ See `docs/architecture.md` for a full structural overview.
 
 `src/components/layout/Nav.tsx` — server component, renders the top bar.
 
-Layout: `[☰ NavMenu] [Logo + Air Assist] ··· [Flow badge] [Draw badge] [Admin?] [ThemeToggle / AccountMenu]`
+Layout: `[☰ NavMenu] [Logo + Air Assist] [NavSearch] ··· [Flow badge] [Draw badge] [Admin?] [ThemeToggle / AccountMenu]`
 
-- **NavMenu** (`src/components/layout/NavMenu.tsx`) — universal hamburger (all screen sizes). Contains `NavSearch` + `NavLinks` for the 8 main page links only. No account controls inside.
+- **NavMenu** (`src/components/layout/NavMenu.tsx`) — universal hamburger (all screen sizes). Contains `NavLinks` for the 8 main page links only. No search, no account controls inside.
+- **NavSearch** — lives in the nav bar itself so it is always reachable without opening the menu. Centred in the bar on `sm+`; on mobile it drops to its own full-width row beneath the logo row.
 - **Flow / Draw** — rendered as orange pill badges (`appBadgeClass`) in Nav.tsx, open in a new tab. These link to separate Vercel deployments (see `docs/planned-features.md`).
 - **Admin link** — shown only when `role === "admin"` via `NavLinks`.
 - **ThemeToggle / AccountMenu** — always visible in the header bar.

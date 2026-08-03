@@ -4,6 +4,7 @@ import { auth, signOut } from "@/auth";
 import { getCurrentUserRole } from "@/lib/auth/currentUser";
 import { NavMenu } from "@/components/layout/NavMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
+import { NavSearch } from "@/components/layout/NavSearch";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
@@ -62,6 +63,11 @@ export async function Nav() {
           />
           <span className="font-semibold text-slate-900 dark:text-white">Air Assist</span>
         </Link>
+        <div className="hidden min-w-0 flex-1 justify-center px-4 sm:flex">
+          <div className="w-full max-w-md">
+            <NavSearch />
+          </div>
+        </div>
         <div className="ml-auto flex items-center gap-3 text-sm">
           <div className="hidden items-center gap-3 sm:flex">
             {appLinks}
@@ -84,6 +90,9 @@ export async function Nav() {
             </>
           )}
         </div>
+      </div>
+      <div className="mt-2 sm:hidden">
+        <NavSearch />
       </div>
       <div className="mt-2 flex items-center gap-2 sm:hidden">
         {appLinks}

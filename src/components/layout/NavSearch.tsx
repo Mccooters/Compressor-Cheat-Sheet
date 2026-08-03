@@ -123,7 +123,7 @@ export function NavSearch() {
       </form>
 
       {open && query.trim() && (
-        <div className="absolute inset-x-0 z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg sm:left-auto sm:right-0 sm:w-96 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute inset-x-0 z-20 mt-2 max-h-[70vh] overflow-y-auto rounded-lg border border-slate-200 bg-white p-3 shadow-lg sm:right-auto sm:w-96 dark:border-zinc-700 dark:bg-zinc-900">
           {!results ? (
             <p className="px-1 py-2 text-sm text-slate-500 dark:text-slate-400">Searching…</p>
           ) : totalCount === 0 ? (

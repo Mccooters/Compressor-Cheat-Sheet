@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NavLinks } from "@/components/layout/NavLinks";
-import { NavSearch } from "@/components/layout/NavSearch";
 
 export function NavMenu({ links }: { links: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
@@ -54,10 +53,7 @@ export function NavMenu({ links }: { links: { href: string; label: string }[] })
 
       {open && (
         <div className="absolute inset-x-0 top-full z-20 flex flex-col gap-4 border-b border-slate-200 bg-white px-6 py-4 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
-          <NavSearch />
-          <div className="flex flex-col gap-4">
-            <NavLinks links={links} />
-          </div>
+          <NavLinks links={links} />
         </div>
       )}
     </div>
