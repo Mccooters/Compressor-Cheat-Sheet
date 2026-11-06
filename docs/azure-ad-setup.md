@@ -46,3 +46,42 @@ Microsoft" and the "Search SharePoint" picker.
 Once these are set (see `.env.example`), redeploy — "Sign in with Microsoft"
 and the SharePoint search picker turn on automatically. No code changes are
 needed.
+
+## Extra setup for the Air Assist iOS app
+
+The iOS app downloads manuals and SWMS documents so they can be read in the
+field with no signal. It has no Microsoft sign-in of its own, so the
+**delegated** permissions above don't cover it — those act as whoever is
+signed in, and on the phone nobody is. The sync routes use the same app
+registration with **application** permissions instead, which let the server
+read SharePoint as itself.
+
+On the **same app registration**:
+
+1. Go to **API permissions > Add a permission > Microsoft Graph >
+   Application permissions** (not Delegated), and add:
+   - `Sites.Read.All`
+   - `Files.Read.All`
+2. Click **Grant admin consent for <organization>** again. Application
+   permissions never work without consent — until this is clicked, document
+   downloads in the app fail while the rest of the sync still works.
+
+No new secret or redirect URI is needed; the existing client ID, secret and
+issuer are reused.
+
+> **Note on access scope.** Application permissions are tenant-wide: the
+> server can read any SharePoint file, not just the ones a given technician
+> could. The app only ever requests documents already linked in the
+> database, but this is a broader grant than the delegated one and worth
+> raising with whoever approves it. Scoping it down is possible with
+> [Sites.Selected](https://learn.microsoft.com/graph/permissions-reference#sitesselected),
+> which would need the specific sites granting to the app individually.
+
+### Also set
+
+| Value | Goes into env var |
+|---|---|
+| A random shared secret, e.g. from `openssl rand -base64 32` | `MOBILE_API_TOKEN` |
+
+The same token goes into the iOS app. Without it the sync routes return
+`503` and stay closed — they do not fall open.
