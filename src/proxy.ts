@@ -1,8 +1,40 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
+// NOTE ON THIS FILE'S NAME AND LOCATION — both matter, silently.
+//
+// Next 16 renamed the `middleware` convention to `proxy`, and when a project
+// uses a `src` directory the file must live at `src/proxy.ts`. This was
+// previously `middleware.ts` in the project root, where Next 16 does not look
+// for it at all: it was never loaded, so nothing here ran and every page was
+// served unauthenticated. There is no warning for this — the only symptom is
+// that the auth gate quietly stops existing. Do not move it back to the root.
+
+// Asset-tag URLs printed on equipment stickers: /a/{id}. The QR encodes
+// them entirely in uppercase (HTTPS://AIRASSIST.COM.AU/A/AAC-CMP-0001) so
+// the code uses QR alphanumeric mode, which is ~31% denser and prints one
+// version smaller. Scheme and host are case-insensitive per RFC 3986, but
+// the PATH is not, and Next's router is case-sensitive too — so /A/... has
+// to be folded to /a/... here or it 404s before reaching the page.
+const ASSET_PATH = /^\/a(\/.*)?$/i;
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+
+  const assetPath = ASSET_PATH.exec(pathname);
+  if (assetPath) {
+    const canonical = `/a${assetPath[1] ?? ""}`;
+    if (pathname !== canonical) {
+      const url = req.nextUrl.clone();
+      url.pathname = canonical;
+      // Rewrite, not redirect: these are scanned on a phone in a plant room,
+      // often on one bar of signal, where an extra round trip is felt.
+      return NextResponse.rewrite(url);
+    }
+    // Public by design — anyone who can physically reach the equipment can
+    // scan the sticker, including customers and auditors with no login.
+    return;
+  }
   // Calculators are plain client-side math with no auth/DB dependency, and
   // are public on purpose: they're installable as an offline PWA, and a
   // login gate would defeat the point since you can't authenticate without
