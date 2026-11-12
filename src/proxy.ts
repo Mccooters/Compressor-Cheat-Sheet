@@ -39,7 +39,15 @@ export default auth((req) => {
   // are public on purpose: they're installable as an offline PWA, and a
   // login gate would defeat the point since you can't authenticate without
   // a network connection.
-  const isPublicRoute = pathname === "/login" || pathname.startsWith("/calculators");
+  // /.well-known/ is the standard namespace for machine-readable site
+  // metadata (RFC 8615) and is public by definition. Apple's Universal Links
+  // validator fetches /.well-known/apple-app-site-association and REJECTS
+  // any redirect, so a login bounce here doesn't fail loudly — it just
+  // silently stops asset-tag QR codes opening in the iOS app.
+  const isPublicRoute =
+    pathname === "/login" ||
+    pathname.startsWith("/calculators") ||
+    pathname.startsWith("/.well-known/");
 
   // Only a lightweight JWT check here — no DB access. Middleware/proxy runs
   // in a separate, minimal execution context that isn't meant to depend on
