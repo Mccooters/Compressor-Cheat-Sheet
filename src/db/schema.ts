@@ -472,3 +472,27 @@ export const faultTreeBranchRelations = relations(
     }),
   })
 );
+
+// Maps a printed asset-tag ID (the QR sticker, e.g. "AAC-CMP-0002") to the
+// AroFlo asset that carries it in its Barcode field. AroFlo is the asset
+// register; this is only an index into it, because its API can fetch an
+// asset by its own ID but has no way to search by barcode. Rows are filled
+// in by src/lib/assets/tagIndex.ts — never by hand.
+export const assetTag = pgTable("asset_tag", {
+  tagId: text("tag_id").primaryKey(),
+  arofloAssetId: text("aroflo_asset_id").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// Single-row-per-key bookkeeping for the AroFlo tag index: how far through
+// AroFlo's "recently changed assets" feed we have read, and when we last
+// looked (so repeated scans of an unregistered tag can't burn the API quota).
+export const arofloSyncState = pgTable("aroflo_sync_state", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

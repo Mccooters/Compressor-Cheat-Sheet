@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { findExampleAsset, type AssetRecord } from "@/lib/assets/exampleAssets";
+import { getAssetByTag } from "@/lib/assets/record";
+import { normaliseTag } from "@/lib/assets/tagIndex";
+import type { AssetRecord } from "@/lib/assets/types";
 
 /**
  * Asset page — where the QR sticker on a piece of equipment lands.
@@ -10,13 +12,11 @@ import { findExampleAsset, type AssetRecord } from "@/lib/assets/exampleAssets";
  * AppChrome). Anyone who can reach the equipment can open it, so it must
  * only ever show what is safe for a customer, contractor or auditor to see.
  *
- * The record currently comes from hand-copied stand-in data. Tags with no record show a
- * "not registered yet" state rather than a 404, since stickers are printed
- * ahead of the assets they end up on.
+ * The record is read live from AroFlo, which is the asset register: a tag
+ * belongs to whichever AroFlo asset has it in its Barcode field. Tags with
+ * no asset show a "not registered yet" state rather than a 404, since
+ * stickers are printed ahead of the assets they end up on.
  */
-
-// AAC-{3-letter type}-{4 digits}, e.g. AAC-CMP-0001.
-const ASSET_ID_PATTERN = /^AAC-[A-Z]{3}-\d{4}$/;
 
 const TYPE_LABELS: Record<string, string> = {
   CMP: "Compressor",
@@ -26,15 +26,13 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export const metadata: Metadata = {
-  title: "Asset record",
+  title: "Asset record · Adaptive Air Compressors",
   robots: { index: false, follow: false },
 };
 
 const STATUS_CLASS: Record<AssetRecord["status"], string> = {
   "In service":
     "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-  "Out of service":
-    "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300",
   Decommissioned:
     "bg-slate-200 text-slate-700 dark:bg-zinc-700 dark:text-slate-300",
 };
@@ -43,8 +41,10 @@ const cardClass =
   "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-800/60";
 const headingClass =
   "text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400";
+const bodyClass = "mt-2 text-sm text-slate-600 dark:text-slate-400";
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: string | null }) {
+  if (!value) return null;
   return (
     <div className="flex items-baseline justify-between gap-4 py-2.5">
       <dt className="text-sm text-slate-500 dark:text-slate-400">{label}</dt>
@@ -63,10 +63,11 @@ export default async function AssetPage({
   const { id } = await params;
 
   // The path arrives uppercase from the QR, but may be typed in any case.
-  const assetId = decodeURIComponent(id).trim().toUpperCase();
-  if (!ASSET_ID_PATTERN.test(assetId)) notFound();
+  const assetId = normaliseTag(decodeURIComponent(id));
+  if (!assetId) notFound();
 
-  const asset = findExampleAsset(assetId);
+  const result = await getAssetByTag(assetId);
+  const asset = result.state === "found" ? result.asset : null;
   // The type segment of the ID is a display fallback only — once a record
   // exists, the record says what the asset is.
   const fallbackType = TYPE_LABELS[assetId.slice(4, 7)];
@@ -95,7 +96,7 @@ export default async function AssetPage({
         </div>
       </header>
 
-      {asset ? (
+      {asset && (
         <>
           <section className={cardClass}>
             <h2 className={headingClass}>Equipment</h2>
@@ -104,31 +105,23 @@ export default async function AssetPage({
               <Row label="Model" value={asset.model} />
               <Row label="Serial number" value={asset.serialNumber} />
               <Row label="Site" value={asset.site} />
-              {asset.location && <Row label="Location" value={asset.location} />}
-              {asset.commissioned && (
-                <Row label="Commissioned" value={asset.commissioned} />
-              )}
             </dl>
           </section>
 
           <section className={cardClass}>
             <h2 className={headingClass}>Service</h2>
-            <dl className="mt-1 divide-y divide-slate-100 dark:divide-zinc-700">
+            <dl className="mt-1">
               <Row label="Last service" value={asset.lastService ?? "None recorded"} />
-              <Row
-                label="Next service due"
-                value={asset.nextServiceDue ?? "Nothing scheduled"}
-              />
             </dl>
             {asset.history.length > 0 && (
-              <ul className="mt-3 space-y-3 border-t border-slate-100 pt-3 dark:border-zinc-700">
+              <ul className="mt-2 space-y-3 border-t border-slate-100 pt-3 dark:border-zinc-700">
                 {asset.history.map((entry) => (
-                  <li key={entry.reference}>
+                  <li key={`${entry.reference}-${entry.title}`}>
                     <span className="block text-sm font-medium text-slate-900 dark:text-white">
                       {entry.title}
                     </span>
                     <span className="block text-xs text-slate-500 dark:text-slate-400">
-                      {entry.date} · {entry.reference}
+                      {[entry.date, entry.reference].filter(Boolean).join(" · ")}
                     </span>
                   </li>
                 ))}
@@ -138,57 +131,59 @@ export default async function AssetPage({
 
           <section className={cardClass}>
             <h2 className={headingClass}>Documents</h2>
-            {asset.documents.length === 0 && (
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            {asset.documents.length === 0 ? (
+              <p className={bodyClass}>
                 Commissioning documents will be available here soon.
               </p>
-            )}
-            <ul className="mt-2 divide-y divide-slate-100 dark:divide-zinc-700">
-              {asset.documents.map((doc) => {
-                const body = (
-                  <>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-slate-900 dark:text-white">
-                        {doc.title}
-                      </span>
-                      <span className="block text-xs text-slate-500 dark:text-slate-400">
-                        {doc.kind} · {doc.date}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-sm font-semibold text-orange-600 dark:text-orange-400">
-                      {doc.href ? "Open" : "PDF"}
-                    </span>
-                  </>
-                );
-                return (
+            ) : (
+              <ul className="mt-2 divide-y divide-slate-100 dark:divide-zinc-700">
+                {asset.documents.map((doc) => (
                   <li key={doc.title}>
-                    {doc.href ? (
-                      <a
-                        href={doc.href}
-                        className="flex items-center justify-between gap-3 py-3"
-                      >
-                        {body}
-                      </a>
-                    ) : (
-                      <div className="flex items-center justify-between gap-3 py-3">
-                        {body}
-                      </div>
-                    )}
+                    <a
+                      href={doc.href ?? undefined}
+                      className="flex items-center justify-between gap-3 py-3"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-slate-900 dark:text-white">
+                          {doc.title}
+                        </span>
+                        <span className="block text-xs text-slate-500 dark:text-slate-400">
+                          {doc.kind} · {doc.date}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold text-orange-600 dark:text-orange-400">
+                        Open
+                      </span>
+                    </a>
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+            )}
           </section>
         </>
-      ) : (
+      )}
+
+      {result.state === "unregistered" && (
         <section className={cardClass}>
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">
             This tag isn&apos;t registered yet
           </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          <p className={bodyClass}>
             The tag is valid and its ID is permanent. Equipment details,
             documents and service information will appear here once the asset
             has been registered.
+          </p>
+        </section>
+      )}
+
+      {result.state === "unavailable" && (
+        <section className={cardClass}>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            Asset details aren&apos;t available right now
+          </h2>
+          <p className={bodyClass}>
+            The tag is valid, but its record couldn&apos;t be loaded. Please
+            try again shortly.
           </p>
         </section>
       )}

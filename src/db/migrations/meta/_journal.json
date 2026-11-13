@@ -57,6 +57,13 @@
       "when": 1782854930329,
       "tag": "0007_black_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794600763904,
+      "tag": "0008_daffy_warhawk",
+      "breakpoints": true
     }
   ]
 }
