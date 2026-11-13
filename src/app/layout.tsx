@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Nav } from "@/components/layout/Nav";
+import { AppChrome } from "@/components/layout/AppChrome";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,7 +48,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Nav />
+        <AppChrome>
+          <Nav />
+        </AppChrome>
         <main className="flex-1 px-6 py-8">{children}</main>
       </body>
     </html>

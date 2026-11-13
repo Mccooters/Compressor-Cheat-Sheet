@@ -1,20 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card } from "@/components/ui/Card";
-import { buttonClass } from "@/components/ui/Button";
+import { findExampleAsset, type AssetRecord } from "@/lib/assets/exampleAssets";
 
 /**
- * Asset-tag landing page — the destination of the QR stickers on equipment.
+ * Asset page — where the QR sticker on a piece of equipment lands.
  *
- * Placeholder for now: the asset register doesn't exist yet (the `equipment`
- * table is a model catalogue, with no per-installation serial, site or
- * service history), so there is nothing to look a tag up against. The tags
- * are already printed and applied though, and the IDs are permanent, so this
- * answers a scan with something honest rather than a 404 or a login wall.
+ * This is a standalone, customer-facing page: it is not part of the Air
+ * Assist technician tool, and the app's nav bar is hidden here (see
+ * AppChrome). Anyone who can reach the equipment can open it, so it must
+ * only ever show what is safe for a customer, contractor or auditor to see.
  *
- * Replace the body — not the route — once the asset table lands.
+ * The record currently comes from example data. Tags with no record show a
+ * "not registered yet" state rather than a 404, since stickers are printed
+ * ahead of the assets they end up on.
  */
 
 // AAC-{3-letter type}-{4 digits}, e.g. AAC-CMP-0001.
@@ -28,12 +26,36 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export const metadata: Metadata = {
-  title: "Asset tag · Air Assist",
-  // Asset tags shouldn't show up in search results.
+  title: "Asset record",
   robots: { index: false, follow: false },
 };
 
-export default async function AssetTagPage({
+const STATUS_CLASS: Record<AssetRecord["status"], string> = {
+  "In service":
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  "Out of service":
+    "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300",
+  Decommissioned:
+    "bg-slate-200 text-slate-700 dark:bg-zinc-700 dark:text-slate-300",
+};
+
+const cardClass =
+  "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-800/60";
+const headingClass =
+  "text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400";
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-2.5">
+      <dt className="text-sm text-slate-500 dark:text-slate-400">{label}</dt>
+      <dd className="text-right text-sm font-medium text-slate-900 dark:text-white">
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+export default async function AssetPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -42,54 +64,128 @@ export default async function AssetTagPage({
 
   // The path arrives uppercase from the QR, but may be typed in any case.
   const assetId = decodeURIComponent(id).trim().toUpperCase();
+  if (!ASSET_ID_PATTERN.test(assetId)) notFound();
 
-  // Validate the shape before doing anything else — a malformed tag is a
-  // 404, distinct from a well-formed tag that simply isn't registered yet.
-  if (!ASSET_ID_PATTERN.test(assetId)) {
-    notFound();
-  }
-
-  const typeCode = assetId.slice(4, 7);
-  // The type segment is a human convenience only. Once the asset register
-  // exists the database is the source of truth for what this thing is —
-  // never derive behaviour from the ID itself.
-  const typeLabel = TYPE_LABELS[typeCode];
+  const asset = findExampleAsset(assetId);
+  // The type segment of the ID is a display fallback only — once a record
+  // exists, the record says what the asset is.
+  const fallbackType = TYPE_LABELS[assetId.slice(4, 7)];
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <PageHeader
-        eyebrow="Asset tag"
-        title={assetId}
-        description={
-          typeLabel
-            ? `${typeLabel} · scanned from an Air Assist equipment tag`
-            : "Scanned from an Air Assist equipment tag"
-        }
-      />
+    <div className="mx-auto max-w-md space-y-4">
+      <header className="space-y-2 pt-2">
+        <p className={headingClass}>Asset record</p>
+        <h1 className="font-mono text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          {assetId}
+        </h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-base text-slate-700 dark:text-slate-300">
+            {asset?.typeLabel ?? fallbackType ?? "Equipment"}
+          </span>
+          {asset && (
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_CLASS[asset.status]}`}
+            >
+              {asset.status}
+            </span>
+          )}
+        </div>
+      </header>
 
-      <Card className="space-y-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-          Asset records are coming soon
-        </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          This tag is valid and the ID above is permanent. Full asset details —
-          make and model, serial number, site, service history and next
-          inspection due — will appear here once the asset register goes live.
-        </p>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          In the meantime, quote <span className="font-mono font-semibold text-slate-900 dark:text-white">{assetId}</span>{" "}
-          when booking service or reporting a fault on this equipment.
-        </p>
-      </Card>
+      {asset ? (
+        <>
+          <section className={cardClass}>
+            <h2 className={headingClass}>Equipment</h2>
+            <dl className="mt-1 divide-y divide-slate-100 dark:divide-zinc-700">
+              <Row label="Manufacturer" value={asset.manufacturer} />
+              <Row label="Model" value={asset.model} />
+              <Row label="Serial number" value={asset.serialNumber} />
+              <Row label="Site" value={asset.site} />
+              <Row label="Location" value={asset.location} />
+              <Row label="Commissioned" value={asset.commissioned} />
+            </dl>
+          </section>
 
-      <div className="flex flex-wrap gap-3">
-        <Link href="/" className={buttonClass("primary")}>
-          Air Assist home
-        </Link>
-        <Link href="/equipment" className={buttonClass("secondary")}>
-          Equipment reference
-        </Link>
+          <section className={cardClass}>
+            <h2 className={headingClass}>Service</h2>
+            <dl className="mt-1 divide-y divide-slate-100 dark:divide-zinc-700">
+              <Row label="Last service" value={asset.lastService ?? "—"} />
+              <Row label="Next service due" value={asset.nextServiceDue ?? "—"} />
+            </dl>
+          </section>
+
+          <section className={cardClass}>
+            <h2 className={headingClass}>Documents</h2>
+            <ul className="mt-2 divide-y divide-slate-100 dark:divide-zinc-700">
+              {asset.documents.map((doc) => {
+                const body = (
+                  <>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-slate-900 dark:text-white">
+                        {doc.title}
+                      </span>
+                      <span className="block text-xs text-slate-500 dark:text-slate-400">
+                        {doc.kind} · {doc.date}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-sm font-semibold text-orange-600 dark:text-orange-400">
+                      {doc.href ? "Open" : "PDF"}
+                    </span>
+                  </>
+                );
+                return (
+                  <li key={doc.title}>
+                    {doc.href ? (
+                      <a
+                        href={doc.href}
+                        className="flex items-center justify-between gap-3 py-3"
+                      >
+                        {body}
+                      </a>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3 py-3">
+                        {body}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </>
+      ) : (
+        <section className={cardClass}>
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+            This tag isn&apos;t registered yet
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            The tag is valid and its ID is permanent. Equipment details,
+            documents and service information will appear here once the asset
+            has been registered.
+          </p>
+        </section>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <a
+          href={`mailto:?subject=${encodeURIComponent(`Service request — ${assetId}`)}`}
+          className="rounded-xl bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-orange-600 dark:bg-orange-400 dark:hover:bg-orange-300"
+        >
+          Request service
+        </a>
+        <a
+          href={`mailto:?subject=${encodeURIComponent(`Fault report — ${assetId}`)}`}
+          className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:border-orange-400 dark:border-zinc-700 dark:text-slate-300"
+        >
+          Report a fault
+        </a>
       </div>
+
+      <p className="pb-4 text-center text-xs text-slate-500 dark:text-slate-500">
+        Quote <span className="font-mono font-semibold">{assetId}</span> when
+        booking service or reporting a fault.
+        {asset && " Example data shown."}
+      </p>
     </div>
   );
 }
