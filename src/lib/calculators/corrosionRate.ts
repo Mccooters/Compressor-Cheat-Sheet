@@ -17,6 +17,9 @@ export interface CorrosionRateResult {
 
 const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 
+/** The largest timestamp a JavaScript Date can hold (ECMA-262 time-value range). */
+const MAX_DATE_MS = 8.64e15;
+
 export function calculateCorrosionRate(
   input: CorrosionRateInput,
 ): CorrosionRateResult | { error: string } {
@@ -47,7 +50,14 @@ export function calculateCorrosionRate(
   let nextInspectionDate: string | null = null;
   if (remainingLifeYears > 0) {
     const nextMs = currentDate.getTime() + (remainingLifeYears / 2) * MS_PER_YEAR;
-    nextInspectionDate = new Date(nextMs).toISOString().slice(0, 10);
+    // A barely-measurable loss (5 mm → 4.999999999 mm over 5 years) gives a
+    // remaining life of millions of years, pushing this past the ±8.64e15 ms
+    // a JavaScript Date can represent — toISOString() then throws RangeError
+    // and takes the whole page down. Treat it as "not calculable", which the
+    // page already renders as "—".
+    if (Number.isFinite(nextMs) && Math.abs(nextMs) <= MAX_DATE_MS) {
+      nextInspectionDate = new Date(nextMs).toISOString().slice(0, 10);
+    }
   }
 
   return {

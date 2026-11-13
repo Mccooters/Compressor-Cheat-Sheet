@@ -76,9 +76,17 @@ export async function forgetTag(tagId: string): Promise<void> {
 
 type FeedItem = { id: string; lastUpdated: string };
 
+type FeedAsset = {
+  id: string;
+  barcode: string | null;
+  name: string | null;
+  serialNumber: string | null;
+  client?: { name: string | null } | null;
+};
+
 async function recordAsset(id: string): Promise<boolean> {
-  const asset = await arofloGet<{ id: string; barcode: string | null }>(
-    `/assets/${id}?_fields=id,barcode`
+  const asset = await arofloGet<FeedAsset>(
+    `/assets/${id}?_fields=id,barcode,name,serialNumber,client`
   );
   const tagId = normaliseTag(asset.barcode);
 
@@ -92,12 +100,30 @@ async function recordAsset(id: string): Promise<boolean> {
     );
   if (!tagId) return false;
 
+  const details = {
+    arofloAssetId: id,
+    name: asset.name,
+    serialNumber: asset.serialNumber,
+    clientName: asset.client?.name ?? null,
+  };
+
+  // If two AroFlo assets carry the same tag by mistake, the one edited most
+  // recently wins: the feed is read oldest-first, so it is written last.
+  const existing = await db.query.assetTag.findFirst({
+    where: eq(assetTag.tagId, tagId),
+  });
+  if (existing && existing.arofloAssetId !== id) {
+    console.warn(
+      `Asset tag ${tagId} is on two AroFlo assets (${existing.arofloAssetId} and ${id}); using ${id}.`
+    );
+  }
+
   await db
     .insert(assetTag)
-    .values({ tagId, arofloAssetId: id })
+    .values({ tagId, ...details })
     .onConflictDoUpdate({
       target: assetTag.tagId,
-      set: { arofloAssetId: id, updatedAt: new Date() },
+      set: { ...details, updatedAt: new Date() },
     });
   return true;
 }
@@ -163,4 +189,24 @@ export async function findArofloAssetId(tagId: string): Promise<string | null> {
 
   await refreshTagIndex();
   return lookup(tagId);
+}
+
+export type AssetTagEntry = typeof assetTag.$inferSelect;
+
+/** Every registered tag, for apps that keep an offline copy. */
+export async function listTags(): Promise<AssetTagEntry[]> {
+  return db.query.assetTag.findMany({ orderBy: (t, { asc }) => [asc(t.tagId)] });
+}
+
+/** One tag's entry, topping the index up first if the tag isn't known yet. */
+export async function getTag(tagId: string): Promise<AssetTagEntry | null> {
+  if (!(await findArofloAssetId(tagId))) return null;
+  return (
+    (await db.query.assetTag.findFirst({ where: eq(assetTag.tagId, tagId) })) ?? null
+  );
+}
+
+/** Whether the last top-up left changed assets unread. */
+export async function hasBacklog(): Promise<boolean> {
+  return (await getState(BACKLOG_KEY)) === "1";
 }

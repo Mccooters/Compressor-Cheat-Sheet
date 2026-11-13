@@ -64,6 +64,13 @@
       "when": 1794600763904,
       "tag": "0008_daffy_warhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794607282777,
+      "tag": "0009_bumpy_blob",
+      "breakpoints": true
     }
   ]
 }

@@ -481,6 +481,11 @@ export const faultTreeBranchRelations = relations(
 export const assetTag = pgTable("asset_tag", {
   tagId: text("tag_id").primaryKey(),
   arofloAssetId: text("aroflo_asset_id").notNull(),
+  // Copied from AroFlo so an app can show something useful for a tag with
+  // no connection. Display only — the live AroFlo record is the truth.
+  name: text("name"),
+  serialNumber: text("serial_number"),
+  clientName: text("client_name"),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

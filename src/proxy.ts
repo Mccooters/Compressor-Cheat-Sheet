@@ -67,7 +67,14 @@ export const config = {
   // persisted back to the browser when auth() runs as middleware — without
   // broad coverage here, a refreshed token is discarded after one render
   // and SharePoint-backed photos/links break again on the next request.
+  //
+  // api/snapshot, api/documents and api/asset-tags are excluded because they
+  // serve the iOS app, which holds a bearer token rather than a browser
+  // session: the redirect above would answer its request with a 302 to the
+  // login page, and an HTML body is exactly what the app reads as a failed
+  // sync. They authenticate themselves — see src/lib/mobile/auth.ts.
+  // api/cron is called by Vercel's scheduler and checks CRON_SECRET itself.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/auth|sw.js|manifest.webmanifest|icon-192.png|icon-512.png|apple-touch-icon.png).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|api/snapshot|api/documents|api/asset-tags|api/cron|sw.js|manifest.webmanifest|icon-192.png|icon-512.png|apple-touch-icon.png).*)",
   ],
 };
