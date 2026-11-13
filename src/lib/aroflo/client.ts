@@ -52,3 +52,31 @@ export async function arofloGet<T>(
 
   return (await response.json()) as T;
 }
+
+export async function arofloPost<T>(path: string, body: unknown): Promise<T> {
+  const token = process.env.AROFLO_API_TOKEN;
+  if (!token) {
+    throw new ArofloError(503, "AROFLO_API_TOKEN is not set.");
+  }
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new ArofloError(
+      response.status,
+      `AroFlo POST ${path} failed (${response.status}): ${detail.slice(0, 300)}`
+    );
+  }
+
+  return (await response.json()) as T;
+}

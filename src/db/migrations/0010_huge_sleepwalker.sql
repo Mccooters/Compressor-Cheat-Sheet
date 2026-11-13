@@ -1,0 +1,1 @@
+ALTER TABLE "asset_tag" ADD COLUMN "legacy_asset_id" text;

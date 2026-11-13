@@ -1,6 +1,8 @@
 import { ArofloError, arofloGet, isArofloConfigured } from "@/lib/aroflo/client";
-import { findArofloAssetId, forgetTag, normaliseTag } from "@/lib/assets/tagIndex";
-import type { AssetRecord } from "@/lib/assets/types";
+import { isLegacyConfigured } from "@/lib/aroflo/legacy";
+import { listAssetFiles } from "@/lib/assets/documents";
+import { forgetTag, getTag, normaliseTag } from "@/lib/assets/tagIndex";
+import type { AssetDocument, AssetRecord } from "@/lib/assets/types";
 
 // A scan costs two AroFlo requests; cached, a busy tag still costs two per
 // window rather than two per visitor.
@@ -42,14 +44,52 @@ function formatDate(value: string | null): string | null {
   return `${Number(match[3])} ${MONTHS[Number(match[2]) - 1]} ${match[1]}`;
 }
 
+const EXTENSION_KIND: Record<string, string> = {
+  pdf: "PDF",
+  jpg: "Photo",
+  jpeg: "Photo",
+  png: "Photo",
+  heic: "Photo",
+};
+
+/** AroFlo upload times are UTC "yyyy/MM/dd HH:mm:ss". */
+function formatUploaded(value: string | null): string {
+  const match = value ? /^(\d{4})\/(\d{2})\/(\d{2})/.exec(value) : null;
+  return match ? `${Number(match[3])} ${MONTHS[Number(match[2]) - 1]} ${match[1]}` : "";
+}
+
+/**
+ * Documents are a bonus: if the older AroFlo API isn't set up or doesn't
+ * answer, the rest of the record still shows.
+ */
+async function loadDocuments(
+  tagId: string,
+  legacyAssetId: string | null
+): Promise<AssetDocument[]> {
+  if (!legacyAssetId || !isLegacyConfigured()) return [];
+  try {
+    const files = await listAssetFiles(legacyAssetId);
+    return files.map((file) => ({
+      title: file.name,
+      kind: EXTENSION_KIND[file.name.split(".").pop()?.toLowerCase() ?? ""] ?? "Document",
+      date: formatUploaded(file.uploaded),
+      href: `/a/${tagId}/docs/${file.key}`,
+    }));
+  } catch (err) {
+    console.error(`Failed to list documents for ${tagId}:`, err);
+    return [];
+  }
+}
+
 const FINISHED = new Set(["COMPLETED", "ARCHIVED"]);
 
 export async function getAssetByTag(tagId: string): Promise<AssetLookup> {
   if (!isArofloConfigured()) return { state: "unavailable" };
 
   try {
-    const arofloId = await findArofloAssetId(tagId);
-    if (!arofloId) return { state: "unregistered" };
+    const entry = await getTag(tagId);
+    if (!entry) return { state: "unregistered" };
+    const arofloId = entry.arofloAssetId;
 
     const [asset, tasks] = await Promise.all([
       arofloGet<ArofloAsset>(`/assets/${arofloId}`, { revalidateSeconds: CACHE_SECONDS }),
@@ -90,11 +130,7 @@ export async function getAssetByTag(tagId: string): Promise<AssetLookup> {
           title: task.name ?? "Job",
           reference: task.jobNumber ? `Job ${task.jobNumber}` : "",
         })),
-        // AroFlo's API exposes documents on jobs but not on assets, and job
-        // documents include invoices and purchase orders marked "show
-        // client". Nothing is published until there is a rule that can't
-        // leak those.
-        documents: [],
+        documents: await loadDocuments(tagId, entry.legacyAssetId),
       },
     };
   } catch (err) {

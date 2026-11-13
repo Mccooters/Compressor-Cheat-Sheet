@@ -133,7 +133,7 @@ export default async function AssetPage({
             <h2 className={headingClass}>Documents</h2>
             {asset.documents.length === 0 ? (
               <p className={bodyClass}>
-                Commissioning documents will be available here soon.
+                No documents have been added for this asset yet.
               </p>
             ) : (
               <ul className="mt-2 divide-y divide-slate-100 dark:divide-zinc-700">
@@ -148,7 +148,7 @@ export default async function AssetPage({
                           {doc.title}
                         </span>
                         <span className="block text-xs text-slate-500 dark:text-slate-400">
-                          {doc.kind} · {doc.date}
+                          {[doc.kind, doc.date].filter(Boolean).join(" · ")}
                         </span>
                       </span>
                       <span className="shrink-0 text-sm font-semibold text-orange-600 dark:text-orange-400">

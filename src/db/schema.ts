@@ -481,6 +481,10 @@ export const faultTreeBranchRelations = relations(
 export const assetTag = pgTable("asset_tag", {
   tagId: text("tag_id").primaryKey(),
   arofloAssetId: text("aroflo_asset_id").notNull(),
+  // The same asset's ID in AroFlo's older API, which uses a different
+  // encoding. Needed to list the asset's documents, which only that API can
+  // do. Null when the row was indexed through the v2 API alone.
+  legacyAssetId: text("legacy_asset_id"),
   // Copied from AroFlo so an app can show something useful for a tag with
   // no connection. Display only — the live AroFlo record is the truth.
   name: text("name"),

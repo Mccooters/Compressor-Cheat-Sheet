@@ -2,6 +2,8 @@ import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { arofloSyncState, assetTag } from "@/db/schema";
 import { arofloGet } from "@/lib/aroflo/client";
+import { isLegacyConfigured } from "@/lib/aroflo/legacy";
+import { syncRegisterFromLegacy } from "@/lib/assets/legacyRegister";
 
 /**
  * Tag → AroFlo asset index.
@@ -45,14 +47,14 @@ export function normaliseTag(raw: string | null | undefined): string | null {
   return TAG_PATTERN.test(tag) ? tag : null;
 }
 
-async function getState(key: string): Promise<string | null> {
+export async function getSyncState(key: string): Promise<string | null> {
   const row = await db.query.arofloSyncState.findFirst({
     where: eq(arofloSyncState.key, key),
   });
   return row?.value ?? null;
 }
 
-async function setState(key: string, value: string): Promise<void> {
+export async function setSyncState(key: string, value: string): Promise<void> {
   await db
     .insert(arofloSyncState)
     .values({ key, value })
@@ -135,9 +137,24 @@ async function recordAsset(id: string): Promise<boolean> {
  * nothing and the next run carries on from there.
  */
 export async function refreshTagIndex(): Promise<{ checked: number; tagged: number }> {
-  const since = (await getState(CURSOR_KEY)) ?? FEED_START;
+  // The older API returns barcodes in list pages, so a top-up through it is
+  // one or two requests instead of one per changed asset. If it fails (bad
+  // keys, an IP restriction), fall through to the v2 feed rather than
+  // leaving the register stale.
+  if (isLegacyConfigured()) {
+    try {
+      await setSyncState(CHECKED_KEY, new Date().toISOString());
+      const result = await syncRegisterFromLegacy("changes");
+      await setSyncState(BACKLOG_KEY, "0");
+      return result;
+    } catch (err) {
+      console.error("Legacy AroFlo register top-up failed; using the v2 feed:", err);
+    }
+  }
+
+  const since = (await getSyncState(CURSOR_KEY)) ?? FEED_START;
   // Stamp first, so concurrent scans don't all start a refresh.
-  await setState(CHECKED_KEY, new Date().toISOString());
+  await setSyncState(CHECKED_KEY, new Date().toISOString());
 
   const feed = await arofloGet<{ items: FeedItem[] }>(
     `/lastupdated/ASSETS?since=${encodeURIComponent(since)}&order=ASC&limit=${BATCH_SIZE}`
@@ -168,10 +185,10 @@ export async function refreshTagIndex(): Promise<{ checked: number; tagged: numb
     // that shares its timestamp.
     const last = Date.parse(group[group.length - 1].lastUpdated);
     const moreToCome = full || i + CONCURRENCY < changed.length;
-    await setState(CURSOR_KEY, new Date(moreToCome ? last - 1 : last).toISOString());
+    await setSyncState(CURSOR_KEY, new Date(moreToCome ? last - 1 : last).toISOString());
   }
 
-  await setState(BACKLOG_KEY, full || interrupted ? "1" : "0");
+  await setSyncState(BACKLOG_KEY, full || interrupted ? "1" : "0");
   return { checked, tagged };
 }
 
@@ -180,8 +197,8 @@ export async function findArofloAssetId(tagId: string): Promise<string | null> {
   const known = await lookup(tagId);
   if (known) return known;
 
-  const checkedAt = await getState(CHECKED_KEY);
-  const backlog = (await getState(BACKLOG_KEY)) === "1";
+  const checkedAt = await getSyncState(CHECKED_KEY);
+  const backlog = (await getSyncState(BACKLOG_KEY)) === "1";
   const interval = backlog ? BACKLOG_INTERVAL_MS : IDLE_INTERVAL_MS;
   if (checkedAt && Date.now() - Date.parse(checkedAt) < interval) {
     return null;
@@ -208,5 +225,5 @@ export async function getTag(tagId: string): Promise<AssetTagEntry | null> {
 
 /** Whether the last top-up left changed assets unread. */
 export async function hasBacklog(): Promise<boolean> {
-  return (await getState(BACKLOG_KEY)) === "1";
+  return (await getSyncState(BACKLOG_KEY)) === "1";
 }

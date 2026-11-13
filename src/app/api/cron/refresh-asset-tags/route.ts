@@ -1,5 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { isArofloConfigured } from "@/lib/aroflo/client";
+import { isLegacyConfigured } from "@/lib/aroflo/legacy";
+import { syncRegisterFromLegacy } from "@/lib/assets/legacyRegister";
 import { hasBacklog, refreshTagIndex } from "@/lib/assets/tagIndex";
 
 /**
@@ -29,6 +31,17 @@ export async function GET(request: Request) {
   }
   if (!isArofloConfigured()) {
     return Response.json({ error: "AROFLO_API_TOKEN is not set" }, { status: 503 });
+  }
+
+  // With the older AroFlo API available, rebuild the whole register: it is
+  // only ~7 list requests, and it also removes tags whose barcode was
+  // cleared. If that fails, fall through to the incremental v2 top-up.
+  if (isLegacyConfigured()) {
+    try {
+      return Response.json({ mode: "full", ...(await syncRegisterFromLegacy("full")) });
+    } catch (err) {
+      console.error("Full register rebuild failed; falling back to the v2 feed:", err);
+    }
   }
 
   try {

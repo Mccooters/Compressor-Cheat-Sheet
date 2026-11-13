@@ -279,10 +279,16 @@ its **Barcode** field. AroFlo's v2 API cannot search by barcode, so the
 website keeps a register (table `asset_tag`) and apps read it rather than
 each searching AroFlo.
 
-The register is topped up from AroFlo's "assets changed since" feed: once a
-day on a schedule (`vercel.json`), and on demand whenever an unknown tag is
-looked up, at most once every few minutes. Implementation:
-`src/lib/assets/tagIndex.ts`.
+The register is refreshed once a day on a schedule (`vercel.json`), and on
+demand whenever an unknown tag is looked up, at most once every few minutes.
+
+- With AroFlo's older, signed API configured (`AROFLO_LEGACY_*`), the daily
+  run rebuilds the whole register from asset list pages, which include the
+  barcode (~7 requests), and on-demand top-ups read only changed assets.
+- Without it, both use the v2 "assets changed since" feed and open each
+  changed asset in turn.
+
+Implementation: `src/lib/assets/tagIndex.ts`, `src/lib/assets/legacyRegister.ts`.
 
 Same bearer token and error rules as the routes above.
 
