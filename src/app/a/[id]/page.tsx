@@ -10,7 +10,7 @@ import { findExampleAsset, type AssetRecord } from "@/lib/assets/exampleAssets";
  * AppChrome). Anyone who can reach the equipment can open it, so it must
  * only ever show what is safe for a customer, contractor or auditor to see.
  *
- * The record currently comes from example data. Tags with no record show a
+ * The record currently comes from hand-copied stand-in data. Tags with no record show a
  * "not registered yet" state rather than a 404, since stickers are printed
  * ahead of the assets they end up on.
  */
@@ -73,6 +73,9 @@ export default async function AssetPage({
 
   return (
     <div className="mx-auto max-w-md space-y-4">
+      <p className="border-b border-slate-200 pb-3 text-sm font-bold tracking-tight text-slate-900 dark:border-zinc-700 dark:text-white">
+        Adaptive Air Compressors
+      </p>
       <header className="space-y-2 pt-2">
         <p className={headingClass}>Asset record</p>
         <h1 className="font-mono text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -101,21 +104,45 @@ export default async function AssetPage({
               <Row label="Model" value={asset.model} />
               <Row label="Serial number" value={asset.serialNumber} />
               <Row label="Site" value={asset.site} />
-              <Row label="Location" value={asset.location} />
-              <Row label="Commissioned" value={asset.commissioned} />
+              {asset.location && <Row label="Location" value={asset.location} />}
+              {asset.commissioned && (
+                <Row label="Commissioned" value={asset.commissioned} />
+              )}
             </dl>
           </section>
 
           <section className={cardClass}>
             <h2 className={headingClass}>Service</h2>
             <dl className="mt-1 divide-y divide-slate-100 dark:divide-zinc-700">
-              <Row label="Last service" value={asset.lastService ?? "—"} />
-              <Row label="Next service due" value={asset.nextServiceDue ?? "—"} />
+              <Row label="Last service" value={asset.lastService ?? "None recorded"} />
+              <Row
+                label="Next service due"
+                value={asset.nextServiceDue ?? "Nothing scheduled"}
+              />
             </dl>
+            {asset.history.length > 0 && (
+              <ul className="mt-3 space-y-3 border-t border-slate-100 pt-3 dark:border-zinc-700">
+                {asset.history.map((entry) => (
+                  <li key={entry.reference}>
+                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                      {entry.title}
+                    </span>
+                    <span className="block text-xs text-slate-500 dark:text-slate-400">
+                      {entry.date} · {entry.reference}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section className={cardClass}>
             <h2 className={headingClass}>Documents</h2>
+            {asset.documents.length === 0 && (
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                Commissioning documents will be available here soon.
+              </p>
+            )}
             <ul className="mt-2 divide-y divide-slate-100 dark:divide-zinc-700">
               {asset.documents.map((doc) => {
                 const body = (
@@ -184,7 +211,6 @@ export default async function AssetPage({
       <p className="pb-4 text-center text-xs text-slate-500 dark:text-slate-500">
         Quote <span className="font-mono font-semibold">{assetId}</span> when
         booking service or reporting a fault.
-        {asset && " Example data shown."}
       </p>
     </div>
   );

@@ -1,8 +1,8 @@
 /**
- * EXAMPLE DATA ONLY — a stand-in for the real asset register so the
- * standalone asset page can be designed against something concrete.
- * Every value here is invented. Replace this lookup with the real source
- * (AroFlo asset by barcode, or an asset table) before it goes live.
+ * STAND-IN DATA — one real asset, copied by hand from its AroFlo record, so
+ * the standalone asset page can be reviewed against something real before
+ * the AroFlo lookup (asset by barcode) is wired in. Replace this file with
+ * that lookup; do not grow it into a second asset register.
  */
 
 export type AssetDocument = {
@@ -10,6 +10,12 @@ export type AssetDocument = {
   kind: "Commissioning" | "Certificate" | "Manual" | "Report";
   date: string;
   href: string | null;
+};
+
+export type AssetHistoryEntry = {
+  date: string;
+  title: string;
+  reference: string;
 };
 
 export type AssetRecord = {
@@ -20,32 +26,38 @@ export type AssetRecord = {
   model: string;
   serialNumber: string;
   site: string;
-  location: string;
-  commissioned: string;
+  location: string | null;
+  commissioned: string | null;
   lastService: string | null;
   nextServiceDue: string | null;
+  history: AssetHistoryEntry[];
   documents: AssetDocument[];
 };
 
 const EXAMPLES: Record<string, AssetRecord> = {
-  "AAC-CMP-0001": {
-    id: "AAC-CMP-0001",
-    typeLabel: "Rotary screw compressor",
+  // AroFlo asset AACPR-018, barcode AAC-CMP-0002.
+  "AAC-CMP-0002": {
+    id: "AAC-CMP-0002",
+    typeLabel: "Rotary screw air compressor",
     status: "In service",
-    manufacturer: "Example Manufacturer",
-    model: "RS 22 VSD",
-    serialNumber: "EX-000000",
-    site: "Example Customer Pty Ltd",
-    location: "Plant room 1",
-    commissioned: "12 Nov 2026",
-    lastService: "12 Nov 2026",
-    nextServiceDue: "12 May 2027",
-    documents: [
-      { title: "Commissioning report", kind: "Commissioning", date: "12 Nov 2026", href: null },
-      { title: "Pressure vessel registration", kind: "Certificate", date: "12 Nov 2026", href: null },
-      { title: "Electrical test certificate", kind: "Certificate", date: "12 Nov 2026", href: null },
-      { title: "Operation & maintenance manual", kind: "Manual", date: "2026", href: null },
+    manufacturer: "Chicago Pneumatic",
+    model: "CPMV30PM-8.5",
+    serialNumber: "COX04606",
+    site: "H10 Engineering",
+    location: null,
+    commissioned: "11 Nov 2026",
+    lastService: null,
+    nextServiceDue: null,
+    history: [
+      {
+        date: "11 Nov 2026",
+        title: "Supply & Commission – CP CPMV30-8.5",
+        reference: "Job 11662",
+      },
     ],
+    // The commissioning documents live in AroFlo and can't be linked until
+    // the AroFlo connection exists.
+    documents: [],
   },
 };
 
