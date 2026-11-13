@@ -137,18 +137,16 @@ async function recordAsset(id: string): Promise<boolean> {
  * nothing and the next run carries on from there.
  */
 export async function refreshTagIndex(): Promise<{ checked: number; tagged: number }> {
-  // The older API returns barcodes in list pages, so a top-up through it is
-  // one or two requests instead of one per changed asset. If it fails (bad
-  // keys, an IP restriction), fall through to the v2 feed rather than
-  // leaving the register stale.
+  // The older API returns barcodes in list pages, so it is tried first: one
+  // or two requests. It is not trusted to be complete, though — on its
+  // first live run it returned newly created assets but missed older ones
+  // that had just been given a tag — so the v2 feed below always runs as
+  // well. A legacy failure (bad keys, an IP restriction) is not fatal.
   if (isLegacyConfigured()) {
     try {
-      await setSyncState(CHECKED_KEY, new Date().toISOString());
-      const result = await syncRegisterFromLegacy("changes");
-      await setSyncState(BACKLOG_KEY, "0");
-      return result;
+      await syncRegisterFromLegacy("changes");
     } catch (err) {
-      console.error("Legacy AroFlo register top-up failed; using the v2 feed:", err);
+      console.error("Legacy AroFlo register top-up failed; using the v2 feed only:", err);
     }
   }
 

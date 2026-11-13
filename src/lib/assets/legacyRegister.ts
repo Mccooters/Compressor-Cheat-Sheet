@@ -1,4 +1,4 @@
-import { and, eq, ne, notInArray } from "drizzle-orm";
+import { and, eq, isNotNull, ne, notInArray } from "drizzle-orm";
 import { db } from "@/db";
 import { assetTag } from "@/db/schema";
 import { arofloPost } from "@/lib/aroflo/client";
@@ -143,11 +143,17 @@ export async function syncRegisterFromLegacy(
   }
 
   if (full) {
-    // Anything not seen in a full read no longer carries a tag.
+    // A tag this API put in the register, but no longer reports, is gone.
+    // Rows found through the v2 feed alone (no legacy ID) are left for that
+    // feed to manage: this API has been seen to miss assets.
     const keep = [...tagged.keys()];
     await db
       .delete(assetTag)
-      .where(keep.length > 0 ? notInArray(assetTag.tagId, keep) : undefined);
+      .where(
+        keep.length > 0
+          ? and(isNotNull(assetTag.legacyAssetId), notInArray(assetTag.tagId, keep))
+          : isNotNull(assetTag.legacyAssetId)
+      );
   } else {
     // Changed assets that now have no tag (cleared barcode, or archived).
     for (const legacyId of untaggedIds) {
@@ -155,6 +161,9 @@ export async function syncRegisterFromLegacy(
     }
   }
 
+  console.log(
+    `Legacy AroFlo register sync (${full ? "full" : "changes"}): ${rows.length} assets read, ${tagged.size} tagged.`
+  );
   await setSyncState(CURSOR_KEY, startedAt.toISOString());
   return { checked: rows.length, tagged: tagged.size };
 }

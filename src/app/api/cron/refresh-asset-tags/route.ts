@@ -33,14 +33,14 @@ export async function GET(request: Request) {
     return Response.json({ error: "AROFLO_API_TOKEN is not set" }, { status: 503 });
   }
 
-  // With the older AroFlo API available, rebuild the whole register: it is
-  // only ~7 list requests, and it also removes tags whose barcode was
-  // cleared. If that fails, fall through to the incremental v2 top-up.
+  // With the older AroFlo API available, rebuild from its list pages first
+  // (~7 requests; also removes tags whose barcode was cleared). The v2 feed
+  // below still runs, because that API has been seen to miss assets.
   if (isLegacyConfigured()) {
     try {
-      return Response.json({ mode: "full", ...(await syncRegisterFromLegacy("full")) });
+      await syncRegisterFromLegacy("full");
     } catch (err) {
-      console.error("Full register rebuild failed; falling back to the v2 feed:", err);
+      console.error("Full legacy register rebuild failed; using the v2 feed only:", err);
     }
   }
 
