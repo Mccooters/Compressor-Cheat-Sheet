@@ -352,10 +352,14 @@ How the copy is kept up to date:
 - **`fresh=1`** tops up at once (unless one started in the last 5 seconds).
   A phone sends it after it has edited or created an asset, so its own change
   comes straight back.
-- **The whole list is read again** (about seven requests) when the last full
-  read is more than 6 hours old, with **`fresh=full`** (the app's pull to
-  refresh; at most once every 2 minutes), and daily by the scheduled register
-  rebuild (`vercel.json`). The "changed since" feed is not complete: it has
+- **The whole list is read again** (about eight requests, about two minutes)
+  when the last full read is more than 6 hours old, with **`fresh=full`**
+  (the app's pull to refresh), and daily by the scheduled register rebuild
+  (`vercel.json`). The 6-hourly one runs after the phone has its answer, so
+  nobody waits for it. A `fresh=full` request **does wait**: allow three
+  minutes for its first page. Full reads never run side by side (at most one
+  every 4 minutes); a `fresh=full` that arrives during one is answered from
+  the copy as it stands. The "changed since" feed is not complete: it has
   missed an older asset that had just been given a barcode, and it doesn't
   count custom field or location edits as changes. A full read is what
   catches those, and assets deleted outright.
@@ -411,7 +415,7 @@ Same bearer token and error rules as the routes above.
 |---|---|
 | `200` | A page, as above |
 | `400` JSON | `since` isn't a date |
-| `503` JSON | The list hasn't been read from AroFlo in full yet (or the mobile API isn't configured). Read AroFlo directly instead; never treat this as an empty list. |
+| `503` JSON | The list hasn't been read from AroFlo in full yet (or the mobile API isn't configured). The request starts that read in the background, so it is usually ready a few minutes later. Read AroFlo directly meanwhile; never treat this as an empty list. |
 | `500` JSON | The read failed |
 
 If AroFlo can't be reached when a read is due, the stored copy is served as
