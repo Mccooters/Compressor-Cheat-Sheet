@@ -15,15 +15,18 @@ import { getSyncState, setSyncState } from "@/lib/assets/tagIndex";
  * none at all while nobody is asking. A phone that wants it sooner asks:
  * "fresh" after an edit, "full" for a pull to refresh.
  *
- * That feed is not complete, though. It has been seen to miss an older
- * asset that had just been given a barcode, and it doesn't count custom
- * field or location edits as changes. So the whole list is read again
- * (about eight requests) when the last full read is more than six hours
- * old, when someone pulls to refresh in the app, and by the daily cron.
+ * With the right filter names (see legacyRegister.ts) that feed reported
+ * the same assets as API v2's, which cross-checks it after every top-up.
+ * What no "changed" feed can report is an asset deleted outright, and any
+ * edit AroFlo doesn't stamp, so the whole list is still read again (about
+ * eight requests) once a day by the cron, and when someone pulls to refresh
+ * in the app.
  *
  * A full read takes about two minutes (AroFlo is slow to send pages with
  * custom fields joined), so a phone is only made to wait for one when it
- * asked for it. The six-hourly one runs after the phone has its answer.
+ * asked for it. If the daily cron has missed (the last full read is over
+ * 26 hours old), the next phone's ordinary read starts one after it has
+ * its answer.
  *
  * What a phone can ask for:
  *   "stale" — the ordinary read: top up if the copy is over an hour old.
@@ -41,8 +44,10 @@ export type RefreshStep = { mode: "full" | "changes"; minIntervalMs: number };
 export const STALE_AFTER_MS = 60 * 60 * 1000;
 // Only stops two requests a moment apart both asking AroFlo.
 export const FRESH_AFTER_MS = 5 * 1000;
-// The copy is read again in full when the last full read is older than this.
-export const FULL_AFTER_MS = 6 * 60 * 60 * 1000;
+// The owner's choice (15 Nov 2026): the whole list once a day. The cron does
+// that; this is only for a day the cron missed, hence the two hours' slack
+// so the two don't both run at cron time.
+export const FULL_AFTER_MS = 26 * 60 * 60 * 1000;
 // Longer than a full read takes, so two never run side by side: someone
 // pulling to refresh while one is running gets the copy as it stands.
 export const FULL_READ_GAP_MS = 4 * 60 * 1000;

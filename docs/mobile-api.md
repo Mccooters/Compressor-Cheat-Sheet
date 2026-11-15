@@ -353,16 +353,14 @@ How the copy is kept up to date:
   A phone sends it after it has edited or created an asset, so its own change
   comes straight back.
 - **The whole list is read again** (about eight requests, about two minutes)
-  when the last full read is more than 6 hours old, with **`fresh=full`**
-  (the app's pull to refresh), and daily by the scheduled register rebuild
-  (`vercel.json`). The 6-hourly one runs after the phone has its answer, so
-  nobody waits for it. A `fresh=full` request **does wait**: allow three
+  once a day by the scheduled register rebuild (`vercel.json`), and with
+  **`fresh=full`** (the app's pull to refresh). If the daily run was missed
+  (the last full read is over 26 hours old), the next ordinary request
+  starts one after the phone has its answer, so nobody waits for it. A `fresh=full` request **does wait**: allow three
   minutes for its first page. Full reads never run side by side (at most one
   every 4 minutes); a `fresh=full` that arrives during one is answered from
-  the copy as it stands. The "changed since" feed is not complete: it has
-  missed an older asset that had just been given a barcode, and it doesn't
-  count custom field or location edits as changes. A full read is what
-  catches those, and assets deleted outright.
+  the copy as it stands. A full read is what catches an asset deleted
+  outright, which no "changed" feed can report.
 - **Cross-check with API v2.** After each top-up, API v2's own feed of
   changed assets is asked what changed (one request). Any asset it names that
   the top-up didn't bring is read again on its own through the older API

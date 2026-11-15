@@ -18,7 +18,7 @@ import { checkMobileToken, mobileJson } from "@/lib/mobile/auth";
  * The first page of a request tops the copy up from AroFlo when it is more
  * than an hour old; at once with `fresh=1`, for a phone that has just
  * edited an asset; and from the whole list again with `fresh=full`, for a
- * pull to refresh, which waits about two minutes for it. The six-hourly
+ * pull to refresh, which waits about two minutes for it. A catch-up
  * full read runs after the answer has gone. See assetListRefresh.ts.
  */
 export const dynamic = "force-dynamic";
