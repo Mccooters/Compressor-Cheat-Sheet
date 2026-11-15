@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
+import { canUseSite } from "@/lib/auth/access";
+import { ASSET_PAGE_LIMIT, visitorKey, withinLimit } from "@/lib/rateLimit";
 import { getAssetByTag } from "@/lib/assets/record";
 import { normaliseTag } from "@/lib/assets/tagIndex";
 import type { AssetRecord } from "@/lib/assets/types";
@@ -66,7 +70,20 @@ export default async function AssetPage({
   const assetId = normaliseTag(decodeURIComponent(id));
   if (!assetId) notFound();
 
-  const result = await getAssetByTag(assetId);
+  // Staff signed in to Air Assist see everything and aren't counted. Anyone
+  // else is a member of the public: they aren't told whose equipment it is
+  // (the person standing at it knows; someone stepping through the sticker
+  // numbers shouldn't get a customer list out of it), and how many of these
+  // pages one visitor can open is limited so the numbers can't be walked.
+  const session = await auth();
+  const isStaff = canUseSite(session?.role);
+  const limited =
+    !isStaff &&
+    !(await withinLimit(visitorKey("asset-page", await headers()), ASSET_PAGE_LIMIT));
+
+  const result = limited
+    ? ({ state: "limited" } as const)
+    : await getAssetByTag(assetId);
   const asset = result.state === "found" ? result.asset : null;
   // The type segment of the ID is a display fallback only — once a record
   // exists, the record says what the asset is.
@@ -104,7 +121,7 @@ export default async function AssetPage({
               <Row label="Manufacturer" value={asset.manufacturer} />
               <Row label="Model" value={asset.model} />
               <Row label="Serial number" value={asset.serialNumber} />
-              <Row label="Site" value={asset.site} />
+              {isStaff && <Row label="Site" value={asset.site} />}
             </dl>
           </section>
 
@@ -161,6 +178,16 @@ export default async function AssetPage({
             )}
           </section>
         </>
+      )}
+
+      {result.state === "limited" && (
+        <section className={cardClass}>
+          <h2 className={headingClass}>Too many pages opened</h2>
+          <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+            A lot of asset records have been opened from this connection in
+            the last few minutes. Wait ten minutes and scan the sticker again.
+          </p>
+        </section>
       )}
 
       {result.state === "unregistered" && (

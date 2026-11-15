@@ -69,7 +69,7 @@ function toDocument(origin: string, doc: DocumentRow) {
 }
 
 export async function GET(request: Request) {
-  const denied = checkMobileToken(request);
+  const denied = await checkMobileToken(request);
   if (denied) return denied;
 
   const origin = new URL(request.url).origin;

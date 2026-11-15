@@ -82,12 +82,23 @@ export const pviResourceCategoryEnum = pgEnum("pvi_resource_category", [
   "other",
 ]);
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "viewer"]);
+// "pending" has signed in but can't see anything until an admin approves
+// them; "staff" sits between viewer and admin (see src/lib/auth/access.ts).
+// New values go on the end: Postgres can only append to an enum cheaply.
+export const userRoleEnum = pgEnum("user_role", [
+  "admin",
+  "viewer",
+  "pending",
+  "staff",
+]);
 
 // Every signed-in email gets a row here, created on first login (see
 // resolveUserRole in src/lib/auth/roles.ts). The very first person ever to
-// sign in becomes admin automatically; everyone after defaults to viewer
-// until an admin promotes them from /admin/users.
+// sign in becomes admin automatically; everyone after is "pending" and sees
+// nothing until an admin approves them from /admin/users. Deleting a row
+// signs that person out within a minute (see the jwt callback in
+// src/auth.ts). The column's own default is not used: the role is always
+// set explicitly.
 export const appUser = pgTable(
   "app_user",
   {
@@ -540,4 +551,39 @@ export const arofloSyncState = pgTable("aroflo_sync_state", {
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+});
+
+// One access token per phone (or per person), made and revoked from
+// /admin/phones. Only the SHA-256 of the token is kept, so a copy of this
+// table can't be used to sign in as a phone. The older single shared token
+// (MOBILE_API_TOKEN) still works alongside these until it is removed from
+// the deployment's settings. See src/lib/mobile/tokens.ts.
+export const mobileToken = pgTable(
+  "mobile_token",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // Whose phone it is, for the admin list ("Josh's iPhone").
+    label: text("label").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    createdBy: text("created_by"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Updated at most once an hour, not on every request.
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (table) => [uniqueIndex("mobile_token_hash_idx").on(table.tokenHash)]
+);
+
+// Counters for limiting how fast one visitor can open the public asset
+// pages (/a/...), so the sticker numbers can't be walked through in bulk.
+// The key is a hash of the visitor's address, never the address itself.
+// See src/lib/rateLimit.ts.
+export const rateLimit = pgTable("rate_limit", {
+  key: text("key").primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  count: integer("count").notNull().default(1),
 });

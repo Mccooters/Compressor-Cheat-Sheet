@@ -1,5 +1,8 @@
 import { fetchAssetFiles } from "@/lib/assets/documents";
 import { getTag, normaliseTag } from "@/lib/assets/tagIndex";
+import { auth } from "@/auth";
+import { canUseSite } from "@/lib/auth/access";
+import { ASSET_DOCUMENT_LIMIT, visitorKey, withinLimit } from "@/lib/rateLimit";
 
 /**
  * Opens one of an asset's documents. AroFlo's download links expire after
@@ -12,12 +15,25 @@ export const dynamic = "force-dynamic";
 const notFound = () => new Response("Document not found", { status: 404 });
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string; key: string }> }
 ) {
   const { id, key } = await params;
   const tagId = normaliseTag(decodeURIComponent(id));
   if (!tagId) return notFound();
+
+  // Public, like the asset page it's linked from, and limited the same way
+  // for anyone not signed in (see src/lib/rateLimit.ts).
+  const session = await auth();
+  if (
+    !canUseSite(session?.role) &&
+    !(await withinLimit(visitorKey("asset-doc", request.headers), ASSET_DOCUMENT_LIMIT))
+  ) {
+    return new Response("Too many documents opened. Try again in ten minutes.", {
+      status: 429,
+      headers: { "retry-after": "600" },
+    });
+  }
 
   try {
     const entry = await getTag(tagId);

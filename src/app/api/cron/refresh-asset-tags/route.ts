@@ -3,6 +3,7 @@ import { isArofloConfigured } from "@/lib/aroflo/client";
 import { isLegacyConfigured } from "@/lib/aroflo/legacy";
 import { syncRegisterFromLegacy } from "@/lib/assets/legacyRegister";
 import { hasBacklog, refreshTagIndex } from "@/lib/assets/tagIndex";
+import { purgeRateLimits } from "@/lib/rateLimit";
 
 /**
  * Scheduled top-up of the asset-tag register (see vercel.json). Vercel calls
@@ -29,6 +30,11 @@ export async function GET(request: Request) {
   if (!authorised(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // Housekeeping that doesn't depend on AroFlo: yesterday's visitor counters.
+  await purgeRateLimits().catch((err) =>
+    console.error("Couldn't clear old rate-limit counters:", err)
+  );
+
   if (!isArofloConfigured()) {
     return Response.json({ error: "AROFLO_API_TOKEN is not set" }, { status: 503 });
   }

@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function GET(request: Request) {
-  const denied = checkMobileToken(request);
+  const denied = await checkMobileToken(request);
   if (denied) return denied;
 
   const params = new URL(request.url).searchParams;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { canUseSite } from "@/lib/auth/access";
 
 // NOTE ON THIS FILE'S NAME AND LOCATION — both matter, silently.
 //
@@ -44,20 +45,46 @@ export default auth((req) => {
   // validator fetches /.well-known/apple-app-site-association and REJECTS
   // any redirect, so a login bounce here doesn't fail loudly — it just
   // silently stops asset-tag QR codes opening in the iOS app.
+  // /no-access is where someone who has signed in but isn't approved (or
+  // has been removed) is sent; it has to be reachable by exactly them.
   const isPublicRoute =
     pathname === "/login" ||
+    pathname === "/no-access" ||
     pathname.startsWith("/calculators") ||
     pathname.startsWith("/.well-known/");
 
-  // Only a lightweight JWT check here — no DB access. Middleware/proxy runs
-  // in a separate, minimal execution context that isn't meant to depend on
-  // shared modules like a DB connection pool; the admin-only restriction on
-  // /admin is enforced in that segment's layout instead, plus requireAdmin()
-  // in every mutating server action regardless.
+  // The session cookie is checked here, and with it the person's role. The
+  // role is read from the database by the jwt callback in src/auth.ts, at
+  // most once a minute per signed-in browser (every request for someone
+  // still waiting for approval); in between it rides in the cookie, so most
+  // requests cost no database round trip. Proxy runs separately from the
+  // pages, with its own copy of the database module: nothing here may rely
+  // on state shared with render code.
+  //
+  // The admin-only restriction on /admin is enforced in that segment's
+  // layout, plus requireAdmin() in every mutating server action regardless.
+  // Approved while sitting on the waiting page: a reload lets them in.
+  if (pathname === "/no-access" && canUseSite(req.auth?.role)) {
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+  }
+
   if (!isPublicRoute && !req.auth) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Signed in is not enough: an admin has to have approved the person. The
+  // role comes from the session cookie, which the jwt callback in
+  // src/auth.ts re-reads from the database every minute, so approving,
+  // demoting or removing someone takes effect without them signing in again.
+  // This covers pages, server actions (they POST to a page) and the API
+  // routes under the matcher alike.
+  if (!isPublicRoute && !canUseSite(req.auth?.role)) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Not approved" }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/no-access", req.nextUrl.origin));
   }
 });
 
