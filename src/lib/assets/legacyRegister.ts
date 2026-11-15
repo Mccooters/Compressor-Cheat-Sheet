@@ -72,7 +72,14 @@ function legacyTimestamp(date: Date): string {
 // `archived` can't be filtered on for assets (true and false return the
 // same rows), so archived assets come back and are dropped here by their
 // own flag.
-const ALL_TIME_FILTER = "and|lastupdatedutc|>|2000-01-01";
+//
+// Every asset: a filter on a real field that is true for all of them.
+// (Some filter has to be sent, or AroFlo returns only recently made
+// assets.) Not "last updated after 2000": 57 assets have never been
+// updated and have no such date, and that filter left them out, which had
+// the full read drop 49 current assets from the shared list on 15 Nov.
+// This one returned all 3,752, those 57 included.
+const EVERY_ASSET_FILTER = "and|assetname|!=|__none__";
 const changedSinceFilter = (since: Date) =>
   `and|lastupdateddatetimeutc|>|${legacyTimestamp(since)}`;
 
@@ -197,7 +204,7 @@ export async function syncRegisterFromLegacy(
   const { rows, joined } = await fetchRows(
     full
       ? // AroFlo only returns the last 30 days' assets when no filter is sent.
-        [ALL_TIME_FILTER]
+        [EVERY_ASSET_FILTER]
       : [changedSinceFilter(new Date(Date.parse(lastSync) - OVERLAP_MS))]
   );
 
