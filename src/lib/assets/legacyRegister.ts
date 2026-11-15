@@ -3,6 +3,11 @@ import { db } from "@/db";
 import { assetTag } from "@/db/schema";
 import { arofloPost } from "@/lib/aroflo/client";
 import { legacyGet } from "@/lib/aroflo/legacy";
+import {
+  ASSET_LIST_FULL_KEY,
+  ASSET_LIST_SYNCED_KEY,
+  storeAssetRows,
+} from "@/lib/assets/assetList";
 import { getSyncState, normaliseTag, setSyncState } from "@/lib/assets/tagIndex";
 
 /**
@@ -15,6 +20,10 @@ import { getSyncState, normaliseTag, setSyncState } from "@/lib/assets/tagIndex"
  *
  * The register stores AroFlo v2 IDs, so the legacy IDs of tagged assets are
  * converted with one v2 request per 100.
+ *
+ * The same read also keeps the shared asset list (assetList.ts): every row
+ * is stored as AroFlo sent it, with the location and custom fields the apps
+ * show, so the phones don't each read the list from AroFlo themselves.
  */
 
 const PAGE_SIZE = 500; // AroFlo's maximum
@@ -50,6 +59,8 @@ async function fetchRows(where: string[]): Promise<LegacyAssetRow[]> {
     const response = await legacyGet<{ assets?: LegacyAssetRow[] }>({
       zone: "assets",
       where,
+      // What the apps' asset lists show, so the stored rows are complete.
+      join: ["location", "customfields"],
       page,
       pageSize: PAGE_SIZE,
     });
@@ -76,7 +87,7 @@ async function toV2Ids(legacyIds: string[]): Promise<Map<string, string>> {
 
 export async function syncRegisterFromLegacy(
   mode: "full" | "changes"
-): Promise<{ checked: number; tagged: number }> {
+): Promise<{ checked: number; tagged: number; assetsChanged: number; assetsRemoved: number }> {
   const startedAt = new Date();
   const lastSync = await getSyncState(CURSOR_KEY);
   // Without a previous sync there is nothing to diff against.
@@ -98,6 +109,10 @@ export async function syncRegisterFromLegacy(
   if (full && rows.length === 0) {
     throw new Error("AroFlo returned no assets for a full read; register left unchanged.");
   }
+
+  // The shared asset list first: if it can't be stored, the cursor below
+  // isn't moved, and the next sync reads these rows again.
+  const stored = await storeAssetRows(rows, full);
 
   // tag -> row. If two assets carry the same tag, the later row wins.
   const tagged = new Map<string, LegacyAssetRow & { assetid: string }>();
@@ -165,5 +180,12 @@ export async function syncRegisterFromLegacy(
     `Legacy AroFlo register sync (${full ? "full" : "changes"}): ${rows.length} assets read, ${tagged.size} tagged.`
   );
   await setSyncState(CURSOR_KEY, startedAt.toISOString());
-  return { checked: rows.length, tagged: tagged.size };
+  if (full) await setSyncState(ASSET_LIST_FULL_KEY, startedAt.toISOString());
+  await setSyncState(ASSET_LIST_SYNCED_KEY, startedAt.toISOString());
+  return {
+    checked: rows.length,
+    tagged: tagged.size,
+    assetsChanged: stored.changed,
+    assetsRemoved: stored.removed,
+  };
 }

@@ -331,3 +331,91 @@ sent.
   its old tag is dropped the next time the register reads that asset.
 - `name`, `serialNumber` and `clientName` are copies for offline display.
   The live AroFlo record is the source of truth.
+
+## Shared asset list
+
+Every phone used to read the whole AroFlo asset list itself (about 3,100
+assets, seven requests) once a day, plus an hourly "what changed" check. This
+site now keeps one copy and the apps download it from here, so the AroFlo
+calls no longer grow with the number of phones.
+
+Needs AroFlo's older, signed API (`AROFLO_LEGACY_*`): only its list pages
+carry the barcode, location and custom fields the apps show.
+
+How the copy is kept up to date:
+
+- **On request, at most every 10 minutes.** The first page of a
+  `GET /api/assets` tops the copy up from AroFlo's "changed since" feed when
+  the last top-up started more than 10 minutes ago. That is usually one
+  AroFlo request, and none at all while no phone is asking. There is no
+  10-minute timer.
+- **`fresh=1`** tops up at once (unless one started in the last 5 seconds).
+  A phone sends it after it has edited or created an asset, so its own change
+  comes straight back.
+- **The whole list is read again** (about seven requests) when the last full
+  read is more than 6 hours old, with **`fresh=full`** (the app's pull to
+  refresh; at most once every 2 minutes), and daily by the scheduled register
+  rebuild (`vercel.json`). The "changed since" feed is not complete: it has
+  missed an older asset that had just been given a barcode, and it doesn't
+  count custom field or location edits as changes. A full read is what
+  catches those, and assets deleted outright.
+- The same reads feed the asset-tag register above, so there is still only
+  one read of AroFlo.
+
+Implementation: `src/lib/assets/assetList.ts`,
+`src/lib/assets/assetListRefresh.ts`, `src/lib/assets/legacyRegister.ts`.
+
+Same bearer token and error rules as the routes above.
+
+### `GET /api/assets`
+
+| Query | Meaning |
+|---|---|
+| `since` | ISO time. Only assets this site saw change after then, and `removed` is filled. Omit for the whole list. |
+| `after` | The `next` value of the previous page. |
+| `limit` | Rows per page, default 500, at most 1000. |
+| `fresh` | `1` to top up from AroFlo first; `full` to read the whole list from AroFlo again first (see above). |
+
+```jsonc
+{
+  "generatedAt": "2026-11-15T01:02:03.000Z", // this site's time when the page was read
+  "syncedAt": "2026-11-15T00:58:41.000Z",    // when the copy was last topped up from AroFlo; null if never
+  "fullSyncedAt": "2026-11-14T18:00:07.000Z", // when the whole list was last read from AroFlo
+  "assets": [
+    {
+      // One row of the older API's Assets zone, exactly as AroFlo sends it
+      // with join=location,customfields: assetid, assetname, serialnumber,
+      // barcode, modelnumber, manufacturer, category, client, location,
+      // customfields, archived, ...
+      "assetid": "JCQqTyBQLFEgCg==",
+      "assetname": "GA37 VSD"
+    }
+  ],
+  "removed": ["JCQqTyBQLFEgDg=="], // asset IDs archived or deleted since `since`; first page only
+  "next": "JCQqTyBQLFEgCg=="       // pass as `after` for the next page; null on the last
+}
+```
+
+- `assets` holds current (non-archived) assets only, ordered by `assetid`.
+  The IDs are the **older API's** asset IDs, the ones the apps key their
+  lists by, not API v2 IDs.
+- Read every page (`next` until null) before replacing or merging a saved
+  copy.
+- **`since` is compared with when this site saw the change**, which can be up
+  to 10 minutes after the change was made in AroFlo. Ask with a time a few
+  minutes before the last successful read (the iOS app uses 10 minutes), to
+  cover a phone clock that is a little out.
+- An asset re-read with nothing changed is not sent again.
+
+| Status | Meaning |
+|---|---|
+| `200` | A page, as above |
+| `400` JSON | `since` isn't a date |
+| `503` JSON | The list hasn't been read from AroFlo in full yet (or the mobile API isn't configured). Read AroFlo directly instead; never treat this as an empty list. |
+| `500` JSON | The read failed |
+
+If AroFlo can't be reached when a read is due, the stored copy is served as
+it is, and `syncedAt` and `fullSyncedAt` show its age. A client that asked
+with `fresh=full` must check `fullSyncedAt` is within a few minutes of
+`generatedAt` (the iOS app allows 10) and read AroFlo itself if it isn't:
+the full read may have failed, or another request may have been running it.

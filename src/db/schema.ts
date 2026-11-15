@@ -1,4 +1,6 @@
 import {
+  boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -494,6 +496,33 @@ export const assetTag = pgTable("asset_tag", {
     .notNull()
     .defaultNow(),
 });
+
+// The whole AroFlo asset list, one row per asset, as AroFlo's older API
+// sends it (location and custom fields joined). The apps download this
+// instead of each phone reading the list from AroFlo itself, so the AroFlo
+// calls stay the same however many phones there are. See
+// src/lib/assets/assetList.ts and /api/assets.
+export const arofloAsset = pgTable(
+  "aroflo_asset",
+  {
+    // AroFlo's older-API asset ID: the one the apps key their lists by.
+    legacyAssetId: text("legacy_asset_id").primaryKey(),
+    // The row exactly as AroFlo sent it, so the apps parse it the same way
+    // they parse AroFlo's own reply.
+    row: jsonb("row").notNull(),
+    // Hash of the row, so a re-read that changed nothing leaves changedAt
+    // alone and phones don't download the asset again.
+    hash: text("hash").notNull(),
+    // Archived in AroFlo, or gone from a full read. Kept (not deleted) so
+    // phones asking "what changed since X" can be told to drop it.
+    archived: boolean("archived").notNull().default(false),
+    // When this site last saw the asset change (not AroFlo's own time).
+    changedAt: timestamp("changed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("aroflo_asset_changed_at_idx").on(table.changedAt)]
+);
 
 // Single-row-per-key bookkeeping for the AroFlo tag index: how far through
 // AroFlo's "recently changed assets" feed we have read, and when we last
