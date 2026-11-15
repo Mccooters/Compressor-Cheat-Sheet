@@ -40,6 +40,9 @@ export const FULL_REQUEST_AFTER_MS = 2 * 60 * 1000;
 const FIRST_READ_AFTER_MS = 60 * 1000;
 // After a failed read, try again in a minute rather than on every request.
 const RETRY_AFTER_MS = 60 * 1000;
+// While AroFlo won't give the joined rows the list is built from, a first
+// read is about seven wasted requests: don't repeat it for every phone.
+const UNAVAILABLE_RETRY_AFTER_MS = 30 * 60 * 1000;
 
 // Separate turns, so a top-up a moment ago doesn't refuse a pull to refresh.
 const TOP_UP_CLAIM_KEY = "asset_list_refresh_claim";
@@ -94,6 +97,13 @@ export async function refreshAssetList(request: RefreshRequest): Promise<void> {
     if (!(await claimRefresh(claimKey, plan.minIntervalMs))) return;
     try {
       await syncRegisterFromLegacy(plan.mode);
+      if (!fullReadAt && (await getSyncState(ASSET_LIST_FULL_KEY)) === null) {
+        // The read worked but not with joins, so there is still no list.
+        await setSyncState(
+          claimKey,
+          new Date(Date.now() - plan.minIntervalMs + UNAVAILABLE_RETRY_AFTER_MS).toISOString()
+        );
+      }
     } catch (err) {
       console.error(`Asset list ${plan.mode} read from AroFlo failed:`, err);
       // Give the turn back early, so a request in a minute tries again.
