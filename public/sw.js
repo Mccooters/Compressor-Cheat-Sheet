@@ -1,4 +1,4 @@
-const CACHE_NAME = "aa-calculators-v3";
+const CACHE_NAME = "aa-calculators-v4";
 
 // Every calculator route, precached on install so the whole section works
 // offline after the very first visit — without this, a page only became
@@ -35,6 +35,10 @@ self.addEventListener("install", (event) => {
         CALCULATOR_ROUTES.map(async (path) => {
           try {
             const response = await fetch(new Request(path, { headers: { Accept: "text/html" } }));
+            // The calculators need a sign-in now. Fetched while signed out,
+            // the answer is the login page (after a redirect): never keep
+            // that as if it were the calculator.
+            if (!response.ok || response.redirected) return;
             const html = await response.clone().text();
             await cache.put(path, response);
             for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"]+)"/g)) {
@@ -114,8 +118,12 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        const copy = response.clone();
-        event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
+        // Only a real calculator page is kept: not the login page a
+        // signed-out visit is redirected to, and not an error.
+        if (response.ok && !response.redirected) {
+          const copy = response.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
+        }
         return response;
       })
       .catch(() => caches.match(request))

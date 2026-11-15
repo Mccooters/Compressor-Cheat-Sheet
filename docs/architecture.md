@@ -108,6 +108,8 @@ docs/
 - Removing someone at `/admin/users` signs their browser out within a minute. Someone whose Microsoft account is disabled is signed out when their Microsoft token next needs refreshing (within the hour).
 - Admin-gated routes: all of `/admin/**`
 - The apps' API routes take a bearer token instead of a session: one per phone, made and revoked at `/admin/phones` (`src/lib/mobile/tokens.ts`), or the older shared `MOBILE_API_TOKEN` while it is still set.
+- The only pages the public can open are the asset pages (`/a/...`) and the login page. The calculators need a sign-in like the rest; they still work offline once opened while signed in (`public/sw.js`).
+- Job photos (`/photos`, `/api/photos/...`) are for `staff` and `admin`. They are read from the Air Assist app's SharePoint work folder as the signed-in person, so SharePoint's own permissions apply on top (`src/lib/photos/`, `getPhotosConfig()` in `src/lib/graph/config.ts`).
 - The public asset pages (`/a/...`) hide the customer's name from anyone not signed in and limit how many one visitor can open (`src/lib/rateLimit.ts`).
 - Dev login at `/login` — enabled by `AUTH_DEV_LOGIN_ENABLED=true`, always off in production
 

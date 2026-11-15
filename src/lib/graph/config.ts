@@ -46,3 +46,33 @@ export function getEquipmentFolderConfig(): {
   if (!siteUrl || !libraryName) return null;
   return { siteUrl, libraryName };
 }
+
+// Where the Air Assist app keeps job photos: a folder in a SharePoint
+// document library (the app's "SharePoint only" work folder). The website
+// reads it as the signed-in person, so SharePoint's permissions still apply.
+//
+// SHAREPOINT_PHOTOS_SITE_URL — the site holding the library. Defaults to
+//   SHAREPOINT_EQUIPMENT_SITE_URL: both live on the Operations site.
+// SHAREPOINT_PHOTOS_LIBRARY — the library's display name
+//   (default "Operational Documents").
+// SHAREPOINT_PHOTOS_FOLDER — the work folder inside it (default "Work Photos").
+export function getPhotosConfig(): {
+  siteUrl: string;
+  libraryName: string;
+  folder: string;
+} | null {
+  const siteUrl = (
+    process.env.SHAREPOINT_PHOTOS_SITE_URL ?? process.env.SHAREPOINT_EQUIPMENT_SITE_URL
+  )
+    ?.trim()
+    .replace(/\/+$/, "");
+  if (!siteUrl) return null;
+  return {
+    siteUrl,
+    libraryName: process.env.SHAREPOINT_PHOTOS_LIBRARY?.trim() || "Operational Documents",
+    folder: (process.env.SHAREPOINT_PHOTOS_FOLDER?.trim() || "Work Photos").replace(
+      /^\/+|\/+$/g,
+      ""
+    ),
+  };
+}

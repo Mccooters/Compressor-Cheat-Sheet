@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
+import { hasRole } from "@/lib/auth/access";
 import { getCurrentUserRole } from "@/lib/auth/currentUser";
 import { NavMenu } from "@/components/layout/NavMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
@@ -19,6 +20,8 @@ const links = [
   { href: "/swms", label: "SWMS" },
 ];
 
+// Job photos are for Staff and Admins (see src/app/photos/layout.tsx).
+const photosLink = [{ href: "/photos", label: "Photos" }];
 const adminLink = [{ href: "/admin/equipment", label: "Admin" }];
 
 const appBadgeClass =
@@ -27,7 +30,11 @@ const appBadgeClass =
 export async function Nav() {
   const session = await auth();
   const role = session?.user ? await getCurrentUserRole() : null;
-  const menuLinks = role === "admin" ? [...links, ...adminLink] : links;
+  const menuLinks = [
+    ...links,
+    ...(hasRole(role, "staff") ? photosLink : []),
+    ...(role === "admin" ? adminLink : []),
+  ];
 
   async function handleSignOut() {
     "use server";
