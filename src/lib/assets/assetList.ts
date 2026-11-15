@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { and, asc, eq, gt, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { arofloAsset } from "@/db/schema";
 
@@ -179,6 +179,49 @@ export async function listAssetPage(options: {
     rows: page.map((entry) => entry.row as LegacyRow),
     next: found.length > limit ? page[page.length - 1].id : null,
   };
+}
+
+/** Current assets whose API v2 ID isn't known yet, oldest change first. */
+export async function assetIdsWithoutV2Id(limit: number): Promise<string[]> {
+  const found = await db
+    .select({ id: arofloAsset.legacyAssetId })
+    .from(arofloAsset)
+    .where(and(eq(arofloAsset.archived, false), isNull(arofloAsset.v2Id)))
+    .orderBy(asc(arofloAsset.changedAt), asc(arofloAsset.legacyAssetId))
+    .limit(limit);
+  return found.map((entry) => entry.id);
+}
+
+/**
+ * Records assets' API v2 IDs (older-API ID -> v2 ID). Only the ID column
+ * is written: the row, its hash and changedAt stay as they are, so phones
+ * aren't sent the asset again.
+ */
+export async function setV2Ids(v2ByLegacyId: Map<string, string>): Promise<void> {
+  const pairs = [...v2ByLegacyId.entries()];
+  for (let i = 0; i < pairs.length; i += STORE_BATCH) {
+    const values = sql.join(
+      pairs.slice(i, i + STORE_BATCH).map(([legacy, v2]) => sql`(${legacy}, ${v2})`),
+      sql`, `
+    );
+    await db.execute(sql`
+      update ${arofloAsset} set v2_id = pairs.v2
+      from (values ${values}) as pairs(legacy, v2)
+      where ${arofloAsset.legacyAssetId} = pairs.legacy
+    `);
+  }
+}
+
+/** The older-API IDs of the assets with these API v2 IDs (v2 ID -> older-API ID). */
+export async function legacyIdsForV2Ids(v2Ids: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (v2Ids.length === 0) return map;
+  const found = await db
+    .select({ legacy: arofloAsset.legacyAssetId, v2: arofloAsset.v2Id })
+    .from(arofloAsset)
+    .where(inArray(arofloAsset.v2Id, v2Ids));
+  for (const entry of found) if (entry.v2) map.set(entry.v2, entry.legacy);
+  return map;
 }
 
 /** IDs of assets archived or removed since a time, for a phone to drop from its copy. */

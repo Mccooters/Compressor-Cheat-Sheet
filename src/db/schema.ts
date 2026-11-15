@@ -520,8 +520,15 @@ export const arofloAsset = pgTable(
     changedAt: timestamp("changed_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // The same asset's ID in AroFlo's API v2, filled in after the row is
+    // stored. API v2's "changed assets" feed names assets by this ID; it is
+    // how an edit the older API's feed missed is traced back to its row.
+    v2Id: text("v2_id"),
   },
-  (table) => [index("aroflo_asset_changed_at_idx").on(table.changedAt)]
+  (table) => [
+    index("aroflo_asset_changed_at_idx").on(table.changedAt),
+    index("aroflo_asset_v2_id_idx").on(table.v2Id),
+  ]
 );
 
 // Single-row-per-key bookkeeping for the AroFlo tag index: how far through

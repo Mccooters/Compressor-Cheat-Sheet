@@ -363,11 +363,19 @@ How the copy is kept up to date:
   missed an older asset that had just been given a barcode, and it doesn't
   count custom field or location edits as changes. A full read is what
   catches those, and assets deleted outright.
+- **Cross-check with API v2.** After each top-up, API v2's own feed of
+  changed assets is asked what changed (one request). Any asset it names that
+  the top-up didn't bring is read again on its own through the older API
+  (one request each, at most 20 a check). This is what catches an edit the
+  older feed misses without waiting for the next full read. Each stored asset
+  carries its v2 ID for this (`aroflo_asset.v2_id`, migration `0012`), looked
+  up 100 at a time as rows arrive.
 - The same reads feed the asset-tag register above, so there is still only
   one read of AroFlo.
 
 Implementation: `src/lib/assets/assetList.ts`,
-`src/lib/assets/assetListRefresh.ts`, `src/lib/assets/legacyRegister.ts`.
+`src/lib/assets/assetListRefresh.ts`, `src/lib/assets/assetListCrossCheck.ts`,
+`src/lib/assets/legacyRegister.ts`.
 
 Same bearer token and error rules as the routes above.
 
