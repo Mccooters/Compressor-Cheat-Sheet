@@ -1,13 +1,19 @@
 import { and, eq, isNotNull, ne, notInArray } from "drizzle-orm";
 import { db } from "@/db";
 import { assetTag } from "@/db/schema";
-import { arofloPost } from "@/lib/aroflo/client";
+import { arofloGet, arofloPost, isArofloConfigured } from "@/lib/aroflo/client";
 import { legacyGet } from "@/lib/aroflo/legacy";
 import {
   ASSET_LIST_FULL_KEY,
   ASSET_LIST_SYNCED_KEY,
   storeAssetRows,
 } from "@/lib/assets/assetList";
+import {
+  crossCheckAssetList,
+  fillMissingV2Ids,
+  startCrossCheckFrom,
+  type FeedItem,
+} from "@/lib/assets/assetListCrossCheck";
 import { getSyncState, normaliseTag, setSyncState } from "@/lib/assets/tagIndex";
 
 /**
@@ -128,6 +134,51 @@ async function toV2Ids(legacyIds: string[]): Promise<Map<string, string>> {
   return map;
 }
 
+/**
+ * After the asset list is stored: ask API v2's feed what changed, and read
+ * again any asset the read above didn't bring (see assetListCrossCheck.ts).
+ * Never throws: the register and the list are already stored, and whatever
+ * this misses is picked up by the next check or the next full read.
+ */
+async function crossCheckWithV2(
+  rows: LegacyAssetRow[],
+  full: boolean,
+  startedAt: Date
+): Promise<void> {
+  if (!isArofloConfigured()) return;
+  try {
+    // New rows need their v2 IDs before the feed's IDs can be matched to them.
+    const filled = await fillMissingV2Ids(toV2Ids);
+    if (full) {
+      // Everything was just read: only changes from now on need checking.
+      await startCrossCheckFrom(startedAt);
+      if (filled > 0) console.log(`Asset list: ${filled} API v2 IDs filled in.`);
+      return;
+    }
+    const justRead = new Set(rows.map((row) => text(row.assetid)).filter((id) => id !== null));
+    const result = await crossCheckAssetList({
+      justRead,
+      startFrom: startedAt.toISOString(),
+      readFeed: async (since, limit) =>
+        (
+          await arofloGet<{ items: FeedItem[] }>(
+            `/lastupdated/ASSETS?since=${encodeURIComponent(since)}&order=ASC&limit=${limit}`
+          )
+        ).items,
+      readAsset: async (legacyId) => {
+        await new Promise((resolve) => setTimeout(resolve, PAGE_GAP_MS));
+        const found = await fetchPage([`and|assetid|=|${legacyId}`], JOINED, 1);
+        return found.find((row) => text(row.assetid) === legacyId) ?? null;
+      },
+    });
+    console.log(
+      `Asset list v2 cross-check: ${result.changed} changed in v2, ${result.alreadyRead} already read, ${result.reread} read again, ${result.notInList} not in the list yet${filled > 0 ? `; ${filled} API v2 IDs filled in` : ""}.`
+    );
+  } catch (err) {
+    console.error("Asset list v2 cross-check failed:", err);
+  }
+}
+
 export async function syncRegisterFromLegacy(
   mode: "full" | "changes"
 ): Promise<{ checked: number; tagged: number; assetsChanged: number; assetsRemoved: number }> {
@@ -228,6 +279,7 @@ export async function syncRegisterFromLegacy(
   if (joined) {
     if (full) await setSyncState(ASSET_LIST_FULL_KEY, startedAt.toISOString());
     await setSyncState(ASSET_LIST_SYNCED_KEY, startedAt.toISOString());
+    await crossCheckWithV2(rows, full, startedAt);
   }
   return {
     checked: rows.length,
