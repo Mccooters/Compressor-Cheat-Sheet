@@ -9,10 +9,11 @@ import { getSyncState, setSyncState } from "@/lib/assets/tagIndex";
 /**
  * When to bring the shared asset list up to date from AroFlo.
  *
- * There is no ten-minute timer: the list is topped up when a phone asks
- * for it and the copy is more than ten minutes old. That is one AroFlo
- * request (its "changed since" feed), and none at all while nobody is
- * asking.
+ * There is no timer: the list is topped up when a phone asks for it and
+ * the copy is more than an hour old. That is one AroFlo request (its
+ * "changed since" feed, which returns the changed assets' whole rows), and
+ * none at all while nobody is asking. A phone that wants it sooner asks:
+ * "fresh" after an edit, "full" for a pull to refresh.
  *
  * That feed is not complete, though. It has been seen to miss an older
  * asset that had just been given a barcode, and it doesn't count custom
@@ -25,7 +26,7 @@ import { getSyncState, setSyncState } from "@/lib/assets/tagIndex";
  * asked for it. The six-hourly one runs after the phone has its answer.
  *
  * What a phone can ask for:
- *   "stale" — the ordinary read: top up if the copy is over ten minutes old.
+ *   "stale" — the ordinary read: top up if the copy is over an hour old.
  *   "fresh" — it has just edited an asset: top up now.
  *   "full"  — pull to refresh: read the whole list from AroFlo again, and wait for it.
  */
@@ -35,7 +36,9 @@ export type RefreshRequest = "stale" | "fresh" | "full";
 /** One read of AroFlo, and how long since the last such read started before another may. */
 export type RefreshStep = { mode: "full" | "changes"; minIntervalMs: number };
 
-export const STALE_AFTER_MS = 10 * 60 * 1000;
+// The owner's choice (15 Nov 2026): hourly is often enough on its own,
+// since a phone can ask for a fresh copy whenever it needs one.
+export const STALE_AFTER_MS = 60 * 60 * 1000;
 // Only stops two requests a moment apart both asking AroFlo.
 export const FRESH_AFTER_MS = 5 * 1000;
 // The copy is read again in full when the last full read is older than this.

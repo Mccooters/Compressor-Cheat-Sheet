@@ -344,11 +344,11 @@ carry the barcode, location and custom fields the apps show.
 
 How the copy is kept up to date:
 
-- **On request, at most every 10 minutes.** The first page of a
+- **On request, at most every hour.** The first page of a
   `GET /api/assets` tops the copy up from AroFlo's "changed since" feed when
-  the last top-up started more than 10 minutes ago. That is usually one
+  the last top-up started more than an hour ago. That is usually one
   AroFlo request, and none at all while no phone is asking. There is no
-  10-minute timer.
+  timer.
 - **`fresh=1`** tops up at once (unless one started in the last 5 seconds).
   A phone sends it after it has edited or created an asset, so its own change
   comes straight back.
@@ -406,7 +406,8 @@ Same bearer token and error rules as the routes above.
 - Read every page (`next` until null) before replacing or merging a saved
   copy.
 - **`since` is compared with when this site saw the change**, which can be up
-  to 10 minutes after the change was made in AroFlo. Ask with a time a few
+  to an hour after the change was made in AroFlo (sooner when a phone asks
+  with `fresh`). Ask with a time a few
   minutes before the last successful read (the iOS app uses 10 minutes), to
   cover a phone clock that is a little out.
 - An asset re-read with nothing changed is not sent again.
