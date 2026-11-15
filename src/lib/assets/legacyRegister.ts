@@ -20,8 +20,9 @@ import { getSyncState, normaliseTag, setSyncState } from "@/lib/assets/tagIndex"
  * Builds the asset-tag register from AroFlo's older API, whose asset list
  * includes each asset's barcode (the v2 list does not).
  *
- *   "full"    — every non-archived asset, ~7 pages of 500. Replaces the
- *               register, so tags whose barcode was cleared disappear.
+ *   "full"    — every asset, ~8 pages of 500 (archived ones come back too
+ *               and are skipped). Replaces the register, so tags whose
+ *               barcode was cleared disappear.
  *   "changes" — only assets changed since the last sync, usually one page.
  *
  * The register stores AroFlo v2 IDs, so the legacy IDs of tagged assets are
@@ -59,13 +60,28 @@ function legacyTimestamp(date: Date): string {
   return date.toISOString().slice(0, 19).replace("T", " ");
 }
 
-// The shared asset list needs each asset's location and custom fields, which
-// AroFlo only sends when asked to join them. Sent as two `join` parameters
-// (as the iOS app does), AroFlo refused this site's request ("Signatures do
-// not match") on the first live run, which also stopped the tag register's
-// read. So the joined read is tried as one comma-separated parameter, and if
-// AroFlo refuses that too, the plain read the register has always used is
-// made instead: the register carries on, and the asset list waits.
+// AroFlo's filter names, checked against the live API on 15 Nov 2026. They
+// are the names the rows themselves carry, "lastupdateD…": the earlier
+// spelling without that "d" is not a field, and AroFlo silently ignores a
+// filter on a field it doesn't know. An ignored filter doesn't fail: it
+// returns the wrong assets (with no join, only those made in the last 30
+// days; with a join, every asset), which is why the "changed since" read
+// used to miss an older asset that had just been given a barcode, and why
+// the hourly top-up was reading the whole list.
+//
+// `archived` can't be filtered on for assets (true and false return the
+// same rows), so archived assets come back and are dropped here by their
+// own flag.
+const ALL_TIME_FILTER = "and|lastupdatedutc|>|2000-01-01";
+const changedSinceFilter = (since: Date) =>
+  `and|lastupdateddatetimeutc|>|${legacyTimestamp(since)}`;
+
+// The shared asset list needs each asset's custom field values, which AroFlo
+// only sends when asked to join them (the `customfields` key is there either
+// way, but empty). One comma-separated `join` parameter and two parameters
+// both work. If AroFlo refuses the joined read, the plain read the register
+// has always used is made instead: the register carries on, and the asset
+// list waits.
 const JOINED: string[] = ["location,customfields"];
 
 async function fetchPage(
@@ -83,11 +99,6 @@ async function fetchPage(
   return Array.isArray(response.assets) ? response.assets : [];
 }
 
-/** Whether rows came back with what was joined (AroFlo ignores a join it doesn't know). */
-export function rowsAreJoined(rows: Record<string, unknown>[]): boolean {
-  return rows.some((row) => "customfields" in row || "location" in row);
-}
-
 /**
  * Every page of a read. `joined` says whether the rows carry location and
  * custom fields, i.e. whether they are complete enough for the shared asset
@@ -100,10 +111,6 @@ export async function fetchRows(
   let first: LegacyAssetRow[];
   try {
     first = await fetchPage(where, join, 1);
-    if (first.length > 0 && !rowsAreJoined(first)) {
-      console.warn("AroFlo ignored the location and custom field joins; the shared asset list was not updated.");
-      join = undefined;
-    }
   } catch (err) {
     console.warn("AroFlo refused the joined asset read; reading without joins for the tag register only:", err);
     join = undefined;
@@ -190,12 +197,8 @@ export async function syncRegisterFromLegacy(
   const { rows, joined } = await fetchRows(
     full
       ? // AroFlo only returns the last 30 days' assets when no filter is sent.
-        ["and|lastupdateutc|>|2000-01-01", "and|archived|=|false"]
-      : [
-          `and|lastupdatedatetimeutc|>|${legacyTimestamp(
-            new Date(Date.parse(lastSync) - OVERLAP_MS)
-          )}`,
-        ]
+        [ALL_TIME_FILTER]
+      : [changedSinceFilter(new Date(Date.parse(lastSync) - OVERLAP_MS))]
   );
 
   // A full read that comes back empty is a fault, not an empty company.
