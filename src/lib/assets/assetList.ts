@@ -34,6 +34,12 @@ const STORE_BATCH = 250;
 // a short page from AroFlo than a mass archiving, so it isn't trusted to
 // remove anything.
 const TRUSTED_FULL_READ_FRACTION = 0.8;
+// An asset AroFlo archives comes back in the read with its own flag. One
+// that simply isn't in the read has been deleted outright, which is rare:
+// a full read that is missing more than this many (or 1 % of the list,
+// if that is more) is a read that went wrong, and removes nothing.
+const MAX_ABSENT_REMOVALS = 10;
+const MAX_ABSENT_FRACTION = 0.01;
 
 export const DEFAULT_PAGE = 500;
 export const MAX_PAGE = 1000;
@@ -77,6 +83,11 @@ export function uniqueRows(rows: LegacyRow[]): Map<string, LegacyRow> {
     if (id) byId.set(id, row);
   }
   return byId;
+}
+
+/** How many current assets a full read may remove just for not being in it. */
+export function absentRemovalLimit(storedLive: number): number {
+  return Math.max(MAX_ABSENT_REMOVALS, Math.floor(storedLive * MAX_ABSENT_FRACTION));
 }
 
 /** Whether a full read saw enough of the stored list to be trusted to remove what it didn't see. */
@@ -138,12 +149,26 @@ export async function storeAssetRows(
         `Full asset read returned ${seenIds.length} assets but ${live} are stored; nothing was removed on the strength of it.`
       );
     } else if (seenIds.length > 0) {
-      const gone = await db
-        .update(arofloAsset)
-        .set({ archived: true, changedAt: sql`now()` })
-        .where(and(eq(arofloAsset.archived, false), notInArray(arofloAsset.legacyAssetId, seenIds)))
-        .returning({ id: arofloAsset.legacyAssetId });
-      removed = gone.length;
+      const absent = and(
+        eq(arofloAsset.archived, false),
+        notInArray(arofloAsset.legacyAssetId, seenIds)
+      );
+      const [{ missing }] = await db
+        .select({ missing: sql<number>`count(*)::int` })
+        .from(arofloAsset)
+        .where(absent);
+      if (missing > absentRemovalLimit(live)) {
+        console.warn(
+          `Full asset read is missing ${missing} current assets that AroFlo hasn't marked archived; nothing was removed on the strength of it.`
+        );
+      } else if (missing > 0) {
+        const gone = await db
+          .update(arofloAsset)
+          .set({ archived: true, changedAt: sql`now()` })
+          .where(absent)
+          .returning({ id: arofloAsset.legacyAssetId });
+        removed = gone.length;
+      }
     }
   }
 
