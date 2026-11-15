@@ -53,24 +53,67 @@ function legacyTimestamp(date: Date): string {
   return date.toISOString().slice(0, 19).replace("T", " ");
 }
 
-async function fetchRows(where: string[]): Promise<LegacyAssetRow[]> {
-  const rows: LegacyAssetRow[] = [];
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const response = await legacyGet<{ assets?: LegacyAssetRow[] }>({
-      zone: "assets",
-      where,
-      // What the apps' asset lists show, so the stored rows are complete.
-      join: ["location", "customfields"],
-      page,
-      pageSize: PAGE_SIZE,
-    });
-    const batch = Array.isArray(response.assets) ? response.assets : [];
-    rows.push(...batch);
-    // A short page is the last one.
-    if (batch.length < PAGE_SIZE) break;
+// The shared asset list needs each asset's location and custom fields, which
+// AroFlo only sends when asked to join them. Sent as two `join` parameters
+// (as the iOS app does), AroFlo refused this site's request ("Signatures do
+// not match") on the first live run, which also stopped the tag register's
+// read. So the joined read is tried as one comma-separated parameter, and if
+// AroFlo refuses that too, the plain read the register has always used is
+// made instead: the register carries on, and the asset list waits.
+const JOINED: string[] = ["location,customfields"];
+
+async function fetchPage(
+  where: string[],
+  join: string[] | undefined,
+  page: number
+): Promise<LegacyAssetRow[]> {
+  const response = await legacyGet<{ assets?: LegacyAssetRow[] }>({
+    zone: "assets",
+    where,
+    ...(join ? { join } : {}),
+    page,
+    pageSize: PAGE_SIZE,
+  });
+  return Array.isArray(response.assets) ? response.assets : [];
+}
+
+/** Whether rows came back with what was joined (AroFlo ignores a join it doesn't know). */
+export function rowsAreJoined(rows: Record<string, unknown>[]): boolean {
+  return rows.some((row) => "customfields" in row || "location" in row);
+}
+
+/**
+ * Every page of a read. `joined` says whether the rows carry location and
+ * custom fields, i.e. whether they are complete enough for the shared asset
+ * list. An empty joined read counts as joined: there is nothing to be missing.
+ */
+export async function fetchRows(
+  where: string[]
+): Promise<{ rows: LegacyAssetRow[]; joined: boolean }> {
+  let join: string[] | undefined = JOINED;
+  let first: LegacyAssetRow[];
+  try {
+    first = await fetchPage(where, join, 1);
+    if (first.length > 0 && !rowsAreJoined(first)) {
+      console.warn("AroFlo ignored the location and custom field joins; the shared asset list was not updated.");
+      join = undefined;
+    }
+  } catch (err) {
+    console.warn("AroFlo refused the joined asset read; reading without joins for the tag register only:", err);
+    join = undefined;
     await new Promise((resolve) => setTimeout(resolve, PAGE_GAP_MS));
+    first = await fetchPage(where, undefined, 1);
   }
-  return rows;
+
+  const rows = [...first];
+  let last = first;
+  for (let page = 2; page <= MAX_PAGES && last.length >= PAGE_SIZE; page++) {
+    await new Promise((resolve) => setTimeout(resolve, PAGE_GAP_MS));
+    // A short page is the last one.
+    last = await fetchPage(where, join, page);
+    rows.push(...last);
+  }
+  return { rows, joined: join !== undefined };
 }
 
 async function toV2Ids(legacyIds: string[]): Promise<Map<string, string>> {
@@ -93,7 +136,7 @@ export async function syncRegisterFromLegacy(
   // Without a previous sync there is nothing to diff against.
   const full = mode === "full" || !lastSync;
 
-  const rows = await fetchRows(
+  const { rows, joined } = await fetchRows(
     full
       ? // AroFlo only returns the last 30 days' assets when no filter is sent.
         ["and|lastupdateutc|>|2000-01-01", "and|archived|=|false"]
@@ -111,8 +154,10 @@ export async function syncRegisterFromLegacy(
   }
 
   // The shared asset list first: if it can't be stored, the cursor below
-  // isn't moved, and the next sync reads these rows again.
-  const stored = await storeAssetRows(rows, full);
+  // isn't moved, and the next sync reads these rows again. Rows that came
+  // without their joins aren't stored: phones would be sent assets with no
+  // location or custom fields.
+  const stored = joined ? await storeAssetRows(rows, full) : { changed: 0, removed: 0 };
 
   // tag -> row. If two assets carry the same tag, the later row wins.
   const tagged = new Map<string, LegacyAssetRow & { assetid: string }>();
@@ -177,11 +222,13 @@ export async function syncRegisterFromLegacy(
   }
 
   console.log(
-    `Legacy AroFlo register sync (${full ? "full" : "changes"}): ${rows.length} assets read, ${tagged.size} tagged.`
+    `Legacy AroFlo register sync (${full ? "full" : "changes"}, ${joined ? "with" : "WITHOUT"} location and custom fields): ${rows.length} assets read, ${tagged.size} tagged.`
   );
   await setSyncState(CURSOR_KEY, startedAt.toISOString());
-  if (full) await setSyncState(ASSET_LIST_FULL_KEY, startedAt.toISOString());
-  await setSyncState(ASSET_LIST_SYNCED_KEY, startedAt.toISOString());
+  if (joined) {
+    if (full) await setSyncState(ASSET_LIST_FULL_KEY, startedAt.toISOString());
+    await setSyncState(ASSET_LIST_SYNCED_KEY, startedAt.toISOString());
+  }
   return {
     checked: rows.length,
     tagged: tagged.size,
