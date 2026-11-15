@@ -17,50 +17,63 @@ import { getSyncState, setSyncState } from "@/lib/assets/tagIndex";
  * That feed is not complete, though. It has been seen to miss an older
  * asset that had just been given a barcode, and it doesn't count custom
  * field or location edits as changes. So the whole list is read again
- * (about seven requests) when the last full read is more than six hours
+ * (about eight requests) when the last full read is more than six hours
  * old, when someone pulls to refresh in the app, and by the daily cron.
+ *
+ * A full read takes about two minutes (AroFlo is slow to send pages with
+ * custom fields joined), so a phone is only made to wait for one when it
+ * asked for it. The six-hourly one runs after the phone has its answer.
  *
  * What a phone can ask for:
  *   "stale" — the ordinary read: top up if the copy is over ten minutes old.
  *   "fresh" — it has just edited an asset: top up now.
- *   "full"  — pull to refresh: read the whole list from AroFlo again.
+ *   "full"  — pull to refresh: read the whole list from AroFlo again, and wait for it.
  */
 
 export type RefreshRequest = "stale" | "fresh" | "full";
+
+/** One read of AroFlo, and how long since the last such read started before another may. */
+export type RefreshStep = { mode: "full" | "changes"; minIntervalMs: number };
 
 export const STALE_AFTER_MS = 10 * 60 * 1000;
 // Only stops two requests a moment apart both asking AroFlo.
 export const FRESH_AFTER_MS = 5 * 1000;
 // The copy is read again in full when the last full read is older than this.
 export const FULL_AFTER_MS = 6 * 60 * 60 * 1000;
-// A full read is about seven requests: two people pulling to refresh
-// together share one.
-export const FULL_REQUEST_AFTER_MS = 2 * 60 * 1000;
-// The first full read takes several seconds; don't start a second alongside it.
-const FIRST_READ_AFTER_MS = 60 * 1000;
+// Longer than a full read takes, so two never run side by side: someone
+// pulling to refresh while one is running gets the copy as it stands.
+export const FULL_READ_GAP_MS = 4 * 60 * 1000;
 // After a failed read, try again in a minute rather than on every request.
 const RETRY_AFTER_MS = 60 * 1000;
-// While AroFlo won't give the joined rows the list is built from, a first
-// read is about seven wasted requests: don't repeat it for every phone.
+// While AroFlo won't give the joined rows the list is built from, a full
+// read is about eight wasted requests: don't repeat it for every phone.
 const UNAVAILABLE_RETRY_AFTER_MS = 30 * 60 * 1000;
 
-// Separate turns, so a top-up a moment ago doesn't refuse a pull to refresh.
+// Separate turns, so a top-up a moment ago doesn't refuse a full read.
 const TOP_UP_CLAIM_KEY = "asset_list_refresh_claim";
 const FULL_CLAIM_KEY = "asset_list_full_claim";
 
-/** What to read from AroFlo, and how long since the last such read started before another may. */
+/**
+ * What to read from AroFlo before answering (`before`), and what to read
+ * once the answer has gone (`after`).
+ */
 export function planRefresh(
   request: RefreshRequest,
   fullReadAt: Date | null,
   now: Date
-): { mode: "full" | "changes"; minIntervalMs: number } {
-  if (!fullReadAt) return { mode: "full", minIntervalMs: FIRST_READ_AFTER_MS };
-  if (request === "full") return { mode: "full", minIntervalMs: FULL_REQUEST_AFTER_MS };
-  const topUpInterval = request === "fresh" ? FRESH_AFTER_MS : STALE_AFTER_MS;
-  if (now.getTime() - fullReadAt.getTime() > FULL_AFTER_MS) {
-    return { mode: "full", minIntervalMs: topUpInterval };
-  }
-  return { mode: "changes", minIntervalMs: topUpInterval };
+): { before: RefreshStep | null; after: RefreshStep | null } {
+  const fullRead: RefreshStep = { mode: "full", minIntervalMs: FULL_READ_GAP_MS };
+  // Never read in full: there is nothing to give yet. Start the read, and
+  // answer "not ready" rather than hold the phone for two minutes.
+  if (!fullReadAt) return { before: null, after: fullRead };
+  // Pull to refresh: the phone wants the result, so it waits.
+  if (request === "full") return { before: fullRead, after: null };
+  const topUp: RefreshStep = {
+    mode: "changes",
+    minIntervalMs: request === "fresh" ? FRESH_AFTER_MS : STALE_AFTER_MS,
+  };
+  const overdue = now.getTime() - fullReadAt.getTime() > FULL_AFTER_MS;
+  return { before: topUp, after: overdue ? fullRead : null };
 }
 
 /**
@@ -83,36 +96,48 @@ export async function claimRefresh(key: string, intervalMs: number): Promise<boo
   return won.length > 0;
 }
 
+/** Runs one read if its turn is free. Never throws. */
+async function runStep(step: RefreshStep): Promise<void> {
+  const claimKey = step.mode === "full" ? FULL_CLAIM_KEY : TOP_UP_CLAIM_KEY;
+  try {
+    if (!(await claimRefresh(claimKey, step.minIntervalMs))) return;
+    const retryIn = async (ms: number) =>
+      setSyncState(claimKey, new Date(Date.now() - step.minIntervalMs + ms).toISOString());
+    try {
+      await syncRegisterFromLegacy(step.mode);
+      if (step.mode === "full" && (await getSyncState(ASSET_LIST_FULL_KEY)) === null) {
+        // The read worked but not with joins, so there is still no list.
+        await retryIn(UNAVAILABLE_RETRY_AFTER_MS);
+      }
+    } catch (err) {
+      console.error(`Asset list ${step.mode} read from AroFlo failed:`, err);
+      // Give the turn back early, so a request in a minute tries again.
+      await retryIn(RETRY_AFTER_MS);
+    }
+  } catch (err) {
+    console.error("Asset list refresh failed:", err);
+  }
+}
+
 /**
- * Brings the list up to date from AroFlo if it is due. Never throws: when
- * AroFlo can't be reached the copy already stored is served, and the
- * reply's `syncedAt` and `fullSyncedAt` say how old it is.
+ * Brings the list up to date from AroFlo as far as this request should
+ * wait for, and returns any further read to run once the answer has gone
+ * (pass it to `after`). Never throws: when AroFlo can't be reached the copy
+ * already stored is served, and the reply's `syncedAt` and `fullSyncedAt`
+ * say how old it is.
  */
-export async function refreshAssetList(request: RefreshRequest): Promise<void> {
-  if (!isLegacyConfigured()) return;
+export async function refreshAssetList(
+  request: RefreshRequest
+): Promise<(() => Promise<void>) | null> {
+  if (!isLegacyConfigured()) return null;
   try {
     const fullReadAt = await getSyncState(ASSET_LIST_FULL_KEY);
     const plan = planRefresh(request, fullReadAt ? new Date(fullReadAt) : null, new Date());
-    const claimKey = plan.mode === "full" ? FULL_CLAIM_KEY : TOP_UP_CLAIM_KEY;
-    if (!(await claimRefresh(claimKey, plan.minIntervalMs))) return;
-    try {
-      await syncRegisterFromLegacy(plan.mode);
-      if (!fullReadAt && (await getSyncState(ASSET_LIST_FULL_KEY)) === null) {
-        // The read worked but not with joins, so there is still no list.
-        await setSyncState(
-          claimKey,
-          new Date(Date.now() - plan.minIntervalMs + UNAVAILABLE_RETRY_AFTER_MS).toISOString()
-        );
-      }
-    } catch (err) {
-      console.error(`Asset list ${plan.mode} read from AroFlo failed:`, err);
-      // Give the turn back early, so a request in a minute tries again.
-      await setSyncState(
-        claimKey,
-        new Date(Date.now() - plan.minIntervalMs + RETRY_AFTER_MS).toISOString()
-      );
-    }
+    if (plan.before) await runStep(plan.before);
+    const later = plan.after;
+    return later ? () => runStep(later) : null;
   } catch (err) {
     console.error("Asset list refresh check failed:", err);
+    return null;
   }
 }
