@@ -4,6 +4,11 @@ import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import { isDevLoginEnabled, isEntraConfigured } from "@/lib/graph/config";
+import {
+  isDefinitiveRefreshFailure,
+  recheckAfterMs,
+} from "@/lib/auth/access";
+import { findUserRole, resolveUserRole } from "@/lib/auth/roles";
 
 const providers: Provider[] = [];
 
@@ -88,7 +93,16 @@ const { handlers, auth: uncachedAuth, signIn, signOut } = NextAuth({
               scope: ENTRA_SCOPE,
             }),
           });
-          const refreshed = await response.json();
+          const refreshed = await response.json().catch(() => null);
+          // The Microsoft account has been disabled or deleted, its password
+          // changed or its sign-ins revoked. Returning null signs this
+          // browser out, so someone who has left stops getting in as soon
+          // as their Microsoft token runs out (within the hour), not when
+          // the 30-day session cookie finally expires.
+          if (isDefinitiveRefreshFailure(response.status, refreshed)) {
+            console.warn("Microsoft refused to refresh a session; signing it out.");
+            return null;
+          }
           if (!response.ok) throw refreshed;
 
           token.accessToken = refreshed.access_token;
@@ -102,9 +116,42 @@ const { handlers, auth: uncachedAuth, signIn, signOut } = NextAuth({
         }
       }
 
+      // Who may use the site. The role is read from the database at sign-in
+      // and again every minute, and carried in the session cookie in
+      // between, so the request gate (src/proxy.ts) can check it without a
+      // database round trip on every request.
+      const email = token.email;
+      const now = Date.now();
+      if (
+        email &&
+        (account ||
+          !token.accessCheckedAt ||
+          now - token.accessCheckedAt >= recheckAfterMs(token.role))
+      ) {
+        try {
+          if (account) {
+            // Signing in: a first-time person is recorded as "pending".
+            token.role = await resolveUserRole(email, token.name);
+          } else {
+            const role = await findUserRole(email);
+            // Removed by an admin since the last check: signed out. Signing
+            // in again makes them "pending", waiting for approval afresh.
+            if (!role) return null;
+            token.role = role;
+          }
+          token.accessCheckedAt = now;
+        } catch (err) {
+          // The database didn't answer. Someone already let in stays in on
+          // the role last seen; someone not yet checked stays out.
+          console.error("Couldn't check a user's role:", err);
+          token.role ??= "pending";
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
+      session.role = token.role ?? "pending";
       if (token.accessToken) {
         session.accessToken = token.accessToken;
       }

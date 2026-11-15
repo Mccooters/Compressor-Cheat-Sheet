@@ -11,7 +11,7 @@ import { checkMobileToken, mobileJson } from "@/lib/mobile/auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const denied = checkMobileToken(request);
+  const denied = await checkMobileToken(request);
   if (denied) return denied;
 
   try {

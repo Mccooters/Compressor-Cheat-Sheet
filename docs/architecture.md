@@ -102,9 +102,13 @@ docs/
 
 - Sign-in via Microsoft Entra ID (single-tenant, company staff only)
 - Session stored as JWT in a cookie (Auth.js default)
-- Two roles: `"user"` (default) and `"admin"`
-- Role stored in the `users` table; fetched via `getCurrentUserRole()` in `src/lib/auth/currentUser.ts`
+- Signing in is not enough. A first sign-in is recorded as `pending` and sees only `/no-access` until an admin approves the person at `/admin/users`. (The very first person ever to sign in becomes `admin`.)
+- Roles, lowest to highest: `pending`, `viewer`, `staff`, `admin` (`src/lib/auth/access.ts`). `staff` is for office features as they are added; nothing is restricted to it yet. Use `requireRole("staff")` / `requireAdmin()` in pages and server actions.
+- Role stored in the `app_user` table. The request gate (`src/proxy.ts`) checks the copy in the session cookie, which the jwt callback in `src/auth.ts` re-reads from the database at most once a minute; pages read it fresh via `getCurrentUserRole()` in `src/lib/auth/currentUser.ts`.
+- Removing someone at `/admin/users` signs their browser out within a minute. Someone whose Microsoft account is disabled is signed out when their Microsoft token next needs refreshing (within the hour).
 - Admin-gated routes: all of `/admin/**`
+- The apps' API routes take a bearer token instead of a session: one per phone, made and revoked at `/admin/phones` (`src/lib/mobile/tokens.ts`), or the older shared `MOBILE_API_TOKEN` while it is still set.
+- The public asset pages (`/a/...`) hide the customer's name from anyone not signed in and limit how many one visitor can open (`src/lib/rateLimit.ts`).
 - Dev login at `/login` — enabled by `AUTH_DEV_LOGIN_ENABLED=true`, always off in production
 
 ---

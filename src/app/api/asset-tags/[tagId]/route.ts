@@ -16,7 +16,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ tagId: string }> }
 ) {
-  const denied = checkMobileToken(request);
+  const denied = await checkMobileToken(request);
   if (denied) return denied;
 
   const { tagId: raw } = await params;

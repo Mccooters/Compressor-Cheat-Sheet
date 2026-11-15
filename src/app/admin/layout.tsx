@@ -9,6 +9,7 @@ const adminLinks = [
   { href: "/admin/controllers", label: "Controllers" },
   { href: "/admin/controllers/sharepoint-inspect", label: "SP Inspect" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/phones", label: "Phones" },
 ];
 
 export default async function AdminLayout({

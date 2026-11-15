@@ -7,7 +7,9 @@ import { usePathname } from "next/navigation";
 // part of the Air Assist technician tool, so the app's nav bar, search and
 // sign-in are hidden there. Matched case-insensitively because the stickers
 // encode the path in uppercase (/A/...).
-const STANDALONE = /^\/a(\/|$)/i;
+// The public asset pages, and the page shown to someone not yet approved
+// (the nav's links would only bounce them back to it).
+const STANDALONE = /^\/(a(\/|$)|no-access$)/i;
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

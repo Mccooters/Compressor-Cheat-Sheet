@@ -161,7 +161,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ kind: string; id: string }> }
 ) {
-  const denied = checkMobileToken(request);
+  const denied = await checkMobileToken(request);
   if (denied) return denied;
 
   const { kind, id } = await params;

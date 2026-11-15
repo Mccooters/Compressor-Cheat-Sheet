@@ -20,20 +20,35 @@ compatible.
 
 ## Authentication
 
-Both routes require a shared bearer token:
+Every route requires a bearer token:
 
 ```
-Authorization: Bearer <MOBILE_API_TOKEN>
+Authorization: Bearer <token>
 ```
+
+Two kinds of token are accepted:
+
+- **A phone's own token** (`aa_…`), made by an admin at `/admin/phones` and
+  shown once. Each phone (or person) gets one, and each can be revoked on its
+  own when a phone is lost or someone leaves. The site stores only the
+  token's SHA-256. This is the kind to use.
+- **The older shared token** (`MOBILE_API_TOKEN`), the same on every phone.
+  Still accepted while it is set on the server, so phones keep working while
+  each is moved to a token of its own; removing it from the deployment's
+  settings switches it off.
+
+The app needs no change: either kind is pasted into the same Access Token
+field.
 
 | Condition | Response |
 |---|---|
-| `MOBILE_API_TOKEN` unset on the server | `503` JSON |
-| Header missing, malformed, or wrong | `401` JSON |
+| No shared token set and no phone tokens made | `503` JSON |
+| The database can't be reached to check a phone's token | `503` JSON |
+| Header missing, malformed, wrong, or a revoked token | `401` JSON |
 
-The comparison is constant-time (`crypto.timingSafeEqual`). The routes never
-fall open: an unconfigured server refuses rather than serving the library
-unauthenticated.
+The shared token's comparison is constant-time (`crypto.timingSafeEqual`).
+The routes never fall open: an unconfigured server refuses rather than
+serving the library unauthenticated.
 
 Both paths are excluded from the auth redirect in `middleware.ts`. That
 matters — the middleware answers unauthenticated requests with a `302` to
