@@ -36,10 +36,11 @@ export default auth((req) => {
     // scan the sticker, including customers and auditors with no login.
     return;
   }
-  // Calculators are plain client-side math with no auth/DB dependency, and
-  // are public on purpose: they're installable as an offline PWA, and a
-  // login gate would defeat the point since you can't authenticate without
-  // a network connection.
+  // The asset pages above are the only pages the public can see. The
+  // calculators used to be public too; they now need a sign-in like the
+  // rest. They still work offline once opened while signed in: the service
+  // worker (public/sw.js) serves its saved copies when there's no signal.
+  //
   // /.well-known/ is the standard namespace for machine-readable site
   // metadata (RFC 8615) and is public by definition. Apple's Universal Links
   // validator fetches /.well-known/apple-app-site-association and REJECTS
@@ -50,7 +51,6 @@ export default auth((req) => {
   const isPublicRoute =
     pathname === "/login" ||
     pathname === "/no-access" ||
-    pathname.startsWith("/calculators") ||
     pathname.startsWith("/.well-known/");
 
   // The session cookie is checked here, and with it the person's role. The
